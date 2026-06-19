@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Investigações — Rumo Logística</title>
+<style>
+  :root {
+    --navy:#003865;--navy2:#1a3a5c;--orange:#F78344;--orange-h:#e06d30;
+    --bg:#f4f6fa;--bg2:#fff;--bg3:#eef1f7;--border:#d0d9e8;
+    --text:#1a2535;--text2:#5a6a80;
+    --green:#2e9e57;--yellow:#d97706;--red:#dc2626;
+    --radius:10px;--shadow:0 2px 12px rgba(0,56,101,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;min-height:100vh;}
+  header{background:var(--navy);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:62px;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+  .header-left{display:flex;align-items:center;gap:20px;}
+  .logo-wrap img{height:36px;filter:brightness(0) invert(1);}
+  .header-divider{width:1px;height:36px;background:rgba(255,255,255,.25);}
+  .header-title h1{font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;}
+  .header-title p{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px;}
+  .header-right{font-size:11px;color:rgba(255,255,255,.5);}
+  .accent-bar{height:4px;background:linear-gradient(90deg,var(--orange) 0%,#f5a462 100%);}
+  nav{background:var(--bg2);border-bottom:2px solid var(--border);display:flex;padding:0 24px;}
+  nav button{background:none;border:none;color:var(--text2);padding:14px 22px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;}
+  nav button:hover{color:var(--navy);}
+  nav button.active{color:var(--navy);border-bottom-color:var(--orange);}
+  main{padding:24px;max-width:1400px;margin:0 auto;}
+  .tab-panel{display:none;}.tab-panel.active{display:block;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px;}
+  .kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 16px;text-align:center;box-shadow:var(--shadow);border-top:3px solid var(--border);transition:transform .2s;}
+  .kpi-card:hover{transform:translateY(-2px);}
+  .kpi-card.accent{border-top-color:var(--orange);}
+  .kpi-card.navy{border-top-color:var(--navy);}
+  .kpi-card.green-top{border-top-color:var(--green);}
+  .kpi-card.red-top{border-top-color:var(--red);}
+  .kpi-val{font-size:38px;font-weight:800;line-height:1;margin-bottom:6px;color:var(--navy);}
+  .kpi-card.accent .kpi-val{color:var(--orange);}
+  .kpi-card.green-top .kpi-val{color:var(--green);}
+  .kpi-card.red-top .kpi-val{color:var(--red);}
+  .kpi-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow);}
+  .card-header{padding:13px 18px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .card-header h2{font-size:13px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:var(--bg3);padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;border-bottom:2px solid var(--border);}
+  td{padding:11px 14px;border-bottom:1px solid #eef1f7;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(0,56,101,.02);}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
+  .badge-blue{background:#dbeafe;color:#1d4ed8;}
+  .badge-green{background:#dcfce7;color:#166534;}
+  .badge-yellow{background:#fef9c3;color:#854d0e;}
+  .badge-orange{background:#ffedd5;color:#9a3412;}
+  .badge-red{background:#fee2e2;color:#991b1b;}
+  .badge-gray{background:#f1f5f9;color:#475569;}
+  .badge-navy{background:#dbeafe;color:#003865;}
+  .prio-alta{color:var(--red);font-weight:700;}
+  .prio-media{color:var(--yellow);font-weight:700;}
+  .prio-baixa{color:var(--green);font-weight:700;}
+  .progress-wrap{display:flex;align-items:center;gap:8px;}
+  .progress-bar{flex:1;height:7px;background:var(--bg3);border-radius:4px;min-width:70px;overflow:hidden;}
+  .progress-fill{height:100%;border-radius:4px;transition:width .3s;}
+  .progress-pct{font-size:12px;color:var(--text2);min-width:34px;text-align:right;font-weight:700;}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s;text-decoration:none;}
+  .btn-primary{background:var(--navy);color:#fff;}.btn-primary:hover{background:var(--navy2);}
+  .btn-orange{background:var(--orange);color:#fff;}.btn-orange:hover{background:var(--orange-h);}
+  .btn-ghost{background:#fff;color:var(--text2);border:1px solid var(--border);}.btn-ghost:hover{background:var(--bg3);}
+  .btn-danger{background:#fff;color:var(--red);border:1px solid #fecaca;}.btn-danger:hover{background:#fee2e2;}
+  .btn-whatsapp{background:#25d366;color:#fff;}.btn-whatsapp:hover{background:#1eb85a;}
+  .btn-sm{padding:5px 10px;font-size:12px;}.btn-icon{padding:5px 8px;}
+  .actions-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .search-box{background:#fff;border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;width:220px;}
+  .search-box:focus{outline:none;border-color:var(--navy);}
+  select.filter-sel{background:#fff;border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;cursor:pointer;}
+  select.filter-sel:focus{outline:none;border-color:var(--navy);}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,20,50,.55);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+  .modal-overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:14px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,56,101,.25);}
+  .modal-header{padding:18px 22px;background:var(--navy);border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;}
+  .modal-header h3{font-size:15px;font-weight:700;color:#fff;}
+  .modal-body{padding:22px;}
+  .modal-footer{padding:16px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:var(--bg3);border-radius:0 0 14px 14px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .form-group{display:flex;flex-direction:column;gap:5px;}
+  .form-group.full{grid-column:1/-1;}
+  label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;}
+  input,select,textarea{background:#fff;border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;transition:border-color .2s;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,56,101,.08);}
+  textarea{resize:vertical;min-height:70px;}
+  .wa-note{font-size:11px;color:var(--text2);margin-top:4px;}
+  .wa-preview{font-size:11px;color:#25d366;font-weight:600;margin-top:3px;}
+  .ind-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+  .ind-row:last-child{border-bottom:none;}
+  .ind-label{font-size:13px;color:var(--text2);}
+  .ind-val{font-size:20px;font-weight:800;color:var(--navy);}
+  .priority-list{list-style:none;}
+  .priority-list li{padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;gap:8px;align-items:flex-start;}
+  .priority-list li:last-child{border-bottom:none;}
+  .num{background:var(--orange);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+  .status-sel{background:transparent;border:none;cursor:pointer;font-size:12px;font-weight:700;padding:0;}
+  .status-sel:focus{outline:none;}
+  .empty{text-align:center;padding:40px;color:var(--text2);}
+  .empty-icon{font-size:40px;margin-bottom:12px;}
+  #toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;border-radius:10px;padding:12px 18px;font-size:13px;font-weight:600;z-index:200;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;box-shadow:0 4px 24px rgba(0,56,101,.3);}
+  #toast.show{transform:translateY(0);opacity:1;}
+  #toast.success{background:var(--green);}
+  #toast.error{background:var(--red);}
+  #toast.info{background:var(--orange);}
+  .close-btn{background:none;border:none;color:rgba(255,255,255,.7);font-size:22px;cursor:pointer;line-height:1;}
+  .close-btn:hover{color:#fff;}
+  .wa-btn{display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#166534;border:1px solid #bbf7d0;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .15s;}
+  .wa-btn:hover{background:#25d366;color:#fff;border-color:#25d366;}
+  @media(max-width:700px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .form-grid{grid-template-columns:1fr;}
+    .form-group.full{grid-column:1;}
+    main{padding:14px;}
+    nav button{padding:12px 10px;font-size:12px;}
+    .header-title p{display:none;}
+    .search-box{width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-wrap"><img src="data:image/png;base64,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" alt="Rumo"></div>
+    <div class="header-divider"></div>
+    <div class="header-title">
+      <h1>Painel de Investigações</h1>
+      <p>Segurança Patrimonial — Combate ao Furto de Cargas</p>
+    </div>
+  </div>
+  <div class="header-right" id="last-updated"></div>
+</header>
+<div class="accent-bar"></div>
+
+<nav>
+  <button class="active" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
+  <button onclick="switchTab('operacoes',this)">📋 Operações</button>
+  <button onclick="switchTab('tarefas',this)">✅ Tarefas</button>
+  <button onclick="switchTab('agenda',this)">📅 Agenda</button>
+</nav>
+
+<main>
+
+<!-- DASHBOARD -->
+<div id="tab-dashboard" class="tab-panel active">
+  <div class="kpi-grid" id="kpi-grid"></div>
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:18px;align-items:start">
+    <div>
+      <div class="card">
+        <div class="card-header"><h2>▶ Status por Operação</h2></div>
+        <table><thead><tr>
+          <th>Operação</th><th>Local / Empresa</th><th>Fase</th>
+          <th>Status</th><th>Conclusão</th><th>Pend.</th><th>Próximo Marco</th>
+        </tr></thead><tbody id="dash-ops-body"></tbody></table>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>▶ Prioridades para o Próximo Ciclo</h2></div>
+        <div style="padding:16px"><ul class="priority-list" id="priority-list"></ul></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>▶ Alta Prioridade Pendentes</h2></div>
+        <table><thead><tr><th>Tarefa</th><th>Operação</th><th>Responsável</th><th>WhatsApp</th><th>Prazo</th></tr></thead>
+        <tbody id="high-prio-body"></tbody></table>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-header"><h2>▶ Indicadores</h2></div>
+        <div style="padding:16px" id="indicadores"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OPERAÇÕES -->
+<div id="tab-operacoes" class="tab-panel">
+  <div class="actions-row" style="margin-bottom:18px">
+    <button class="btn btn-primary" onclick="openOpModal()">+ Nova Operação</button>
+    <input type="text" class="search-box" placeholder="Buscar operação…" oninput="filterOps(this.value)">
+    <select class="filter-sel" id="op-status-filter" onchange="filterOps()">
+      <option value="">Todos os status</option>
+      <option>Em andamento</option><option>Fase inicial</option>
+      <option>Planejamento</option><option>Concluído</option><option>Encerrado</option>
+    </select>
+  </div>
+  <div class="card">
+    <table><thead><tr>
+      <th>#</th><th>Operação</th><th>Local</th><th>Fase</th>
+      <th>Status</th><th>% Conc.</th><th>Pend.</th><th>Próximo Marco</th><th>Ponto Cego</th><th></th>
+    </tr></thead><tbody id="ops-table-body"></tbody></table>
+  </div>
+</div>
+
+<!-- TAREFAS -->
+<div id="tab-tarefas" class="tab-panel">
+  <div class="actions-row" style="margin-bottom:18px">
+    <button class="btn btn-primary" onclick="openTaskModal()">+ Nova Tarefa</button>
+    <input type="text" class="search-box" id="task-search" placeholder="Buscar tarefa…" oninput="renderTasks()">
+    <select class="filter-sel" id="task-filter-op" onchange="renderTasks()"><option value="">Todas as operações</option></select>
+    <select class="filter-sel" id="task-filter-status" onchange="renderTasks()">
+      <option value="">Todos os status</option><option>Pendente</option><option>Em andamento</option><option>Concluído</option>
+    </select>
+    <select class="filter-sel" id="task-filter-prio" onchange="renderTasks()">
+      <option value="">Todas as prioridades</option><option>Alta</option><option>Média</option><option>Baixa</option>
+    </select>
+  </div>
+  <div class="card">
+    <table><thead><tr>
+      <th>✔</th><th>Tarefa / Atividade</th><th>Operação</th><th>Responsável</th>
+      <th>Prioridade</th><th>Status</th><th>Prazo</th><th>WhatsApp</th><th></th>
+    </tr></thead><tbody id="tasks-table-body"></tbody></table>
+  </div>
+</div>
+
+<!-- AGENDA -->
+<div id="tab-agenda" class="tab-panel">
+  <div class="actions-row" style="margin-bottom:18px">
+    <button class="btn btn-primary" onclick="openAgendaModal()">+ Novo Compromisso</button>
+    <select class="filter-sel" id="agenda-filter-month" onchange="renderAgenda()"><option value="">Todos os meses</option></select>
+  </div>
+  <div class="card">
+    <table><thead><tr>
+      <th>Data</th><th>Título</th><th>Operação</th><th>Responsável</th>
+      <th>Tipo</th><th>Status</th><th>Observações</th><th></th>
+    </tr></thead><tbody id="agenda-table-body"></tbody></table>
+  </div>
+</div>
+
+</main>
+
+<!-- MODAL OPERAÇÃO -->
+<div class="modal-overlay" id="op-modal">
+<div class="modal">
+  <div class="modal-header"><h3 id="op-modal-title">Nova Operação</h3><button class="close-btn" onclick="closeModal('op-modal')">×</button></div>
+  <div class="modal-body"><div class="form-grid">
+    <div class="form-group"><label>Nome da Operação *</label><input id="op-nome" placeholder="Ex: Ponto Cego"></div>
+    <div class="form-group"><label>Local / Empresa *</label><input id="op-local" placeholder="Ex: Rondonópolis/MT – TRO"></div>
+    <div class="form-group"><label>Fase Atual</label><input id="op-fase" placeholder="Ex: 2ª fase em andamento"></div>
+    <div class="form-group"><label>Status</label>
+      <select id="op-status"><option>Em andamento</option><option>Fase inicial</option><option>Planejamento</option><option>Concluído</option><option>Encerrado</option></select>
+    </div>
+    <div class="form-group full"><label>Próximo Marco</label><input id="op-marco" placeholder="Ex: Parecer do GAECO e execução das medidas operacionais"></div>
+    <div class="form-group full"><label>Ponto Cego / Obstáculo</label><input id="op-pontocego" placeholder="Ex: Aguardando manifestação do órgão"></div>
+    <div class="form-group full"><label>Objetivo da Operação</label><textarea id="op-objetivo" placeholder="Descreva o objetivo principal…"></textarea></div>
+    <div class="form-group full"><label>Principais Entregas Realizadas</label><textarea id="op-entregas" placeholder="Liste as entregas já concluídas…"></textarea></div>
+  </div></div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeModal('op-modal')">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveOp()">Salvar Operação</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL TAREFA -->
+<div class="modal-overlay" id="task-modal">
+<div class="modal">
+  <div class="modal-header"><h3 id="task-modal-title">Nova Tarefa</h3><button class="close-btn" onclick="closeModal('task-modal')">×</button></div>
+  <div class="modal-body"><div class="form-grid">
+    <div class="form-group full"><label>Tarefa / Atividade *</label><input id="task-nome" placeholder="Descreva a tarefa…"></div>
+    <div class="form-group"><label>Operação *</label><select id="task-op"></select></div>
+    <div class="form-group"><label>Responsável</label><input id="task-resp" placeholder="Ex: Gabriel / Deligi"></div>
+    <div class="form-group full">
+      <label>📱 WhatsApp do Responsável</label>
+      <input id="task-wa" placeholder="DDD + número, sem espaços. Ex: 11987654321" oninput="previewWA(this.value)">
+      <div class="wa-preview" id="wa-preview"></div>
+      <div class="wa-note">Ao salvar com WhatsApp, o botão "Salvar e Notificar" envia a mensagem automaticamente via WhatsApp Web.</div>
+    </div>
+    <div class="form-group"><label>Prioridade</label>
+      <select id="task-prio"><option>Alta</option><option selected>Média</option><option>Baixa</option></select>
+    </div>
+    <div class="form-group"><label>Status</label>
+      <select id="task-status"><option>Pendente</option><option>Em andamento</option><option>Concluído</option></select>
+    </div>
+    <div class="form-group"><label>Data Limite</label><input type="date" id="task-prazo"></div>
+    <div class="form-group full"><label>Observações</label><textarea id="task-obs" placeholder="Informações adicionais…"></textarea></div>
+  </div></div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeModal('task-modal')">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveTask(false)">Salvar</button>
+    <button class="btn btn-whatsapp" id="btn-save-notify" onclick="saveTask(true)" style="display:none">💬 Salvar e Notificar</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL AGENDA -->
+<div class="modal-overlay" id="agenda-modal">
+<div class="modal">
+  <div class="modal-header"><h3 id="agenda-modal-title">Novo Compromisso</h3><button class="close-btn" onclick="closeModal('agenda-modal')">×</button></div>
+  <div class="modal-body"><div class="form-grid">
+    <div class="form-group full"><label>Título *</label><input id="ag-titulo" placeholder="Ex: Reunião com DIG de Rio Claro"></div>
+    <div class="form-group"><label>Data *</label><input type="date" id="ag-data"></div>
+    <div class="form-group"><label>Horário</label><input type="time" id="ag-hora"></div>
+    <div class="form-group"><label>Operação</label><select id="ag-op"></select></div>
+    <div class="form-group"><label>Responsável</label><input id="ag-resp" placeholder="Ex: Elias / Gabriel"></div>
+    <div class="form-group"><label>Tipo</label>
+      <select id="ag-tipo"><option>Reunião</option><option>Diligência</option><option>Entrega de Relatório</option><option>Apresentação</option><option>Monitoramento</option><option>Operação de Campo</option><option>Outro</option></select>
+    </div>
+    <div class="form-group"><label>Status</label>
+      <select id="ag-status"><option>Pendente</option><option>Em andamento</option><option>Realizado</option><option>Cancelado</option></select>
+    </div>
+    <div class="form-group full"><label>Observações</label><textarea id="ag-obs"></textarea></div>
+  </div></div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeModal('agenda-modal')">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveAgenda()">Salvar</button>
+  </div>
+</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SK='painel_inv_v3';
+function loadData(){try{const r=localStorage.getItem(SK);if(r)return JSON.parse(r);}catch(e){}return getDefaultData();}
+function saveData(){localStorage.setItem(SK,JSON.stringify(db));document.getElementById('last-updated').textContent='Salvo: '+new Date().toLocaleString('pt-BR');}
+function getDefaultData(){return{
+  operacoes:[
+    {id:1,nome:'Ponto Cego',local:'Rondonópolis/MT – TRO',fase:'2ª fase em andamento',status:'Em andamento',marco:'Parecer do GAECO e execução das medidas operacionais',pontocego:'Aguardando manifestação do GAECO',objetivo:'Apurar organização envolvida em furtos de grãos por modal ferroviário.',entregas:'✓ Relatório final da 1ª fase entregue ao GAECO\n✓ Levantamento preliminar de envolvidos\n✓ Identificação do modus operandi'},
+    {id:2,nome:'Dreno',local:'Rio Claro/SP',fase:'Diligências complementares',status:'Em andamento',marco:'Entrega do relatório complementar à DIG de Rio Claro',pontocego:'Complementação de diligências solicitada',objetivo:'Investigar desvio de cargas na unidade de Rio Claro.',entregas:'✓ Levantamento do esquema criminoso\n✓ Mapeamento dos pontos de desvio\n✓ Apresentação do relatório à Polícia Civil'},
+    {id:3,nome:'Carga Segura',local:'Votuporanga/SP – COFCO',fase:'Fase inicial',status:'Fase inicial',marco:'Conclusão do relatório investigativo preliminar',pontocego:'Coleta inicial de evidências em andamento',objetivo:'Apurar furtos de grãos na unidade da COFCO em Votuporanga.',entregas:'✓ Coleta inicial de evidências\n✓ Levantamento de locais de armazenamento'},
+    {id:4,nome:'Fim da Linha',local:'Santa Adélia/SP – BRADO',fase:'Fase inicial',status:'Fase inicial',marco:'Conclusão do relatório inicial e definição de medidas policiais',pontocego:'Suspeitos identificados; mapeamento em andamento',objetivo:'Mapear e identificar envolvidos em furtos na unidade BRADO de Santa Adélia.',entregas:'✓ Levantamento inicial de suspeitos\n✓ Mapeamento preliminar dos locais de atuação'},
+    {id:5,nome:'Rastro Oculto',local:'Embu-Guaçu/SP',fase:'Levantamento preliminar',status:'Planejamento',marco:'Início das diligências de campo (KM 122)',pontocego:'Identificação de indivíduos em curso',objetivo:'Apurar organização envolvida em furtos de grãos por modal ferroviário.',entregas:'✓ Identificação de indivíduos envolvidos\n✓ Levantamento de locais de armazenamento'}
+  ],
+  tarefas:[
+    {id:1,nome:'Extrair base de registros dos caminhões com carga recusada no tombador',opId:1,responsavel:'Gabriel / Deligi',whatsapp:'',prioridade:'Alta',status:'Em andamento',prazo:'',obs:''},
+    {id:2,nome:'Cruzar informações com sistema KMM e resultados de classificação',opId:1,responsavel:'Gabriel / Deligi',whatsapp:'',prioridade:'Alta',status:'Em andamento',prazo:'',obs:''},
+    {id:3,nome:'Definir protocolo para situações de flagrante',opId:1,responsavel:'Elias',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
+    {id:4,nome:'Definir local para retenção de caminhões aguardando perícia',opId:1,responsavel:'Elias',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
+    {id:5,nome:'Designar representante da Rumo para formalização de BOs',opId:1,responsavel:'Elias / Tiago Castro',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
+    {id:6,nome:'Implementar segunda classificação das cargas recusadas',opId:1,responsavel:'Elias / Equipe Paula',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
+    {id:7,nome:'Realizar monitoramento nos horários identificados como críticos',opId:1,responsavel:'Delgado / Erlandes',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
+    {id:8,nome:'Empregar drones para vigilância dos pontos mapeados',opId:1,responsavel:'',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
+    {id:9,nome:'Consolidar registros e laudos emitidos pela Webtec',opId:1,responsavel:'Gabriel / Bruxo',whatsapp:'',prioridade:'Média',status:'Em andamento',prazo:'',obs:''},
+    {id:10,nome:'Compilar histórico de ocorrências e furtos registrados',opId:1,responsavel:'Bruxo',whatsapp:'',prioridade:'Média',status:'Pendente',prazo:'',obs:''},
+    {id:11,nome:'Elaborar relatório complementar para a DIG',opId:2,responsavel:'Leandro',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
+    {id:12,nome:'Monitorar horários identificados para ocorrência dos furtos',opId:2,responsavel:'Delgado / André',whatsapp:'',prioridade:'Média',status:'Pendente',prazo:'',obs:''},
+    {id:13,nome:'Formalizar boletins de ocorrência retroativos',opId:2,responsavel:'Leandro',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
+    {id:14,nome:'Utilizar imagens da câmera da COFCO para identificação dos envolvidos',opId:3,responsavel:'',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
+    {id:15,nome:'Identificar e qualificar os suspeitos',opId:3,responsavel:'',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
+    {id:16,nome:'Consolidar evidências e estruturar relatório investigativo',opId:3,responsavel:'Gabriel',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
+    {id:17,nome:'Apresentar material às autoridades competentes',opId:3,responsavel:'Elias / Gabriel',whatsapp:'',prioridade:'Média',status:'Pendente',prazo:'',obs:''},
+    {id:18,nome:'Ampliar levantamento de evidências para comprovação da materialidade',opId:4,responsavel:'Delgado / Lucas',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
+    {id:19,nome:'Realizar levantamentos de campo nos locais mapeados',opId:5,responsavel:'',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
+    {id:20,nome:'Empregar drones para monitoramento operacional',opId:5,responsavel:'',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''}
+  ],
+  agenda:[
+    {id:1,titulo:'Reunião de alinhamento com GAECO',data:'2026-06-25',hora:'10:00',opId:1,responsavel:'Elias / Gabriel',tipo:'Reunião',status:'Pendente',obs:''},
+    {id:2,titulo:'Entrega relatório complementar à DIG de Rio Claro',data:'2026-06-30',hora:'14:00',opId:2,responsavel:'Leandro',tipo:'Entrega de Relatório',status:'Pendente',obs:''}
+  ],
+  nextId:{op:6,task:21,ag:3}
+};}
+
+let db=loadData();
+let editingOpId=null,editingTaskId=null,editingAgId=null;
+let opSearchVal='',opStatusFilter='';
+
+const getOp=id=>db.operacoes.find(o=>o.id===id);
+const getOpName=id=>{const o=getOp(id);return o?o.nome:'—';};
+function statusBadge(s){const m={'Em andamento':'badge-blue','Fase inicial':'badge-yellow','Planejamento':'badge-orange','Concluído':'badge-green','Encerrado':'badge-gray','Pendente':'badge-gray','Realizado':'badge-green','Cancelado':'badge-red'};return`<span class="badge ${m[s]||'badge-gray'}">${s}</span>`;}
+function prioBadge(p){return`<span class="${{Alta:'prio-alta',Média:'prio-media',Baixa:'prio-baixa'}[p]||''}">${p}</span>`;}
+function progressBar(pct){const c=pct>=80?'#2e9e57':pct>=40?'#d97706':'#003865';return`<div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${c}"></div></div><span class="progress-pct">${pct}%</span></div>`;}
+function getOpStats(id){const ts=db.tarefas.filter(t=>t.opId===id);const done=ts.filter(t=>t.status==='Concluído').length;return{total:ts.length,done,pend:ts.filter(t=>t.status!=='Concluído').length,pct:ts.length?Math.round(done/ts.length*100):0};}
+function formatDate(d){if(!d)return'—';const[y,m,day]=d.split('-');return`${day}/${m}/${y}`;}
+function nextId(k){return db.nextId[k]++;}
+function buildWALink(phone,taskName,opName,prio,prazo,resp){
+  const num='55'+phone.replace(/\D/g,'');
+  const pDate=prazo?` | Prazo: ${formatDate(prazo)}`:'';
+  const firstName=resp?resp.split('/')[0].trim():'';
+  const msg=encodeURIComponent(
+    `Olá${firstName?' '+firstName:''}! 👋\n\nVocê foi atribuído(a) à seguinte tarefa no Painel de Investigações Rumo:\n\n`+
+    `📋 *Tarefa:* ${taskName}\n`+
+    `🔍 *Operação:* ${opName}\n`+
+    `⚡ *Prioridade:* ${prio}${pDate}\n\n`+
+    `Por favor, acesse o painel para acompanhar o andamento.\n\nAtenciosamente,\nEquipe de Investigações Rumo 🚂`
+  );
+  return`https://wa.me/${num}?text=${msg}`;
+}
+function waButton(phone,task){
+  if(!phone)return'<span style="color:#cbd5e1;font-size:11px">—</span>';
+  const link=buildWALink(phone,task.nome,getOpName(task.opId),task.prioridade,task.prazo,task.responsavel);
+  return`<a class="wa-btn" href="${link}" target="_blank">💬 WhatsApp</a>`;
+}
+function toast(msg,type='success'){const el=document.getElementById('toast');el.textContent=msg;el.className=`show ${type}`;setTimeout(()=>el.className='',2400);}
+
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='dashboard')renderDashboard();
+  if(id==='operacoes')renderOps();
+  if(id==='tarefas')renderTasks();
+  if(id==='agenda')renderAgenda();
+}
+
+function renderDashboard(){
+  const ts=db.tarefas,ops=db.operacoes;
+  const total=ts.length,done=ts.filter(t=>t.status==='Concluído').length;
+  const pct=total?Math.round(done/total*100):0;
+  const andamento=ts.filter(t=>t.status==='Em andamento').length;
+  const pendente=ts.filter(t=>t.status==='Pendente').length;
+  const altaPend=ts.filter(t=>t.prioridade==='Alta'&&t.status!=='Concluído').length;
+  const opsAtivas=ops.filter(o=>o.status!=='Concluído'&&o.status!=='Encerrado').length;
+  document.getElementById('kpi-grid').innerHTML=`
+    <div class="kpi-card navy"><div class="kpi-val">${opsAtivas}</div><div class="kpi-label">Operações Ativas</div></div>
+    <div class="kpi-card"><div class="kpi-val">${total}</div><div class="kpi-label">Total de Tarefas</div></div>
+    <div class="kpi-card green-top"><div class="kpi-val">${done}</div><div class="kpi-label">Tarefas Concluídas</div></div>
+    <div class="kpi-card accent"><div class="kpi-val">${pct}%</div><div class="kpi-label">% Conclusão Geral</div></div>
+    <div class="kpi-card"><div class="kpi-val" style="color:#1d4ed8">${andamento}</div><div class="kpi-label">Em Andamento</div></div>
+    <div class="kpi-card"><div class="kpi-val" style="color:#475569">${pendente}</div><div class="kpi-label">Pendentes</div></div>
+    <div class="kpi-card red-top"><div class="kpi-val">${altaPend}</div><div class="kpi-label">Alta Prior. Pend.</div></div>
+  `;
+  document.getElementById('dash-ops-body').innerHTML=ops.map(op=>{const s=getOpStats(op.id);return`<tr>
+    <td><strong>${op.nome}</strong></td><td style="color:var(--text2);font-size:12px">${op.local}</td>
+    <td style="font-size:12px;color:var(--text2)">${op.fase}</td><td>${statusBadge(op.status)}</td>
+    <td style="min-width:120px">${progressBar(s.pct)}</td>
+    <td><span class="badge ${s.pend?'badge-orange':'badge-green'}">${s.pend}</span></td>
+    <td style="font-size:12px;color:var(--text2);max-width:180px;white-space:normal">${op.marco||'—'}</td>
+  </tr>`;}).join('');
+  const priors=['Concluir diligências complementares da Operação Dreno','Executar medidas operacionais pendentes da Operação Ponto Cego','Intensificar monitoramentos nas Operações Fim da Linha e Carga Segura','Estruturar plano operacional da Operação Rastro Oculto','Consolidar evidências para futuras representações junto aos órgãos de Segurança Pública'];
+  document.getElementById('priority-list').innerHTML=priors.map((p,i)=>`<li><span class="num">${i+1}</span>${p}</li>`).join('');
+  document.getElementById('indicadores').innerHTML=[
+    ['Operações em andamento',opsAtivas],
+    ['Operações concluídas',ops.filter(o=>o.status==='Concluído').length],
+    ['Operações em fase inicial',ops.filter(o=>o.status==='Fase inicial').length],
+    ['Tarefas c/ WhatsApp cadastrado',ts.filter(t=>t.whatsapp).length],
+    ['Alta prioridade pendentes',altaPend],
+    ['Relatórios pendentes',ts.filter(t=>t.nome.toLowerCase().includes('relatório')&&t.status!=='Concluído').length],
+  ].map(([l,v])=>`<div class="ind-row"><span class="ind-label">${l}</span><span class="ind-val">${v}</span></div>`).join('');
+  const hp=ts.filter(t=>t.prioridade==='Alta'&&t.status!=='Concluído').slice(0,8);
+  document.getElementById('high-prio-body').innerHTML=hp.length===0
+    ?`<tr><td colspan="5" class="empty" style="padding:20px">🎉 Nenhuma tarefa de alta prioridade pendente</td></tr>`
+    :hp.map(t=>`<tr>
+      <td style="font-size:12px;max-width:200px;white-space:normal">${t.nome}</td>
+      <td><span class="badge badge-navy" style="font-size:11px">${getOpName(t.opId)}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${t.responsavel||'—'}</td>
+      <td>${waButton(t.whatsapp,t)}</td>
+      <td style="font-size:12px;color:var(--text2)">${formatDate(t.prazo)}</td>
+    </tr>`).join('');
+  document.getElementById('last-updated').textContent='Salvo: '+new Date().toLocaleString('pt-BR');
+}
+
+function filterOps(v){
+  if(v!==undefined)opSearchVal=v.toLowerCase();
+  opStatusFilter=document.getElementById('op-status-filter')?.value||'';
+  renderOps();
+}
+function renderOps(){
+  let ops=db.operacoes;
+  if(opSearchVal)ops=ops.filter(o=>o.nome.toLowerCase().includes(opSearchVal)||o.local.toLowerCase().includes(opSearchVal));
+  if(opStatusFilter)ops=ops.filter(o=>o.status===opStatusFilter);
+  const tbody=document.getElementById('ops-table-body');
+  if(!ops.length){tbody.innerHTML=`<tr><td colspan="10" class="empty"><div class="empty-icon">🔍</div>Nenhuma operação encontrada</td></tr>`;return;}
+  tbody.innerHTML=ops.map((op,i)=>{const s=getOpStats(op.id);return`<tr>
+    <td style="color:var(--text2)">${i+1}</td><td><strong>${op.nome}</strong></td>
+    <td style="color:var(--text2);font-size:12px">${op.local}</td>
+    <td style="font-size:12px;color:var(--text2)">${op.fase}</td>
+    <td>${statusBadge(op.status)}</td><td style="min-width:120px">${progressBar(s.pct)}</td>
+    <td><span class="badge ${s.pend?'badge-orange':'badge-green'}">${s.pend}</span></td>
+    <td style="font-size:12px;color:var(--text2);max-width:140px;white-space:normal">${op.marco||'—'}</td>
+    <td style="font-size:12px;color:var(--text2);max-width:120px;white-space:normal">${op.pontocego||'—'}</td>
+    <td><div style="display:flex;gap:4px">
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="openOpModal(${op.id})">✏️</button>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteOp(${op.id})">🗑️</button>
+    </div></td>
+  </tr>`;}).join('');
+}
+function openOpModal(id){
+  editingOpId=id||null;
+  document.getElementById('op-modal-title').textContent=id?'Editar Operação':'Nova Operação';
+  if(id){const op=getOp(id);
+    document.getElementById('op-nome').value=op.nome;document.getElementById('op-local').value=op.local;
+    document.getElementById('op-fase').value=op.fase;document.getElementById('op-status').value=op.status;
+    document.getElementById('op-marco').value=op.marco||'';document.getElementById('op-pontocego').value=op.pontocego||'';
+    document.getElementById('op-objetivo').value=op.objetivo||'';document.getElementById('op-entregas').value=op.entregas||'';
+  }else{
+    ['op-nome','op-local','op-fase','op-marco','op-pontocego','op-objetivo','op-entregas'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('op-status').value='Em andamento';
+  }
+  document.getElementById('op-modal').classList.add('open');
+}
+function saveOp(){
+  const nome=document.getElementById('op-nome').value.trim();
+  const local=document.getElementById('op-local').value.trim();
+  if(!nome||!local){toast('Preencha os campos obrigatórios','error');return;}
+  const data={nome,local,fase:document.getElementById('op-fase').value.trim(),status:document.getElementById('op-status').value,marco:document.getElementById('op-marco').value.trim(),pontocego:document.getElementById('op-pontocego').value.trim(),objetivo:document.getElementById('op-objetivo').value.trim(),entregas:document.getElementById('op-entregas').value.trim()};
+  if(editingOpId)Object.assign(getOp(editingOpId),data);
+  else{data.id=nextId('op');db.operacoes.push(data);}
+  saveData();closeModal('op-modal');renderOps();renderDashboard();
+  toast(editingOpId?'Operação atualizada!':'Operação adicionada!');
+  updateOpSelects();
+}
+function deleteOp(id){
+  if(!confirm('Excluir esta operação e todas as suas tarefas?'))return;
+  db.operacoes=db.operacoes.filter(o=>o.id!==id);
+  db.tarefas=db.tarefas.filter(t=>t.opId!==id);
+  saveData();renderOps();renderDashboard();updateOpSelects();
+  toast('Operação excluída','info');
+}
+
+function updateOpSelects(){
+  const opts=db.operacoes.map(o=>`<option value="${o.id}">${o.nome}</option>`).join('');
+  ['task-op','ag-op'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+  const f=document.getElementById('task-filter-op');
+  if(f)f.innerHTML=`<option value="">Todas as operações</option>`+opts;
+}
+function previewWA(val){
+  const clean=val.replace(/\D/g,'');
+  const el=document.getElementById('wa-preview');
+  const btn=document.getElementById('btn-save-notify');
+  if(clean.length>=10){el.textContent='✓ Número válido: +55 '+clean;if(btn)btn.style.display='inline-flex';}
+  else{el.textContent=clean.length>0?'⚠ Digite o DDD + número (mín. 10 dígitos)':'';if(btn)btn.style.display='none';}
+}
+function renderTasks(){
+  const search=(document.getElementById('task-search')?.value||'').toLowerCase();
+  const fOp=document.getElementById('task-filter-op')?.value;
+  const fSt=document.getElementById('task-filter-status')?.value;
+  const fPr=document.getElementById('task-filter-prio')?.value;
+  let ts=db.tarefas;
+  if(search)ts=ts.filter(t=>t.nome.toLowerCase().includes(search)||(t.responsavel||'').toLowerCase().includes(search));
+  if(fOp)ts=ts.filter(t=>t.opId==fOp);
+  if(fSt)ts=ts.filter(t=>t.status===fSt);
+  if(fPr)ts=ts.filter(t=>t.prioridade===fPr);
+  const tbody=document.getElementById('tasks-table-body');
+  if(!ts.length){tbody.innerHTML=`<tr><td colspan="9" class="empty"><div class="empty-icon">✅</div>Nenhuma tarefa encontrada</td></tr>`;return;}
+  tbody.innerHTML=ts.map(t=>{const done=t.status==='Concluído';return`<tr style="${done?'opacity:.55':''}">
+    <td><input type="checkbox" ${done?'checked':''} onchange="toggleTask(${t.id},this.checked)" style="cursor:pointer;width:16px;height:16px;accent-color:var(--navy)"></td>
+    <td style="max-width:240px;white-space:normal;${done?'text-decoration:line-through;':''}">${t.nome}</td>
+    <td><span class="badge badge-navy" style="font-size:11px">${getOpName(t.opId)}</span></td>
+    <td style="font-size:12px;color:var(--text2)">${t.responsavel||'—'}</td>
+    <td>${prioBadge(t.prioridade)}</td>
+    <td><select class="status-sel" onchange="changeTaskStatus(${t.id},this.value)" style="color:${t.status==='Concluído'?'#166534':t.status==='Em andamento'?'#1d4ed8':'#475569'}">
+      <option ${t.status==='Pendente'?'selected':''}>Pendente</option>
+      <option ${t.status==='Em andamento'?'selected':''}>Em andamento</option>
+      <option ${t.status==='Concluído'?'selected':''}>Concluído</option>
+    </select></td>
+    <td style="font-size:12px;color:var(--text2)">${formatDate(t.prazo)}</td>
+    <td>${waButton(t.whatsapp,t)}</td>
+    <td><div style="display:flex;gap:4px">
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="openTaskModal(${t.id})">✏️</button>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteTask(${t.id})">🗑️</button>
+    </div></td>
+  </tr>`;}).join('');
+}
+function toggleTask(id,checked){const t=db.tarefas.find(t=>t.id===id);if(t){t.status=checked?'Concluído':'Pendente';saveData();renderTasks();renderDashboard();}}
+function changeTaskStatus(id,val){const t=db.tarefas.find(t=>t.id===id);if(t){t.status=val;saveData();renderDashboard();renderTasks();}}
+function openTaskModal(id){
+  editingTaskId=id||null;
+  updateOpSelects();
+  document.getElementById('task-modal-title').textContent=id?'Editar Tarefa':'Nova Tarefa';
+  const btn=document.getElementById('btn-save-notify');
+  if(id){const t=db.tarefas.find(t=>t.id===id);
+    document.getElementById('task-nome').value=t.nome;
+    document.getElementById('task-op').value=t.opId;
+    document.getElementById('task-resp').value=t.responsavel||'';
+    document.getElementById('task-wa').value=t.whatsapp||'';
+    document.getElementById('task-prio').value=t.prioridade;
+    document.getElementById('task-status').value=t.status;
+    document.getElementById('task-prazo').value=t.prazo||'';
+    document.getElementById('task-obs').value=t.obs||'';
+    previewWA(t.whatsapp||'');
+  }else{
+    ['task-nome','task-resp','task-wa','task-obs'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('task-prio').value='Média';
+    document.getElementById('task-status').value='Pendente';
+    document.getElementById('task-prazo').value='';
+    document.getElementById('wa-preview').textContent='';
+    if(btn)btn.style.display='none';
+  }
+  document.getElementById('task-modal').classList.add('open');
+}
+function saveTask(notify=false){
+  const nome=document.getElementById('task-nome').value.trim();
+  const opId=parseInt(document.getElementById('task-op').value);
+  if(!nome||!opId){toast('Preencha os campos obrigatórios','error');return;}
+  const waNum=document.getElementById('task-wa').value.replace(/\D/g,'');
+  const data={nome,opId,responsavel:document.getElementById('task-resp').value.trim(),whatsapp:waNum,prioridade:document.getElementById('task-prio').value,status:document.getElementById('task-status').value,prazo:document.getElementById('task-prazo').value,obs:document.getElementById('task-obs').value.trim()};
+  if(editingTaskId)Object.assign(db.tarefas.find(t=>t.id===editingTaskId),data);
+  else{data.id=nextId('task');db.tarefas.push(data);}
+  saveData();closeModal('task-modal');renderTasks();renderDashboard();
+  if(notify&&waNum){
+    const link=buildWALink(waNum,data.nome,getOpName(data.opId),data.prioridade,data.prazo,data.responsavel);
+    window.open(link,'_blank');
+    toast('Abrindo WhatsApp para notificação…','info');
+  }else{
+    toast(editingTaskId?'Tarefa atualizada!':'Tarefa adicionada!');
+  }
+}
+function deleteTask(id){
+  if(!confirm('Excluir esta tarefa?'))return;
+  db.tarefas=db.tarefas.filter(t=>t.id!==id);
+  saveData();renderTasks();renderDashboard();
+  toast('Tarefa excluída','info');
+}
+
+function renderAgenda(){
+  const fM=document.getElementById('agenda-filter-month')?.value;
+  let items=[...db.agenda].sort((a,b)=>a.data.localeCompare(b.data));
+  if(fM)items=items.filter(a=>a.data.startsWith(fM));
+  const months=[...new Set(db.agenda.map(a=>a.data.substring(0,7)))].sort();
+  const mSel=document.getElementById('agenda-filter-month');
+  const cur=mSel.value;
+  mSel.innerHTML=`<option value="">Todos os meses</option>`+months.map(m=>`<option value="${m}" ${cur===m?'selected':''}>${m}</option>`).join('');
+  const tbody=document.getElementById('agenda-table-body');
+  const today=new Date().toISOString().split('T')[0];
+  if(!items.length){tbody.innerHTML=`<tr><td colspan="8" class="empty"><div class="empty-icon">📅</div>Nenhum compromisso cadastrado</td></tr>`;return;}
+  tbody.innerHTML=items.map(a=>{const past=a.data<today&&a.status==='Pendente';return`<tr>
+    <td style="font-weight:700;${past?'color:var(--red)':''}">${formatDate(a.data)}${a.hora?' '+a.hora:''}</td>
+    <td><strong>${a.titulo}</strong></td>
+    <td><span class="badge badge-navy" style="font-size:11px">${getOpName(a.opId)}</span></td>
+    <td style="font-size:12px;color:var(--text2)">${a.responsavel||'—'}</td>
+    <td><span class="badge badge-gray" style="font-size:11px">${a.tipo}</span></td>
+    <td>${statusBadge(a.status)}</td>
+    <td style="font-size:12px;color:var(--text2)">${a.obs||'—'}</td>
+    <td><div style="display:flex;gap:4px">
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="openAgendaModal(${a.id})">✏️</button>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteAgenda(${a.id})">🗑️</button>
+    </div></td>
+  </tr>`;}).join('');
+}
+function openAgendaModal(id){
+  editingAgId=id||null;updateOpSelects();
+  document.getElementById('agenda-modal-title').textContent=id?'Editar Compromisso':'Novo Compromisso';
+  if(id){const a=db.agenda.find(a=>a.id===id);
+    document.getElementById('ag-titulo').value=a.titulo;document.getElementById('ag-data').value=a.data;
+    document.getElementById('ag-hora').value=a.hora||'';document.getElementById('ag-op').value=a.opId;
+    document.getElementById('ag-resp').value=a.responsavel||'';document.getElementById('ag-tipo').value=a.tipo;
+    document.getElementById('ag-status').value=a.status;document.getElementById('ag-obs').value=a.obs||'';
+  }else{
+    ['ag-titulo','ag-hora','ag-resp','ag-obs'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('ag-data').value=new Date().toISOString().split('T')[0];
+    document.getElementById('ag-tipo').value='Reunião';document.getElementById('ag-status').value='Pendente';
+  }
+  document.getElementById('agenda-modal').classList.add('open');
+}
+function saveAgenda(){
+  const titulo=document.getElementById('ag-titulo').value.trim();
+  const data=document.getElementById('ag-data').value;
+  if(!titulo||!data){toast('Preencha os campos obrigatórios','error');return;}
+  const item={titulo,data,hora:document.getElementById('ag-hora').value,opId:parseInt(document.getElementById('ag-op').value),responsavel:document.getElementById('ag-resp').value.trim(),tipo:document.getElementById('ag-tipo').value,status:document.getElementById('ag-status').value,obs:document.getElementById('ag-obs').value.trim()};
+  if(editingAgId)Object.assign(db.agenda.find(a=>a.id===editingAgId),item);
+  else{item.id=nextId('ag');db.agenda.push(item);}
+  saveData();closeModal('agenda-modal');renderAgenda();
+  toast(editingAgId?'Compromisso atualizado!':'Compromisso adicionado!');
+}
+function deleteAgenda(id){
+  if(!confirm('Excluir este compromisso?'))return;
+  db.agenda=db.agenda.filter(a=>a.id!==id);
+  saveData();renderAgenda();toast('Compromisso excluído','info');
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
+
+updateOpSelects();
+renderDashboard();
+</script>
+</body>
+</html>
