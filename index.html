@@ -3,664 +3,307 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel de Investigações — Rumo Logística</title>
+<title>Inteligência & Investigação — Rumo Logística</title>
 <style>
-  @font-face { font-family:'Cera Pro'; src:url('fonts/Fontspring-DEMO-cerapro-light.otf') format('opentype'); font-weight:300; }
-  @font-face { font-family:'Cera Pro'; src:url('fonts/Fontspring-DEMO-cerapro-regular.otf') format('opentype'); font-weight:400; }
-  @font-face { font-family:'Cera Pro'; src:url('fonts/Fontspring-DEMO-cerapro-medium.otf') format('opentype'); font-weight:500; }
-  @font-face { font-family:'Cera Pro'; src:url('fonts/Fontspring-DEMO-cerapro-bold.otf') format('opentype'); font-weight:700; }
-  :root {
-    --navy:#003865;--navy2:#1a3a5c;--orange:#F78344;--orange-h:#e06d30;
-    --bg:#f4f6fa;--bg2:#fff;--bg3:#eef1f7;--border:#d0d9e8;
-    --text:#1a2535;--text2:#5a6a80;
-    --green:#2e9e57;--yellow:#d97706;--red:#dc2626;
-    --radius:10px;--shadow:0 2px 12px rgba(0,56,101,.10);
-  }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--bg);color:var(--text);font-family:'Cera Pro','Segoe UI',Arial,sans-serif;font-size:14px;min-height:100vh;}
-  header{background:var(--navy);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:62px;box-shadow:0 2px 8px rgba(0,0,0,.25);}
-  .header-left{display:flex;align-items:center;gap:20px;}
-  .header-title h1{font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;}
-  .header-title p{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px;}
-  .header-right{font-size:11px;color:rgba(255,255,255,.5);}
-  .accent-bar{height:4px;background:linear-gradient(90deg,var(--orange) 0%,#f5a462 100%);}
-  nav{background:var(--bg2);border-bottom:2px solid var(--border);display:flex;padding:0 24px;}
-  nav button{background:none;border:none;color:var(--text2);padding:14px 22px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;}
-  nav button:hover{color:var(--navy);}
-  nav button.active{color:var(--navy);border-bottom-color:var(--orange);}
-  main{padding:24px;max-width:1400px;margin:0 auto;}
-  .tab-panel{display:none;}.tab-panel.active{display:block;}
-  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px;}
-  .kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 16px;text-align:center;box-shadow:var(--shadow);border-top:3px solid var(--border);transition:transform .2s;}
-  .kpi-card:hover{transform:translateY(-2px);}
-  .kpi-card.accent{border-top-color:var(--orange);}
-  .kpi-card.navy{border-top-color:var(--navy);}
-  .kpi-card.green-top{border-top-color:var(--green);}
-  .kpi-card.red-top{border-top-color:var(--red);}
-  .kpi-val{font-size:38px;font-weight:800;line-height:1;margin-bottom:6px;color:var(--navy);}
-  .kpi-card.accent .kpi-val{color:var(--orange);}
-  .kpi-card.green-top .kpi-val{color:var(--green);}
-  .kpi-card.red-top .kpi-val{color:var(--red);}
-  .kpi-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
-  .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow);}
-  .card-header{padding:13px 18px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-  .card-header h2{font-size:13px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;}
-  table{width:100%;border-collapse:collapse;}
-  th{background:var(--bg3);padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;border-bottom:2px solid var(--border);}
-  td{padding:11px 14px;border-bottom:1px solid #eef1f7;vertical-align:middle;}
-  tr:last-child td{border-bottom:none;}
-  tr:hover td{background:rgba(0,56,101,.02);}
-  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
-  .badge-blue{background:#dbeafe;color:#1d4ed8;}
-  .badge-green{background:#dcfce7;color:#166534;}
-  .badge-yellow{background:#fef9c3;color:#854d0e;}
-  .badge-orange{background:#ffedd5;color:#9a3412;}
-  .badge-red{background:#fee2e2;color:#991b1b;}
-  .badge-gray{background:#f1f5f9;color:#475569;}
-  .badge-navy{background:#dbeafe;color:#003865;}
-  .prio-alta{color:var(--red);font-weight:700;}
-  .prio-media{color:var(--yellow);font-weight:700;}
-  .prio-baixa{color:var(--green);font-weight:700;}
-  .progress-wrap{display:flex;align-items:center;gap:8px;}
-  .progress-bar{flex:1;height:7px;background:var(--bg3);border-radius:4px;min-width:70px;overflow:hidden;}
-  .progress-fill{height:100%;border-radius:4px;transition:width .3s;}
-  .progress-pct{font-size:12px;color:var(--text2);min-width:34px;text-align:right;font-weight:700;}
-  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s;text-decoration:none;}
-  .btn-primary{background:var(--navy);color:#fff;}.btn-primary:hover{background:var(--navy2);}
-  .btn-orange{background:var(--orange);color:#fff;}.btn-orange:hover{background:var(--orange-h);}
-  .btn-ghost{background:#fff;color:var(--text2);border:1px solid var(--border);}.btn-ghost:hover{background:var(--bg3);}
-  .btn-danger{background:#fff;color:var(--red);border:1px solid #fecaca;}.btn-danger:hover{background:#fee2e2;}
-  .btn-whatsapp{background:#25d366;color:#fff;}.btn-whatsapp:hover{background:#1eb85a;}
-  .btn-sm{padding:5px 10px;font-size:12px;}.btn-icon{padding:5px 8px;}
-  .actions-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-  .search-box{background:#fff;border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;width:220px;}
-  .search-box:focus{outline:none;border-color:var(--navy);}
-  select.filter-sel{background:#fff;border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;cursor:pointer;}
-  select.filter-sel:focus{outline:none;border-color:var(--navy);}
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,20,50,.55);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
-  .modal-overlay.open{display:flex;}
-  .modal{background:#fff;border-radius:14px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,56,101,.25);}
-  .modal-header{padding:18px 22px;background:var(--navy);border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;}
-  .modal-header h3{font-size:15px;font-weight:700;color:#fff;}
-  .modal-body{padding:22px;}
-  .modal-footer{padding:16px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:var(--bg3);border-radius:0 0 14px 14px;}
-  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-  .form-group{display:flex;flex-direction:column;gap:5px;}
-  .form-group.full{grid-column:1/-1;}
-  label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;}
-  input,select,textarea{background:#fff;border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;transition:border-color .2s;}
-  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,56,101,.08);}
-  textarea{resize:vertical;min-height:70px;}
-  .wa-note{font-size:11px;color:var(--text2);margin-top:4px;}
-  .wa-preview{font-size:11px;color:#25d366;font-weight:600;margin-top:3px;}
-  .ind-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
-  .ind-row:last-child{border-bottom:none;}
-  .ind-label{font-size:13px;color:var(--text2);}
-  .ind-val{font-size:20px;font-weight:800;color:var(--navy);}
-  .priority-list{list-style:none;}
-  .priority-list li{padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;gap:8px;align-items:flex-start;}
-  .priority-list li:last-child{border-bottom:none;}
-  .num{background:var(--orange);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
-  .status-sel{background:transparent;border:none;cursor:pointer;font-size:12px;font-weight:700;padding:0;}
-  .status-sel:focus{outline:none;}
-  .empty{text-align:center;padding:40px;color:var(--text2);}
-  .empty-icon{font-size:40px;margin-bottom:12px;}
-  #toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;border-radius:10px;padding:12px 18px;font-size:13px;font-weight:600;z-index:200;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;box-shadow:0 4px 24px rgba(0,56,101,.3);}
-  #toast.show{transform:translateY(0);opacity:1;}
-  #toast.success{background:var(--green);}
-  #toast.error{background:var(--red);}
-  #toast.info{background:var(--orange);}
-  .close-btn{background:none;border:none;color:rgba(255,255,255,.7);font-size:22px;cursor:pointer;line-height:1;}
-  .close-btn:hover{color:#fff;}
-  .wa-btn{display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#166534;border:1px solid #bbf7d0;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .15s;}
-  .wa-btn:hover{background:#25d366;color:#fff;border-color:#25d366;}
-  @media(max-width:700px){
-    .kpi-grid{grid-template-columns:repeat(2,1fr);}
-    .form-grid{grid-template-columns:1fr;}
-    .form-group.full{grid-column:1;}
-    main{padding:14px;}
-    nav button{padding:12px 10px;font-size:12px;}
-    .header-title p{display:none;}
-    .search-box{width:100%;}
-  }
+@font-face { font-family:'Cera Pro'; src:url('fonts/Fontspring-DEMO-cerapro-light.otf') format('opentype'); font-weight:300; }
+@font-face { font-family:'Cera Pro'; src:url('fonts/Fontspring-DEMO-cerapro-regular.otf') format('opentype'); font-weight:400; }
+@font-face { font-family:'Cera Pro'; src:url('fonts/Fontspring-DEMO-cerapro-medium.otf') format('opentype'); font-weight:500; }
+@font-face { font-family:'Cera Pro'; src:url('fonts/Fontspring-DEMO-cerapro-bold.otf') format('opentype'); font-weight:700; }
+
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+:root {
+  --navy:#003865; --navy2:#002a4d; --navy3:#001f38;
+  --orange:#F78344; --orange2:#e06c2a;
+  --white:#fff; --gray:#f4f6fa; --gray2:#e8ecf4;
+  --text:#1a2535; --text2:#4a5a72;
+}
+html { scroll-behavior:smooth; }
+body { font-family:'Cera Pro','Segoe UI',Arial,sans-serif; background:var(--white); color:var(--text); overflow-x:hidden; }
+
+/* TOP BAR */
+.topbar { background:var(--navy3); padding:8px 48px; display:flex; justify-content:space-between; align-items:center; font-size:11px; color:rgba(255,255,255,.45); letter-spacing:.5px; }
+
+/* HEADER */
+header { background:var(--navy); padding:0 48px; height:68px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 2px 20px rgba(0,0,0,.3); }
+.header-brand { display:flex; align-items:center; gap:14px; }
+.brand-icon { width:40px; height:40px; background:var(--orange); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; }
+.brand-text h1 { font-size:16px; font-weight:700; color:#fff; letter-spacing:.2px; }
+.brand-text p { font-size:11px; color:rgba(255,255,255,.45); margin-top:1px; font-weight:400; }
+.header-nav { display:flex; align-items:center; gap:6px; }
+.nav-link { color:rgba(255,255,255,.7); font-size:13px; font-weight:500; padding:8px 16px; border-radius:6px; text-decoration:none; transition:all .2s; }
+.nav-link:hover { background:rgba(255,255,255,.1); color:#fff; }
+.nav-link.active { background:var(--orange); color:#fff; }
+.header-date { font-size:11px; color:rgba(255,255,255,.35); }
+
+/* HERO */
+.hero { background:var(--navy); min-height:500px; position:relative; display:flex; align-items:center; overflow:hidden; }
+.hero-bg {
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 70% 70% at 75% 50%, rgba(247,131,68,.13) 0%, transparent 55%),
+    linear-gradient(135deg, #001f38 0%, #003865 55%, #004b8a 100%);
+}
+.hero-grid {
+  position:absolute; inset:0;
+  background-image: linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px), linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:64px 64px;
+}
+.hero-deco { position:absolute; right:-20px; top:50%; transform:translateY(-50%); font-size:340px; line-height:1; opacity:.055; user-select:none; pointer-events:none; }
+.hero-content { position:relative; z-index:2; padding:88px 48px; max-width:1200px; margin:0 auto; width:100%; }
+.hero-eyebrow { display:inline-flex; align-items:center; gap:8px; background:rgba(247,131,68,.15); border:1px solid rgba(247,131,68,.3); border-radius:20px; padding:5px 14px; font-size:11px; font-weight:700; color:var(--orange); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:22px; }
+.hero-eyebrow::before { content:''; width:6px; height:6px; background:var(--orange); border-radius:50%; display:inline-block; }
+.hero h2 { font-size:clamp(30px,5vw,56px); font-weight:700; color:#fff; line-height:1.1; max-width:660px; margin-bottom:18px; letter-spacing:-.5px; }
+.hero h2 em { color:var(--orange); font-style:normal; }
+.hero-sub { font-size:16px; color:rgba(255,255,255,.58); max-width:500px; line-height:1.7; margin-bottom:38px; font-weight:400; }
+.hero-stats { display:flex; gap:36px; flex-wrap:wrap; }
+.hstat { border-left:3px solid var(--orange); padding-left:14px; }
+.hstat .v { font-size:30px; font-weight:700; color:#fff; line-height:1; }
+.hstat .l { font-size:11px; color:rgba(255,255,255,.45); margin-top:3px; text-transform:uppercase; letter-spacing:.5px; }
+
+/* ORANGE RULE */
+.rule { height:4px; background:linear-gradient(90deg,var(--orange) 0%,#f5a462 55%,transparent 100%); }
+
+/* MODULES SECTION */
+.modules { background:var(--gray); padding:72px 48px; }
+.sec-head { text-align:center; margin-bottom:52px; }
+.sec-eye { font-size:11px; font-weight:700; color:var(--orange); text-transform:uppercase; letter-spacing:2px; margin-bottom:10px; display:block; }
+.sec-head h3 { font-size:30px; font-weight:700; color:var(--navy); letter-spacing:-.3px; margin-bottom:8px; }
+.sec-head p { font-size:15px; color:var(--text2); max-width:460px; margin:0 auto; line-height:1.6; }
+
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:26px; max-width:1100px; margin:0 auto; }
+
+/* MODULE CARD */
+.card {
+  background:var(--white); border-radius:16px; overflow:hidden;
+  box-shadow:0 4px 20px rgba(0,56,101,.08); border:1px solid rgba(0,56,101,.07);
+  transition:transform .28s ease, box-shadow .28s ease;
+  text-decoration:none; display:flex; flex-direction:column; color:inherit;
+}
+.card:hover { transform:translateY(-7px); box-shadow:0 20px 50px rgba(0,56,101,.16); }
+.card:hover .card-icon { transform:scale(1.1); }
+.card:hover .card-arr { transform:translateX(5px); }
+
+.card-visual { height:190px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.card-visual-bg { position:absolute; inset:0; }
+.card-visual-shade { position:absolute; inset:0; background:linear-gradient(180deg,transparent 30%,rgba(0,10,30,.55) 100%); }
+.card-icon { position:relative; z-index:2; font-size:68px; transition:transform .3s; filter:drop-shadow(0 4px 14px rgba(0,0,0,.25)); }
+.card-badge { position:absolute; top:14px; right:14px; z-index:3; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:4px 11px; border-radius:12px; }
+.badge-on { background:#dcfce7; color:#166534; }
+.badge-off { background:#fff7ed; color:#9a3412; }
+
+.card-body { padding:26px; flex:1; display:flex; flex-direction:column; }
+.card-num { font-size:11px; font-weight:700; color:var(--orange); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:7px; }
+.card-body h4 { font-size:20px; font-weight:700; color:var(--navy); margin-bottom:9px; line-height:1.2; }
+.card-body p { font-size:13px; color:var(--text2); line-height:1.65; flex:1; }
+
+.card-chips { display:flex; flex-wrap:wrap; gap:6px; margin:16px 0 20px; }
+.chip { font-size:11px; font-weight:600; color:var(--text2); background:var(--gray); border:1px solid var(--gray2); border-radius:6px; padding:3px 10px; }
+
+.card-foot { display:flex; align-items:center; justify-content:space-between; padding-top:16px; border-top:1px solid var(--gray2); }
+.cta-btn { display:inline-flex; align-items:center; gap:8px; background:var(--navy); color:#fff; font-size:13px; font-weight:600; padding:10px 18px; border-radius:8px; text-decoration:none; transition:background .2s; font-family:inherit; border:none; cursor:pointer; }
+.cta-btn:hover { background:var(--navy2); }
+.cta-btn.off { background:var(--gray2); color:var(--text2); pointer-events:none; cursor:default; }
+.card-arr { transition:transform .2s; }
+.card-kpi .n { font-size:22px; font-weight:700; color:var(--navy); line-height:1; text-align:right; }
+.card-kpi .l { font-size:10px; color:var(--text2); text-transform:uppercase; letter-spacing:.4px; margin-top:2px; text-align:right; }
+
+/* BG THEMES */
+.bg-a { background:linear-gradient(135deg,#003865 0%,#005fa3 55%,#003a70 100%); }
+.bg-b { background:linear-gradient(135deg,#0d1b2a 0%,#1b2d44 55%,#0a1628 100%); }
+
+/* INFO STRIP */
+.strip { background:var(--navy); padding:48px; }
+.strip-inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:36px; }
+.si { text-align:center; }
+.si .ico { font-size:26px; margin-bottom:8px; }
+.si .v { font-size:38px; font-weight:700; color:#fff; line-height:1; }
+.si .l { font-size:11px; color:rgba(255,255,255,.45); text-transform:uppercase; letter-spacing:.6px; margin-top:5px; }
+.si .bar { width:28px; height:3px; background:var(--orange); margin:10px auto 0; border-radius:2px; }
+
+/* FOOTER */
+footer { background:var(--navy3); padding:26px 48px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+footer p { font-size:12px; color:rgba(255,255,255,.3); }
+.foot-brand { font-size:13px; font-weight:700; color:rgba(255,255,255,.55); display:flex; align-items:center; gap:7px; }
+.foot-brand em { color:var(--orange); font-style:normal; }
+
+/* TOAST */
+#toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px); background:#1a2535; color:#fff; padding:14px 24px; border-radius:10px; font-size:14px; font-weight:600; box-shadow:0 8px 32px rgba(0,0,0,.3); z-index:200; opacity:0; transition:all .3s; pointer-events:none; font-family:'Cera Pro','Segoe UI',sans-serif; }
+
+/* ANIMATIONS */
+@keyframes up { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:none; } }
+.hero-eyebrow { animation:up .5s .0s both; }
+.hero h2      { animation:up .5s .1s both; }
+.hero-sub     { animation:up .5s .2s both; }
+.hero-stats   { animation:up .5s .3s both; }
+.card:nth-child(1) { animation:up .5s .15s both; }
+.card:nth-child(2) { animation:up .5s .28s both; }
+
+/* RESPONSIVE */
+@media(max-width:768px) {
+  .topbar,.header-date { display:none; }
+  header { padding:0 18px; height:58px; }
+  .hero-content { padding:48px 18px; }
+  .hero-deco { display:none; }
+  .modules { padding:44px 18px; }
+  .grid { grid-template-columns:1fr; }
+  .strip { padding:36px 18px; }
+  footer { padding:18px; flex-direction:column; text-align:center; }
+}
 </style>
 </head>
 <body>
 
+<div class="topbar">
+  <span>🔒 Uso Interno — Rumo Logística</span>
+  <span id="tb-date"></span>
+</div>
+
 <header>
-  <div class="header-left">
-    <div class="header-title">
-      <h1>Painel de Investigações</h1>
+  <div class="header-brand">
+    <div class="brand-icon">🔍</div>
+    <div class="brand-text">
+      <h1>Inteligência &amp; Investigação</h1>
       <p>Fluxo operacional de atividades da Inteligência e Investigação</p>
     </div>
   </div>
-  <div class="header-right" id="last-updated"></div>
+  <nav class="header-nav">
+    <a href="index.html" class="nav-link active">Início</a>
+    <a href="Painel_Investigacoes.html" class="nav-link">Investigações</a>
+    <a href="#modulos" class="nav-link">Módulos</a>
+  </nav>
+  <div class="header-date" id="hd-date"></div>
 </header>
-<div class="accent-bar"></div>
 
-<nav>
-  <button class="active" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
-  <button onclick="switchTab('operacoes',this)">📋 Operações</button>
-  <button onclick="switchTab('tarefas',this)">✅ Tarefas</button>
-  <button onclick="switchTab('agenda',this)">📅 Agenda</button>
-</nav>
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-deco">🚂</div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Rumo Logística · Núcleo de Inteligência</div>
+    <h2>Central de <em>Inteligência</em><br>e Investigação</h2>
+    <p class="hero-sub">Plataforma integrada para gestão de operações investigativas, monitoramento de indicadores e controle das atividades do núcleo de inteligência.</p>
+    <div class="hero-stats">
+      <div class="hstat"><div class="v" id="s-ops">5</div><div class="l">Operações Ativas</div></div>
+      <div class="hstat"><div class="v" id="s-tasks">20</div><div class="l">Tarefas em Gestão</div></div>
+      <div class="hstat"><div class="v" id="s-pct">—</div><div class="l">% de Conclusão</div></div>
+    </div>
+  </div>
+</section>
+<div class="rule"></div>
 
-<main>
+<section class="modules" id="modulos">
+  <div class="sec-head">
+    <span class="sec-eye">Módulos do Sistema</span>
+    <h3>Selecione o módulo desejado</h3>
+    <p>Acesse as ferramentas do núcleo de inteligência clicando nos módulos abaixo.</p>
+  </div>
 
-<!-- DASHBOARD -->
-<div id="tab-dashboard" class="tab-panel active">
-  <div class="kpi-grid" id="kpi-grid"></div>
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:18px;align-items:start">
-    <div>
-      <div class="card">
-        <div class="card-header"><h2>▶ Status por Operação</h2></div>
-        <table><thead><tr>
-          <th>Operação</th><th>Local / Empresa</th><th>Fase</th>
-          <th>Status</th><th>Conclusão</th><th>Pend.</th><th>Próximo Marco</th>
-        </tr></thead><tbody id="dash-ops-body"></tbody></table>
+  <div class="grid">
+
+    <!-- MÓDULO 01 -->
+    <a class="card" href="Painel_Investigacoes.html">
+      <div class="card-visual bg-a">
+        <div class="card-visual-shade"></div>
+        <div class="card-icon">🔍</div>
+        <span class="card-badge badge-on">● Ativo</span>
       </div>
-      <div class="card">
-        <div class="card-header"><h2>▶ Prioridades para o Próximo Ciclo</h2></div>
-        <div style="padding:16px"><ul class="priority-list" id="priority-list"></ul></div>
+      <div class="card-body">
+        <div class="card-num">Módulo 01</div>
+        <h4>Painel de Investigações</h4>
+        <p>Gestão completa das operações investigativas em andamento. Acompanhe status, tarefas, responsáveis e marcos de cada operação em tempo real.</p>
+        <div class="card-chips">
+          <span class="chip">📋 Operações</span>
+          <span class="chip">✅ Tarefas</span>
+          <span class="chip">📅 Agenda</span>
+          <span class="chip">💬 WhatsApp</span>
+          <span class="chip">📊 Dashboard</span>
+        </div>
+        <div class="card-foot">
+          <span class="cta-btn">Acessar módulo <span class="card-arr">→</span></span>
+          <div class="card-kpi"><div class="n" id="m1-n">5</div><div class="l">Operações</div></div>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-header"><h2>▶ Alta Prioridade Pendentes</h2></div>
-        <table><thead><tr><th>Tarefa</th><th>Operação</th><th>Responsável</th><th>WhatsApp</th><th>Prazo</th></tr></thead>
-        <tbody id="high-prio-body"></tbody></table>
+    </a>
+
+    <!-- MÓDULO 02 -->
+    <div class="card" onclick="showToast()" style="cursor:pointer">
+      <div class="card-visual bg-b">
+        <div class="card-visual-shade"></div>
+        <div class="card-icon">📈</div>
+        <span class="card-badge badge-off">Em breve</span>
+      </div>
+      <div class="card-body">
+        <div class="card-num">Módulo 02</div>
+        <h4>Indicadores da Inteligência</h4>
+        <p>Painel de KPIs estratégicos do núcleo de inteligência. Métricas de desempenho, tendências, mapa de ocorrências e relatórios consolidados.</p>
+        <div class="card-chips">
+          <span class="chip">📊 KPIs</span>
+          <span class="chip">🗺️ Mapa</span>
+          <span class="chip">📉 Tendências</span>
+          <span class="chip">📄 Relatórios</span>
+          <span class="chip">🎯 Metas</span>
+        </div>
+        <div class="card-foot">
+          <button class="cta-btn off">Em desenvolvimento</button>
+          <div class="card-kpi"><div class="n">—</div><div class="l">Disponível</div></div>
+        </div>
       </div>
     </div>
-    <div>
-      <div class="card">
-        <div class="card-header"><h2>▶ Indicadores</h2></div>
-        <div style="padding:16px" id="indicadores"></div>
-      </div>
-    </div>
+
+  </div>
+</section>
+
+<div class="strip">
+  <div class="strip-inner">
+    <div class="si"><div class="ico">🔍</div><div class="v" id="i-ops">5</div><div class="l">Operações ativas</div><div class="bar"></div></div>
+    <div class="si"><div class="ico">✅</div><div class="v" id="i-done">—</div><div class="l">Tarefas concluídas</div><div class="bar"></div></div>
+    <div class="si"><div class="ico">⚡</div><div class="v" id="i-alta">—</div><div class="l">Alta prioridade pend.</div><div class="bar"></div></div>
+    <div class="si"><div class="ico">📅</div><div class="v" id="i-ag">—</div><div class="l">Compromissos</div><div class="bar"></div></div>
   </div>
 </div>
 
-<!-- OPERAÇÕES -->
-<div id="tab-operacoes" class="tab-panel">
-  <div class="actions-row" style="margin-bottom:18px">
-    <button class="btn btn-primary" onclick="openOpModal()">+ Nova Operação</button>
-    <input type="text" class="search-box" placeholder="Buscar operação…" oninput="filterOps(this.value)">
-    <select class="filter-sel" id="op-status-filter" onchange="filterOps()">
-      <option value="">Todos os status</option>
-      <option>Em andamento</option><option>Fase inicial</option>
-      <option>Planejamento</option><option>Concluído</option><option>Encerrado</option>
-    </select>
-  </div>
-  <div class="card">
-    <table><thead><tr>
-      <th>#</th><th>Operação</th><th>Local</th><th>Fase</th>
-      <th>Status</th><th>% Conc.</th><th>Pend.</th><th>Próximo Marco</th><th>Ponto Cego</th><th></th>
-    </tr></thead><tbody id="ops-table-body"></tbody></table>
-  </div>
-</div>
+<footer>
+  <div class="foot-brand">🚂 Rumo Logística · <em>Núcleo de Inteligência</em></div>
+  <p>Sistema de uso interno — acesso restrito à equipe autorizada</p>
+  <p id="ft-date"></p>
+</footer>
 
-<!-- TAREFAS -->
-<div id="tab-tarefas" class="tab-panel">
-  <div class="actions-row" style="margin-bottom:18px">
-    <button class="btn btn-primary" onclick="openTaskModal()">+ Nova Tarefa</button>
-    <input type="text" class="search-box" id="task-search" placeholder="Buscar tarefa…" oninput="renderTasks()">
-    <select class="filter-sel" id="task-filter-op" onchange="renderTasks()"><option value="">Todas as operações</option></select>
-    <select class="filter-sel" id="task-filter-status" onchange="renderTasks()">
-      <option value="">Todos os status</option><option>Pendente</option><option>Em andamento</option><option>Concluído</option>
-    </select>
-    <select class="filter-sel" id="task-filter-prio" onchange="renderTasks()">
-      <option value="">Todas as prioridades</option><option>Alta</option><option>Média</option><option>Baixa</option>
-    </select>
-  </div>
-  <div class="card">
-    <table><thead><tr>
-      <th>✔</th><th>Tarefa / Atividade</th><th>Operação</th><th>Responsável</th>
-      <th>Prioridade</th><th>Status</th><th>Prazo</th><th>WhatsApp</th><th></th>
-    </tr></thead><tbody id="tasks-table-body"></tbody></table>
-  </div>
-</div>
-
-<!-- AGENDA -->
-<div id="tab-agenda" class="tab-panel">
-  <div class="actions-row" style="margin-bottom:18px">
-    <button class="btn btn-primary" onclick="openAgendaModal()">+ Novo Compromisso</button>
-    <select class="filter-sel" id="agenda-filter-month" onchange="renderAgenda()"><option value="">Todos os meses</option></select>
-  </div>
-  <div class="card">
-    <table><thead><tr>
-      <th>Data</th><th>Título</th><th>Operação</th><th>Responsável</th>
-      <th>Tipo</th><th>Status</th><th>Observações</th><th></th>
-    </tr></thead><tbody id="agenda-table-body"></tbody></table>
-  </div>
-</div>
-
-</main>
-
-<!-- MODAL OPERAÇÃO -->
-<div class="modal-overlay" id="op-modal">
-<div class="modal">
-  <div class="modal-header"><h3 id="op-modal-title">Nova Operação</h3><button class="close-btn" onclick="closeModal('op-modal')">×</button></div>
-  <div class="modal-body"><div class="form-grid">
-    <div class="form-group"><label>Nome da Operação *</label><input id="op-nome" placeholder="Ex: Ponto Cego"></div>
-    <div class="form-group"><label>Local / Empresa *</label><input id="op-local" placeholder="Ex: Rondonópolis/MT – TRO"></div>
-    <div class="form-group"><label>Fase Atual</label><input id="op-fase" placeholder="Ex: 2ª fase em andamento"></div>
-    <div class="form-group"><label>Status</label>
-      <select id="op-status"><option>Em andamento</option><option>Fase inicial</option><option>Planejamento</option><option>Concluído</option><option>Encerrado</option></select>
-    </div>
-    <div class="form-group full"><label>Próximo Marco</label><input id="op-marco" placeholder="Ex: Parecer do GAECO e execução das medidas operacionais"></div>
-    <div class="form-group full"><label>Ponto Cego / Obstáculo</label><input id="op-pontocego" placeholder="Ex: Aguardando manifestação do órgão"></div>
-    <div class="form-group full"><label>Objetivo da Operação</label><textarea id="op-objetivo" placeholder="Descreva o objetivo principal…"></textarea></div>
-    <div class="form-group full"><label>Principais Entregas Realizadas</label><textarea id="op-entregas" placeholder="Liste as entregas já concluídas…"></textarea></div>
-  </div></div>
-  <div class="modal-footer">
-    <button class="btn btn-ghost" onclick="closeModal('op-modal')">Cancelar</button>
-    <button class="btn btn-primary" onclick="saveOp()">Salvar Operação</button>
-  </div>
-</div>
-</div>
-
-<!-- MODAL TAREFA -->
-<div class="modal-overlay" id="task-modal">
-<div class="modal">
-  <div class="modal-header"><h3 id="task-modal-title">Nova Tarefa</h3><button class="close-btn" onclick="closeModal('task-modal')">×</button></div>
-  <div class="modal-body"><div class="form-grid">
-    <div class="form-group full"><label>Tarefa / Atividade *</label><input id="task-nome" placeholder="Descreva a tarefa…"></div>
-    <div class="form-group"><label>Operação *</label><select id="task-op"></select></div>
-    <div class="form-group"><label>Responsável</label><input id="task-resp" placeholder="Ex: Gabriel / Deligi"></div>
-    <div class="form-group full">
-      <label>📱 WhatsApp do Responsável</label>
-      <input id="task-wa" placeholder="DDD + número, sem espaços. Ex: 11987654321" oninput="previewWA(this.value)">
-      <div class="wa-preview" id="wa-preview"></div>
-      <div class="wa-note">Ao salvar com WhatsApp, o botão "Salvar e Notificar" envia a mensagem automaticamente via WhatsApp Web.</div>
-    </div>
-    <div class="form-group"><label>Prioridade</label>
-      <select id="task-prio"><option>Alta</option><option selected>Média</option><option>Baixa</option></select>
-    </div>
-    <div class="form-group"><label>Status</label>
-      <select id="task-status"><option>Pendente</option><option>Em andamento</option><option>Concluído</option></select>
-    </div>
-    <div class="form-group"><label>Data Limite</label><input type="date" id="task-prazo"></div>
-    <div class="form-group full"><label>Observações</label><textarea id="task-obs" placeholder="Informações adicionais…"></textarea></div>
-  </div></div>
-  <div class="modal-footer">
-    <button class="btn btn-ghost" onclick="closeModal('task-modal')">Cancelar</button>
-    <button class="btn btn-primary" onclick="saveTask(false)">Salvar</button>
-    <button class="btn btn-whatsapp" id="btn-save-notify" onclick="saveTask(true)" style="display:none">💬 Salvar e Notificar</button>
-  </div>
-</div>
-</div>
-
-<!-- MODAL AGENDA -->
-<div class="modal-overlay" id="agenda-modal">
-<div class="modal">
-  <div class="modal-header"><h3 id="agenda-modal-title">Novo Compromisso</h3><button class="close-btn" onclick="closeModal('agenda-modal')">×</button></div>
-  <div class="modal-body"><div class="form-grid">
-    <div class="form-group full"><label>Título *</label><input id="ag-titulo" placeholder="Ex: Reunião com DIG de Rio Claro"></div>
-    <div class="form-group"><label>Data *</label><input type="date" id="ag-data"></div>
-    <div class="form-group"><label>Horário</label><input type="time" id="ag-hora"></div>
-    <div class="form-group"><label>Operação</label><select id="ag-op"></select></div>
-    <div class="form-group"><label>Responsável</label><input id="ag-resp" placeholder="Ex: Elias / Gabriel"></div>
-    <div class="form-group"><label>Tipo</label>
-      <select id="ag-tipo"><option>Reunião</option><option>Diligência</option><option>Entrega de Relatório</option><option>Apresentação</option><option>Monitoramento</option><option>Operação de Campo</option><option>Outro</option></select>
-    </div>
-    <div class="form-group"><label>Status</label>
-      <select id="ag-status"><option>Pendente</option><option>Em andamento</option><option>Realizado</option><option>Cancelado</option></select>
-    </div>
-    <div class="form-group full"><label>Observações</label><textarea id="ag-obs"></textarea></div>
-  </div></div>
-  <div class="modal-footer">
-    <button class="btn btn-ghost" onclick="closeModal('agenda-modal')">Cancelar</button>
-    <button class="btn btn-primary" onclick="saveAgenda()">Salvar</button>
-  </div>
-</div>
-</div>
-
-<div id="toast"></div>
+<div id="toast">🚧 Módulo em desenvolvimento — disponível em breve!</div>
 
 <script>
-const SK='painel_inv_v3';
-function loadData(){try{const r=localStorage.getItem(SK);if(r)return JSON.parse(r);}catch(e){}return getDefaultData();}
-function saveData(){localStorage.setItem(SK,JSON.stringify(db));document.getElementById('last-updated').textContent='Salvo: '+new Date().toLocaleString('pt-BR');}
-function getDefaultData(){return{
-  operacoes:[
-    {id:1,nome:'Ponto Cego',local:'Rondonópolis/MT – TRO',fase:'2ª fase em andamento',status:'Em andamento',marco:'Parecer do GAECO e execução das medidas operacionais',pontocego:'Aguardando manifestação do GAECO',objetivo:'Apurar organização envolvida em furtos de grãos por modal ferroviário.',entregas:'✓ Relatório final da 1ª fase entregue ao GAECO\n✓ Levantamento preliminar de envolvidos\n✓ Identificação do modus operandi'},
-    {id:2,nome:'Dreno',local:'Rio Claro/SP',fase:'Diligências complementares',status:'Em andamento',marco:'Entrega do relatório complementar à DIG de Rio Claro',pontocego:'Complementação de diligências solicitada',objetivo:'Investigar desvio de cargas na unidade de Rio Claro.',entregas:'✓ Levantamento do esquema criminoso\n✓ Mapeamento dos pontos de desvio\n✓ Apresentação do relatório à Polícia Civil'},
-    {id:3,nome:'Carga Segura',local:'Votuporanga/SP – COFCO',fase:'Fase inicial',status:'Fase inicial',marco:'Conclusão do relatório investigativo preliminar',pontocego:'Coleta inicial de evidências em andamento',objetivo:'Apurar furtos de grãos na unidade da COFCO em Votuporanga.',entregas:'✓ Coleta inicial de evidências\n✓ Levantamento de locais de armazenamento'},
-    {id:4,nome:'Fim da Linha',local:'Santa Adélia/SP – BRADO',fase:'Fase inicial',status:'Fase inicial',marco:'Conclusão do relatório inicial e definição de medidas policiais',pontocego:'Suspeitos identificados; mapeamento em andamento',objetivo:'Mapear e identificar envolvidos em furtos na unidade BRADO de Santa Adélia.',entregas:'✓ Levantamento inicial de suspeitos\n✓ Mapeamento preliminar dos locais de atuação'},
-    {id:5,nome:'Rastro Oculto',local:'Embu-Guaçu/SP',fase:'Levantamento preliminar',status:'Planejamento',marco:'Início das diligências de campo (KM 122)',pontocego:'Identificação de indivíduos em curso',objetivo:'Apurar organização envolvida em furtos de grãos por modal ferroviário.',entregas:'✓ Identificação de indivíduos envolvidos\n✓ Levantamento de locais de armazenamento'}
-  ],
-  tarefas:[
-    {id:1,nome:'Extrair base de registros dos caminhões com carga recusada no tombador',opId:1,responsavel:'Gabriel / Deligi',whatsapp:'',prioridade:'Alta',status:'Em andamento',prazo:'',obs:''},
-    {id:2,nome:'Cruzar informações com sistema KMM e resultados de classificação',opId:1,responsavel:'Gabriel / Deligi',whatsapp:'',prioridade:'Alta',status:'Em andamento',prazo:'',obs:''},
-    {id:3,nome:'Definir protocolo para situações de flagrante',opId:1,responsavel:'Elias',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
-    {id:4,nome:'Definir local para retenção de caminhões aguardando perícia',opId:1,responsavel:'Elias',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
-    {id:5,nome:'Designar representante da Rumo para formalização de BOs',opId:1,responsavel:'Elias / Tiago Castro',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
-    {id:6,nome:'Implementar segunda classificação das cargas recusadas',opId:1,responsavel:'Elias / Equipe Paula',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
-    {id:7,nome:'Realizar monitoramento nos horários identificados como críticos',opId:1,responsavel:'Delgado / Erlandes',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
-    {id:8,nome:'Empregar drones para vigilância dos pontos mapeados',opId:1,responsavel:'',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
-    {id:9,nome:'Consolidar registros e laudos emitidos pela Webtec',opId:1,responsavel:'Gabriel / Bruxo',whatsapp:'',prioridade:'Média',status:'Em andamento',prazo:'',obs:''},
-    {id:10,nome:'Compilar histórico de ocorrências e furtos registrados',opId:1,responsavel:'Bruxo',whatsapp:'',prioridade:'Média',status:'Pendente',prazo:'',obs:''},
-    {id:11,nome:'Elaborar relatório complementar para a DIG',opId:2,responsavel:'Leandro',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
-    {id:12,nome:'Monitorar horários identificados para ocorrência dos furtos',opId:2,responsavel:'Delgado / André',whatsapp:'',prioridade:'Média',status:'Pendente',prazo:'',obs:''},
-    {id:13,nome:'Formalizar boletins de ocorrência retroativos',opId:2,responsavel:'Leandro',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
-    {id:14,nome:'Utilizar imagens da câmera da COFCO para identificação dos envolvidos',opId:3,responsavel:'',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
-    {id:15,nome:'Identificar e qualificar os suspeitos',opId:3,responsavel:'',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
-    {id:16,nome:'Consolidar evidências e estruturar relatório investigativo',opId:3,responsavel:'Gabriel',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
-    {id:17,nome:'Apresentar material às autoridades competentes',opId:3,responsavel:'Elias / Gabriel',whatsapp:'',prioridade:'Média',status:'Pendente',prazo:'',obs:''},
-    {id:18,nome:'Ampliar levantamento de evidências para comprovação da materialidade',opId:4,responsavel:'Delgado / Lucas',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
-    {id:19,nome:'Realizar levantamentos de campo nos locais mapeados',opId:5,responsavel:'',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''},
-    {id:20,nome:'Empregar drones para monitoramento operacional',opId:5,responsavel:'',whatsapp:'',prioridade:'Alta',status:'Pendente',prazo:'',obs:''}
-  ],
-  agenda:[
-    {id:1,titulo:'Reunião de alinhamento com GAECO',data:'2026-06-25',hora:'10:00',opId:1,responsavel:'Elias / Gabriel',tipo:'Reunião',status:'Pendente',obs:''},
-    {id:2,titulo:'Entrega relatório complementar à DIG de Rio Claro',data:'2026-06-30',hora:'14:00',opId:2,responsavel:'Leandro',tipo:'Entrega de Relatório',status:'Pendente',obs:''}
-  ],
-  nextId:{op:6,task:21,ag:3}
-};}
+const now = new Date();
+const fmtL = now.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+const fmtS = now.toLocaleDateString('pt-BR');
+document.getElementById('tb-date').textContent  = fmtL;
+document.getElementById('hd-date').textContent  = fmtS;
+document.getElementById('ft-date').textContent  = '© ' + now.getFullYear() + ' — ' + fmtS;
 
-let db=loadData();
-let editingOpId=null,editingTaskId=null,editingAgId=null;
-let opSearchVal='',opStatusFilter='';
+function loadDB() {
+  try { const r=localStorage.getItem('painel_inv_v3'); return r?JSON.parse(r):null; } catch(e){return null;}
+}
+function updateStats() {
+  const db = loadDB(); if(!db) return;
+  const ops=db.operacoes||[], ts=db.tarefas||[], ag=db.agenda||[];
+  const atv  = ops.filter(o=>o.status!=='Concluído'&&o.status!=='Encerrado').length;
+  const done = ts.filter(t=>t.status==='Concluído').length;
+  const pct  = ts.length ? Math.round(done/ts.length*100) : 0;
+  const alta = ts.filter(t=>t.prioridade==='Alta'&&t.status!=='Concluído').length;
+  document.getElementById('s-ops').textContent   = atv;
+  document.getElementById('s-tasks').textContent = ts.length;
+  document.getElementById('s-pct').textContent   = pct+'%';
+  document.getElementById('m1-n').textContent    = atv;
+  document.getElementById('i-ops').textContent   = atv;
+  document.getElementById('i-done').textContent  = done;
+  document.getElementById('i-alta').textContent  = alta;
+  document.getElementById('i-ag').textContent    = ag.length;
+}
+updateStats();
 
-const getOp=id=>db.operacoes.find(o=>o.id===id);
-const getOpName=id=>{const o=getOp(id);return o?o.nome:'—';};
-function statusBadge(s){const m={'Em andamento':'badge-blue','Fase inicial':'badge-yellow','Planejamento':'badge-orange','Concluído':'badge-green','Encerrado':'badge-gray','Pendente':'badge-gray','Realizado':'badge-green','Cancelado':'badge-red'};return`<span class="badge ${m[s]||'badge-gray'}">${s}</span>`;}
-function prioBadge(p){return`<span class="${{Alta:'prio-alta',Média:'prio-media',Baixa:'prio-baixa'}[p]||''}">${p}</span>`;}
-function progressBar(pct){const c=pct>=80?'#2e9e57':pct>=40?'#d97706':'#003865';return`<div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${c}"></div></div><span class="progress-pct">${pct}%</span></div>`;}
-function getOpStats(id){const ts=db.tarefas.filter(t=>t.opId===id);const done=ts.filter(t=>t.status==='Concluído').length;return{total:ts.length,done,pend:ts.filter(t=>t.status!=='Concluído').length,pct:ts.length?Math.round(done/ts.length*100):0};}
-function formatDate(d){if(!d)return'—';const[y,m,day]=d.split('-');return`${day}/${m}/${y}`;}
-function nextId(k){return db.nextId[k]++;}
-function buildWALink(phone,taskName,opName,prio,prazo,resp){
-  const num='55'+phone.replace(/\D/g,'');
-  const pDate=prazo?` | Prazo: ${formatDate(prazo)}`:'';
-  const firstName=resp?resp.split('/')[0].trim():'';
-  const msg=encodeURIComponent(
-    `Olá${firstName?' '+firstName:''}! 👋\n\nVocê foi atribuído(a) à seguinte tarefa no Painel de Investigações Rumo:\n\n`+
-    `📋 *Tarefa:* ${taskName}\n`+
-    `🔍 *Operação:* ${opName}\n`+
-    `⚡ *Prioridade:* ${prio}${pDate}\n\n`+
-    `Por favor, acesse o painel para acompanhar o andamento.\n\nAtenciosamente,\nEquipe de Investigações Rumo 🚂`
-  );
-  return`https://wa.me/${num}?text=${msg}`;
+function showToast() {
+  const t=document.getElementById('toast');
+  t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)';
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(80px)';},2800);
 }
-function waButton(phone,task){
-  if(!phone)return'<span style="color:#cbd5e1;font-size:11px">—</span>';
-  const link=buildWALink(phone,task.nome,getOpName(task.opId),task.prioridade,task.prazo,task.responsavel);
-  return`<a class="wa-btn" href="${link}" target="_blank">💬 WhatsApp</a>`;
-}
-function toast(msg,type='success'){const el=document.getElementById('toast');el.textContent=msg;el.className=`show ${type}`;setTimeout(()=>el.className='',2400);}
-
-function switchTab(id,btn){
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
-  btn.classList.add('active');
-  if(id==='dashboard')renderDashboard();
-  if(id==='operacoes')renderOps();
-  if(id==='tarefas')renderTasks();
-  if(id==='agenda')renderAgenda();
-}
-
-function renderDashboard(){
-  const ts=db.tarefas,ops=db.operacoes;
-  const total=ts.length,done=ts.filter(t=>t.status==='Concluído').length;
-  const pct=total?Math.round(done/total*100):0;
-  const andamento=ts.filter(t=>t.status==='Em andamento').length;
-  const pendente=ts.filter(t=>t.status==='Pendente').length;
-  const altaPend=ts.filter(t=>t.prioridade==='Alta'&&t.status!=='Concluído').length;
-  const opsAtivas=ops.filter(o=>o.status!=='Concluído'&&o.status!=='Encerrado').length;
-  document.getElementById('kpi-grid').innerHTML=`
-    <div class="kpi-card navy"><div class="kpi-val">${opsAtivas}</div><div class="kpi-label">Operações Ativas</div></div>
-    <div class="kpi-card"><div class="kpi-val">${total}</div><div class="kpi-label">Total de Tarefas</div></div>
-    <div class="kpi-card green-top"><div class="kpi-val">${done}</div><div class="kpi-label">Tarefas Concluídas</div></div>
-    <div class="kpi-card accent"><div class="kpi-val">${pct}%</div><div class="kpi-label">% Conclusão Geral</div></div>
-    <div class="kpi-card"><div class="kpi-val" style="color:#1d4ed8">${andamento}</div><div class="kpi-label">Em Andamento</div></div>
-    <div class="kpi-card"><div class="kpi-val" style="color:#475569">${pendente}</div><div class="kpi-label">Pendentes</div></div>
-    <div class="kpi-card red-top"><div class="kpi-val">${altaPend}</div><div class="kpi-label">Alta Prior. Pend.</div></div>
-  `;
-  document.getElementById('dash-ops-body').innerHTML=ops.map(op=>{const s=getOpStats(op.id);return`<tr>
-    <td><strong>${op.nome}</strong></td><td style="color:var(--text2);font-size:12px">${op.local}</td>
-    <td style="font-size:12px;color:var(--text2)">${op.fase}</td><td>${statusBadge(op.status)}</td>
-    <td style="min-width:120px">${progressBar(s.pct)}</td>
-    <td><span class="badge ${s.pend?'badge-orange':'badge-green'}">${s.pend}</span></td>
-    <td style="font-size:12px;color:var(--text2);max-width:180px;white-space:normal">${op.marco||'—'}</td>
-  </tr>`;}).join('');
-  const priors=['Concluir diligências complementares da Operação Dreno','Executar medidas operacionais pendentes da Operação Ponto Cego','Intensificar monitoramentos nas Operações Fim da Linha e Carga Segura','Estruturar plano operacional da Operação Rastro Oculto','Consolidar evidências para futuras representações junto aos órgãos de Segurança Pública'];
-  document.getElementById('priority-list').innerHTML=priors.map((p,i)=>`<li><span class="num">${i+1}</span>${p}</li>`).join('');
-  document.getElementById('indicadores').innerHTML=[
-    ['Operações em andamento',opsAtivas],
-    ['Operações concluídas',ops.filter(o=>o.status==='Concluído').length],
-    ['Operações em fase inicial',ops.filter(o=>o.status==='Fase inicial').length],
-    ['Tarefas c/ WhatsApp cadastrado',ts.filter(t=>t.whatsapp).length],
-    ['Alta prioridade pendentes',altaPend],
-    ['Relatórios pendentes',ts.filter(t=>t.nome.toLowerCase().includes('relatório')&&t.status!=='Concluído').length],
-  ].map(([l,v])=>`<div class="ind-row"><span class="ind-label">${l}</span><span class="ind-val">${v}</span></div>`).join('');
-  const hp=ts.filter(t=>t.prioridade==='Alta'&&t.status!=='Concluído').slice(0,8);
-  document.getElementById('high-prio-body').innerHTML=hp.length===0
-    ?`<tr><td colspan="5" class="empty" style="padding:20px">🎉 Nenhuma tarefa de alta prioridade pendente</td></tr>`
-    :hp.map(t=>`<tr>
-      <td style="font-size:12px;max-width:200px;white-space:normal">${t.nome}</td>
-      <td><span class="badge badge-navy" style="font-size:11px">${getOpName(t.opId)}</span></td>
-      <td style="font-size:12px;color:var(--text2)">${t.responsavel||'—'}</td>
-      <td>${waButton(t.whatsapp,t)}</td>
-      <td style="font-size:12px;color:var(--text2)">${formatDate(t.prazo)}</td>
-    </tr>`).join('');
-  document.getElementById('last-updated').textContent='Salvo: '+new Date().toLocaleString('pt-BR');
-}
-
-function filterOps(v){
-  if(v!==undefined)opSearchVal=v.toLowerCase();
-  opStatusFilter=document.getElementById('op-status-filter')?.value||'';
-  renderOps();
-}
-function renderOps(){
-  let ops=db.operacoes;
-  if(opSearchVal)ops=ops.filter(o=>o.nome.toLowerCase().includes(opSearchVal)||o.local.toLowerCase().includes(opSearchVal));
-  if(opStatusFilter)ops=ops.filter(o=>o.status===opStatusFilter);
-  const tbody=document.getElementById('ops-table-body');
-  if(!ops.length){tbody.innerHTML=`<tr><td colspan="10" class="empty"><div class="empty-icon">🔍</div>Nenhuma operação encontrada</td></tr>`;return;}
-  tbody.innerHTML=ops.map((op,i)=>{const s=getOpStats(op.id);return`<tr>
-    <td style="color:var(--text2)">${i+1}</td><td><strong>${op.nome}</strong></td>
-    <td style="color:var(--text2);font-size:12px">${op.local}</td>
-    <td style="font-size:12px;color:var(--text2)">${op.fase}</td>
-    <td>${statusBadge(op.status)}</td><td style="min-width:120px">${progressBar(s.pct)}</td>
-    <td><span class="badge ${s.pend?'badge-orange':'badge-green'}">${s.pend}</span></td>
-    <td style="font-size:12px;color:var(--text2);max-width:140px;white-space:normal">${op.marco||'—'}</td>
-    <td style="font-size:12px;color:var(--text2);max-width:120px;white-space:normal">${op.pontocego||'—'}</td>
-    <td><div style="display:flex;gap:4px">
-      <button class="btn btn-ghost btn-sm btn-icon" onclick="openOpModal(${op.id})">✏️</button>
-      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteOp(${op.id})">🗑️</button>
-    </div></td>
-  </tr>`;}).join('');
-}
-function openOpModal(id){
-  editingOpId=id||null;
-  document.getElementById('op-modal-title').textContent=id?'Editar Operação':'Nova Operação';
-  if(id){const op=getOp(id);
-    document.getElementById('op-nome').value=op.nome;document.getElementById('op-local').value=op.local;
-    document.getElementById('op-fase').value=op.fase;document.getElementById('op-status').value=op.status;
-    document.getElementById('op-marco').value=op.marco||'';document.getElementById('op-pontocego').value=op.pontocego||'';
-    document.getElementById('op-objetivo').value=op.objetivo||'';document.getElementById('op-entregas').value=op.entregas||'';
-  }else{
-    ['op-nome','op-local','op-fase','op-marco','op-pontocego','op-objetivo','op-entregas'].forEach(x=>document.getElementById(x).value='');
-    document.getElementById('op-status').value='Em andamento';
-  }
-  document.getElementById('op-modal').classList.add('open');
-}
-function saveOp(){
-  const nome=document.getElementById('op-nome').value.trim();
-  const local=document.getElementById('op-local').value.trim();
-  if(!nome||!local){toast('Preencha os campos obrigatórios','error');return;}
-  const data={nome,local,fase:document.getElementById('op-fase').value.trim(),status:document.getElementById('op-status').value,marco:document.getElementById('op-marco').value.trim(),pontocego:document.getElementById('op-pontocego').value.trim(),objetivo:document.getElementById('op-objetivo').value.trim(),entregas:document.getElementById('op-entregas').value.trim()};
-  if(editingOpId)Object.assign(getOp(editingOpId),data);
-  else{data.id=nextId('op');db.operacoes.push(data);}
-  saveData();closeModal('op-modal');renderOps();renderDashboard();
-  toast(editingOpId?'Operação atualizada!':'Operação adicionada!');
-  updateOpSelects();
-}
-function deleteOp(id){
-  if(!confirm('Excluir esta operação e todas as suas tarefas?'))return;
-  db.operacoes=db.operacoes.filter(o=>o.id!==id);
-  db.tarefas=db.tarefas.filter(t=>t.opId!==id);
-  saveData();renderOps();renderDashboard();updateOpSelects();
-  toast('Operação excluída','info');
-}
-
-function updateOpSelects(){
-  const opts=db.operacoes.map(o=>`<option value="${o.id}">${o.nome}</option>`).join('');
-  ['task-op','ag-op'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
-  const f=document.getElementById('task-filter-op');
-  if(f)f.innerHTML=`<option value="">Todas as operações</option>`+opts;
-}
-function previewWA(val){
-  const clean=val.replace(/\D/g,'');
-  const el=document.getElementById('wa-preview');
-  const btn=document.getElementById('btn-save-notify');
-  if(clean.length>=10){el.textContent='✓ Número válido: +55 '+clean;if(btn)btn.style.display='inline-flex';}
-  else{el.textContent=clean.length>0?'⚠ Digite o DDD + número (mín. 10 dígitos)':'';if(btn)btn.style.display='none';}
-}
-function renderTasks(){
-  const search=(document.getElementById('task-search')?.value||'').toLowerCase();
-  const fOp=document.getElementById('task-filter-op')?.value;
-  const fSt=document.getElementById('task-filter-status')?.value;
-  const fPr=document.getElementById('task-filter-prio')?.value;
-  let ts=db.tarefas;
-  if(search)ts=ts.filter(t=>t.nome.toLowerCase().includes(search)||(t.responsavel||'').toLowerCase().includes(search));
-  if(fOp)ts=ts.filter(t=>t.opId==fOp);
-  if(fSt)ts=ts.filter(t=>t.status===fSt);
-  if(fPr)ts=ts.filter(t=>t.prioridade===fPr);
-  const tbody=document.getElementById('tasks-table-body');
-  if(!ts.length){tbody.innerHTML=`<tr><td colspan="9" class="empty"><div class="empty-icon">✅</div>Nenhuma tarefa encontrada</td></tr>`;return;}
-  tbody.innerHTML=ts.map(t=>{const done=t.status==='Concluído';return`<tr style="${done?'opacity:.55':''}">
-    <td><input type="checkbox" ${done?'checked':''} onchange="toggleTask(${t.id},this.checked)" style="cursor:pointer;width:16px;height:16px;accent-color:var(--navy)"></td>
-    <td style="max-width:240px;white-space:normal;${done?'text-decoration:line-through;':''}">${t.nome}</td>
-    <td><span class="badge badge-navy" style="font-size:11px">${getOpName(t.opId)}</span></td>
-    <td style="font-size:12px;color:var(--text2)">${t.responsavel||'—'}</td>
-    <td>${prioBadge(t.prioridade)}</td>
-    <td><select class="status-sel" onchange="changeTaskStatus(${t.id},this.value)" style="color:${t.status==='Concluído'?'#166534':t.status==='Em andamento'?'#1d4ed8':'#475569'}">
-      <option ${t.status==='Pendente'?'selected':''}>Pendente</option>
-      <option ${t.status==='Em andamento'?'selected':''}>Em andamento</option>
-      <option ${t.status==='Concluído'?'selected':''}>Concluído</option>
-    </select></td>
-    <td style="font-size:12px;color:var(--text2)">${formatDate(t.prazo)}</td>
-    <td>${waButton(t.whatsapp,t)}</td>
-    <td><div style="display:flex;gap:4px">
-      <button class="btn btn-ghost btn-sm btn-icon" onclick="openTaskModal(${t.id})">✏️</button>
-      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteTask(${t.id})">🗑️</button>
-    </div></td>
-  </tr>`;}).join('');
-}
-function toggleTask(id,checked){const t=db.tarefas.find(t=>t.id===id);if(t){t.status=checked?'Concluído':'Pendente';saveData();renderTasks();renderDashboard();}}
-function changeTaskStatus(id,val){const t=db.tarefas.find(t=>t.id===id);if(t){t.status=val;saveData();renderDashboard();renderTasks();}}
-function openTaskModal(id){
-  editingTaskId=id||null;
-  updateOpSelects();
-  document.getElementById('task-modal-title').textContent=id?'Editar Tarefa':'Nova Tarefa';
-  const btn=document.getElementById('btn-save-notify');
-  if(id){const t=db.tarefas.find(t=>t.id===id);
-    document.getElementById('task-nome').value=t.nome;
-    document.getElementById('task-op').value=t.opId;
-    document.getElementById('task-resp').value=t.responsavel||'';
-    document.getElementById('task-wa').value=t.whatsapp||'';
-    document.getElementById('task-prio').value=t.prioridade;
-    document.getElementById('task-status').value=t.status;
-    document.getElementById('task-prazo').value=t.prazo||'';
-    document.getElementById('task-obs').value=t.obs||'';
-    previewWA(t.whatsapp||'');
-  }else{
-    ['task-nome','task-resp','task-wa','task-obs'].forEach(x=>document.getElementById(x).value='');
-    document.getElementById('task-prio').value='Média';
-    document.getElementById('task-status').value='Pendente';
-    document.getElementById('task-prazo').value='';
-    document.getElementById('wa-preview').textContent='';
-    if(btn)btn.style.display='none';
-  }
-  document.getElementById('task-modal').classList.add('open');
-}
-function saveTask(notify=false){
-  const nome=document.getElementById('task-nome').value.trim();
-  const opId=parseInt(document.getElementById('task-op').value);
-  if(!nome||!opId){toast('Preencha os campos obrigatórios','error');return;}
-  const waNum=document.getElementById('task-wa').value.replace(/\D/g,'');
-  const data={nome,opId,responsavel:document.getElementById('task-resp').value.trim(),whatsapp:waNum,prioridade:document.getElementById('task-prio').value,status:document.getElementById('task-status').value,prazo:document.getElementById('task-prazo').value,obs:document.getElementById('task-obs').value.trim()};
-  if(editingTaskId)Object.assign(db.tarefas.find(t=>t.id===editingTaskId),data);
-  else{data.id=nextId('task');db.tarefas.push(data);}
-  saveData();closeModal('task-modal');renderTasks();renderDashboard();
-  if(notify&&waNum){
-    const link=buildWALink(waNum,data.nome,getOpName(data.opId),data.prioridade,data.prazo,data.responsavel);
-    window.open(link,'_blank');
-    toast('Abrindo WhatsApp para notificação…','info');
-  }else{
-    toast(editingTaskId?'Tarefa atualizada!':'Tarefa adicionada!');
-  }
-}
-function deleteTask(id){
-  if(!confirm('Excluir esta tarefa?'))return;
-  db.tarefas=db.tarefas.filter(t=>t.id!==id);
-  saveData();renderTasks();renderDashboard();
-  toast('Tarefa excluída','info');
-}
-
-function renderAgenda(){
-  const fM=document.getElementById('agenda-filter-month')?.value;
-  let items=[...db.agenda].sort((a,b)=>a.data.localeCompare(b.data));
-  if(fM)items=items.filter(a=>a.data.startsWith(fM));
-  const months=[...new Set(db.agenda.map(a=>a.data.substring(0,7)))].sort();
-  const mSel=document.getElementById('agenda-filter-month');
-  const cur=mSel.value;
-  mSel.innerHTML=`<option value="">Todos os meses</option>`+months.map(m=>`<option value="${m}" ${cur===m?'selected':''}>${m}</option>`).join('');
-  const tbody=document.getElementById('agenda-table-body');
-  const today=new Date().toISOString().split('T')[0];
-  if(!items.length){tbody.innerHTML=`<tr><td colspan="8" class="empty"><div class="empty-icon">📅</div>Nenhum compromisso cadastrado</td></tr>`;return;}
-  tbody.innerHTML=items.map(a=>{const past=a.data<today&&a.status==='Pendente';return`<tr>
-    <td style="font-weight:700;${past?'color:var(--red)':''}">${formatDate(a.data)}${a.hora?' '+a.hora:''}</td>
-    <td><strong>${a.titulo}</strong></td>
-    <td><span class="badge badge-navy" style="font-size:11px">${getOpName(a.opId)}</span></td>
-    <td style="font-size:12px;color:var(--text2)">${a.responsavel||'—'}</td>
-    <td><span class="badge badge-gray" style="font-size:11px">${a.tipo}</span></td>
-    <td>${statusBadge(a.status)}</td>
-    <td style="font-size:12px;color:var(--text2)">${a.obs||'—'}</td>
-    <td><div style="display:flex;gap:4px">
-      <button class="btn btn-ghost btn-sm btn-icon" onclick="openAgendaModal(${a.id})">✏️</button>
-      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteAgenda(${a.id})">🗑️</button>
-    </div></td>
-  </tr>`;}).join('');
-}
-function openAgendaModal(id){
-  editingAgId=id||null;updateOpSelects();
-  document.getElementById('agenda-modal-title').textContent=id?'Editar Compromisso':'Novo Compromisso';
-  if(id){const a=db.agenda.find(a=>a.id===id);
-    document.getElementById('ag-titulo').value=a.titulo;document.getElementById('ag-data').value=a.data;
-    document.getElementById('ag-hora').value=a.hora||'';document.getElementById('ag-op').value=a.opId;
-    document.getElementById('ag-resp').value=a.responsavel||'';document.getElementById('ag-tipo').value=a.tipo;
-    document.getElementById('ag-status').value=a.status;document.getElementById('ag-obs').value=a.obs||'';
-  }else{
-    ['ag-titulo','ag-hora','ag-resp','ag-obs'].forEach(x=>document.getElementById(x).value='');
-    document.getElementById('ag-data').value=new Date().toISOString().split('T')[0];
-    document.getElementById('ag-tipo').value='Reunião';document.getElementById('ag-status').value='Pendente';
-  }
-  document.getElementById('agenda-modal').classList.add('open');
-}
-function saveAgenda(){
-  const titulo=document.getElementById('ag-titulo').value.trim();
-  const data=document.getElementById('ag-data').value;
-  if(!titulo||!data){toast('Preencha os campos obrigatórios','error');return;}
-  const item={titulo,data,hora:document.getElementById('ag-hora').value,opId:parseInt(document.getElementById('ag-op').value),responsavel:document.getElementById('ag-resp').value.trim(),tipo:document.getElementById('ag-tipo').value,status:document.getElementById('ag-status').value,obs:document.getElementById('ag-obs').value.trim()};
-  if(editingAgId)Object.assign(db.agenda.find(a=>a.id===editingAgId),item);
-  else{item.id=nextId('ag');db.agenda.push(item);}
-  saveData();closeModal('agenda-modal');renderAgenda();
-  toast(editingAgId?'Compromisso atualizado!':'Compromisso adicionado!');
-}
-function deleteAgenda(id){
-  if(!confirm('Excluir este compromisso?'))return;
-  db.agenda=db.agenda.filter(a=>a.id!==id);
-  saveData();renderAgenda();toast('Compromisso excluído','info');
-}
-
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
-
-updateOpSelects();
-renderDashboard();
 </script>
 </body>
 </html>
