@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel de Investigações — Rumo Logística</title>
 <style>
+  @font-face { font-family:'Cera Pro'; src:url('fonts/Fontspring-DEMO-cerapro-light.otf') format('opentype'); font-weight:300; }
+  @font-face { font-family:'Cera Pro'; src:url('fonts/Fontspring-DEMO-cerapro-regular.otf') format('opentype'); font-weight:400; }
+  @font-face { font-family:'Cera Pro'; src:url('fonts/Fontspring-DEMO-cerapro-medium.otf') format('opentype'); font-weight:500; }
+  @font-face { font-family:'Cera Pro'; src:url('fonts/Fontspring-DEMO-cerapro-bold.otf') format('opentype'); font-weight:700; }
   :root {
     --navy:#003865;--navy2:#1a3a5c;--orange:#F78344;--orange-h:#e06d30;
     --bg:#f4f6fa;--bg2:#fff;--bg3:#eef1f7;--border:#d0d9e8;
@@ -13,12 +17,9 @@
     --radius:10px;--shadow:0 2px 12px rgba(0,56,101,.10);
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;min-height:100vh;}
+  body{background:var(--bg);color:var(--text);font-family:'Cera Pro','Segoe UI',Arial,sans-serif;font-size:14px;min-height:100vh;}
   header{background:var(--navy);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:62px;box-shadow:0 2px 8px rgba(0,0,0,.25);}
   .header-left{display:flex;align-items:center;gap:20px;}
-  .logo-wrap{background:#fff;border-radius:6px;padding:5px 10px;display:flex;align-items:center;}
-  .logo-wrap img{height:32px;display:block;}
-  .header-divider{width:1px;height:36px;background:rgba(255,255,255,.25);}
   .header-title h1{font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;}
   .header-title p{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px;}
   .header-right{font-size:11px;color:rgba(255,255,255,.5);}
@@ -128,8 +129,6 @@
 
 <header>
   <div class="header-left">
-    <div class="logo-wrap"><img src="data:image/png;base64,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" alt="Rumo"></div>
-    <div class="header-divider"></div>
     <div class="header-title">
       <h1>Painel de Investigações</h1>
       <p>Fluxo operacional de atividades da Inteligência e Investigação</p>
