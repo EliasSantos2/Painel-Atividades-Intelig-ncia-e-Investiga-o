@@ -334,8 +334,13 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
   <div class="proc-grid">
     <div class="proc-card"><h4>Tipo de Procedimento</h4><canvas id="ch-proc"></canvas></div>
     <div class="proc-card"><h4>Delegacia (DP)</h4><canvas id="ch-dp"></canvas></div>
-    <div class="proc-card"><h4>Vara</h4><canvas id="ch-vara"></canvas></div>
-    <div class="proc-card"><h4>Quebra de Sigilo</h4><canvas id="ch-sigilo"></canvas></div>
+    <div class="proc-card proc-card-wide" style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start">
+      <div><h4>Vara</h4><canvas id="ch-vara"></canvas></div>
+      <div style="border-left:1px solid var(--border);padding-left:20px">
+        <h4>Quebra de Sigilo</h4>
+        <canvas id="ch-sigilo" style="max-height:180px"></canvas>
+      </div>
+    </div>
     <div class="proc-card proc-card-wide"><h4>Último Andamento</h4><canvas id="ch-andamento"></canvas></div>
   </div>
 </div>
