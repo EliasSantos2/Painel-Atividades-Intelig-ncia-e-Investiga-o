@@ -160,9 +160,9 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
 <div class="topbar">
   <a href="index.html"><i data-lucide="arrow-left" style="width:13px;height:13px"></i> Início</a>
   <span class="sep">|</span>
-  <a href="Painel_Investigacoes.html">📋 Módulo 01 · Painel de Investigações</a>
+  <a href="Painel_Investigacoes.html">Módulo 01 · Painel de Investigações</a>
   <span class="sep">|</span>
-  <span class="active-mod">📊 Módulo 02 · Indicadores da Inteligência</span>
+  <span class="active-mod">Módulo 02 · Indicadores da Inteligência</span>
 </div>
 
 <div class="hdr">
@@ -317,7 +317,7 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
   </div>
 
   <div class="desdo-card" style="width:100%">
-    <h3>📋 Distribuição Anual dos Processos (Baixada Santista)</h3>
+    <h3>Distribuição Anual dos Processos (Baixada Santista)</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:12px">
       <div style="text-align:center"><div style="font-size:36px;font-weight:700;color:#f5c518">47</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase">2024</div></div>
       <div style="text-align:center"><div style="font-size:36px;font-weight:700;color:var(--orange)">179</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase">2025</div></div>
@@ -910,13 +910,13 @@ function buildMapPopup(c){
     </div>
     <div style="padding:8px 10px;border:1px solid #ddd;border-top:none;border-radius:0 0 4px 4px">
       <div style="margin-bottom:6px"><strong>${c.nat||c.tp||'—'}</strong> · ${c.tp||''} · ${c.sb||''}</div>
-      <div style="color:#555;font-size:11px;margin-bottom:4px">📅 ${c.dt||'—'} ${c.hr?'às '+c.hr:''}</div>
-      <div style="color:#555;font-size:11px;margin-bottom:4px">📍 ${c.cid||'—'}/${c.uf||'—'} · ${c.circ||'—'} · KM ${c.km||'—'}</div>
-      <div style="color:#555;font-size:11px;margin-bottom:8px">🏢 ${c.emp||'—'} · Art. ${c.cr||'—'}</div>`;
+      <div style="color:#555;font-size:11px;margin-bottom:4px">${c.dt||'—'} ${c.hr?'às '+c.hr:''}</div>
+      <div style="color:#555;font-size:11px;margin-bottom:4px">${c.cid||'—'}/${c.uf||'—'} · ${c.circ||'—'} · KM ${c.km||'—'}</div>
+      <div style="color:#555;font-size:11px;margin-bottom:8px">${c.emp||'—'} · Art. ${c.cr||'—'}</div>`;
   if(hasInq){
     const p = c.inq;
     h += `<div style="background:#fff8f8;border:1px solid #C0392B;border-radius:4px;padding:6px 8px;font-size:11px">
-      <div style="color:#C0392B;font-weight:700;margin-bottom:4px">⚖️ Processo Vinculado</div>
+      <div style="color:#C0392B;font-weight:700;margin-bottom:4px">Processo Vinculado</div>
       <div><strong>Proc.:</strong> ${p.proc||'—'} · Nº ${p.num||'—'}</div>
       <div><strong>DP:</strong> ${p.dp||'—'}</div>
       <div><strong>Vara:</strong> ${p.vara||'—'}</div>
@@ -925,7 +925,7 @@ function buildMapPopup(c){
     </div>`;
   } else {
     h += `<div style="background:#f0fff4;border:1px solid #27ae60;border-radius:4px;padding:6px 8px;font-size:11px;color:#27ae60">
-      ✅ Não há inquérito em aberto para este B.O.</div>`;
+      Não há inquérito em aberto para este B.O.</div>`;
   }
   h += '</div></div>';
   return h;
