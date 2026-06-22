@@ -61,7 +61,7 @@ body{font-family:'Plus Jakarta Sans','Segoe UI',Arial,sans-serif;background:var(
 .tab-content.active{display:block}
 
 /* ── KPIs ── */
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:20px 24px;background:var(--bg)}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;padding:20px 24px;background:var(--bg)}
 .kpi{background:#fff;border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);position:relative;overflow:hidden;border-top:4px solid transparent;transition:.2s}
 .kpi:hover{box-shadow:var(--shadow2);transform:translateY(-1px)}
 .kpi.k1{border-top-color:var(--orange)}
@@ -244,6 +244,7 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
     <div class="kpi k2"><i data-lucide="shield-alert" style="color:var(--red);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Criminal</div><div class="kpi-val" id="kpi-crim">—</div><div class="kpi-sub" id="kpi-crim-pct">—</div></div>
     <div class="kpi k3"><i data-lucide="shield-check" style="color:var(--navy2);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Não Criminal</div><div class="kpi-val" id="kpi-naocrim">—</div><div class="kpi-sub" id="kpi-naocrim-pct">—</div></div>
     <div class="kpi k4"><i data-lucide="user-check" style="color:var(--green);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Autoria Conhecida</div><div class="kpi-val" id="kpi-aut">—</div><div class="kpi-sub" id="kpi-aut-pct">—</div></div>
+    <div class="kpi" style="border-top-color:#C0392B"><i data-lucide="package-open" style="color:#C0392B;width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">THP Total Criminal</div><div class="kpi-val" id="kpi-thp" style="color:#C0392B">—</div><div class="kpi-sub" id="kpi-thp-sub">toneladas havidas produto</div></div>
   </div>
   <div class="section-header">
     <h2><i data-lucide="bar-chart-2" style="display:inline;vertical-align:middle;width:16px;height:16px;color:var(--orange)"></i> Análise por Indicadores</h2>
@@ -498,6 +499,20 @@ function buildCharts(data) {
   document.getElementById('kpi-naocrim-pct').textContent = total ? (naoCr/total*100).toFixed(1)+'% do total' : '';
   document.getElementById('kpi-aut-pct').textContent= total ? (aut/total*100).toFixed(1)+'% de autoria identificada' : '';
   document.getElementById('count-label').textContent = total.toLocaleString('pt-BR') + ' registros';
+
+  // THP Total Criminal — calcula a partir de COORDS filtrado (campo thp, apenas criminais)
+  const coordsCrim = (typeof getCoordFiltered==='function' ? getCoordFiltered() : COORDS)
+    .filter(c => c.cl === 'CRIMINAL');
+  const thpTotal = coordsCrim.reduce((acc, c) => {
+    const v = parseFloat(String(c.thp||'').replace(',','.'));
+    return acc + (isNaN(v) ? 0 : v);
+  }, 0);
+  const thpEl = document.getElementById('kpi-thp');
+  const thpSub = document.getElementById('kpi-thp-sub');
+  if(thpEl){
+    thpEl.textContent = thpTotal > 0 ? thpTotal.toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:2}) : '—';
+  }
+  if(thpSub){ thpSub.textContent = coordsCrim.length + ' BOs criminais com coord.'; }
 
   const opts = { responsive:true, plugins:{ legend:{ labels:{ color:'#1a2740', font:{size:11,family:"'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"} } } } };
 
