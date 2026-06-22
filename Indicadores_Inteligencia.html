@@ -417,12 +417,14 @@ function getFiltered() {
 }
 
 const COLORS = {
-  orange:'#F78344', red:'#e74c3c', blue:'#3498db', green:'#27ae60',
-  yellow:'#f5c518', purple:'#8e44ad', teal:'#1abc9c', navy:'#2980b9'
+  orange:'#F78344', red:'#C0392B', blue:'#005CA9', green:'#1a6999',
+  yellow:'#F7A878', purple:'#003865', teal:'#007ACC', navy:'#003865'
 };
+// Paleta Rumo DNA completa para gráficos com múltiplas séries
+const RUMO_PAL = ['#003865','#005CA9','#F78344','#1a6999','#007ACC','#F7A878','#001F3F','#FFB085'];
 
 const MESES_LABEL = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-const YEAR_COLORS = { 2023:'#3498db', 2024:'#f5c518', 2025:'#F78344', 2026:'#27ae60' };
+const YEAR_COLORS = { 2023:'#005CA9', 2024:'#1a6999', 2025:'#F78344', 2026:'#003865' };
 
 function countBy(arr, key, topN=0) {
   const m = {};
@@ -459,7 +461,7 @@ function buildCharts(data) {
   charts['class'] = new Chart(document.getElementById('ch-class'), {
     type:'doughnut', data:{
       labels:['Criminal','Não Criminal'],
-      datasets:[{ data:[crim,naoCr], backgroundColor:['#dc2626','#003865'], borderWidth:0 }]
+      datasets:[{ data:[crim,naoCr], backgroundColor:['#003865','#F78344'], borderWidth:0 }]
     },
     options:{ ...opts, plugins:{ ...opts.plugins, legend:{ position:'bottom', labels:{ color:'#1a2740', font:{size:11} } } },
       cutout:'65%' }
@@ -471,7 +473,7 @@ function buildCharts(data) {
   charts['artigo'] = new Chart(document.getElementById('ch-artigo'), {
     type:'bar', data:{
       labels: artigos.map(([k])=>'Art.'+k),
-      datasets:[{ data:artigos.map(([,v])=>v), backgroundColor:'#f5c518', barThickness:16, borderRadius:3 }]
+      datasets:[{ data:artigos.map(([,v])=>v), backgroundColor:'#005CA9', barThickness:16, borderRadius:3 }]
     },
     options:{ ...opts, indexAxis:'y', plugins:{ legend:{display:false} },
       scales:{ x:{ grid:{color:'#EBF0F8'}, ticks:{color:'#5a6e8a'} }, y:{ grid:{display:false}, ticks:{color:'#1a2740',font:{size:11}} } } }
@@ -535,7 +537,7 @@ function buildCharts(data) {
   charts['aut'] = new Chart(document.getElementById('ch-aut'), {
     type:'pie', data:{
       labels:['Desconhecida','Conhecida'],
-      datasets:[{ data:[data.filter(r=>r.au=='D').length, aut], backgroundColor:['#D9DEE8','#2e9e57'], borderWidth:1 }]
+      datasets:[{ data:[data.filter(r=>r.au=='D').length, aut], backgroundColor:['#D9E4F0','#003865'], borderWidth:1 }]
     },
     options:{ ...opts, plugins:{ legend:{ position:'bottom', labels:{ color:'#1a2740', font:{size:11} } } } }
   });
@@ -546,7 +548,7 @@ function buildCharts(data) {
   charts['emp'] = new Chart(document.getElementById('ch-emp'), {
     type:'pie', data:{
       labels:emps.map(([k])=>k),
-      datasets:[{ data:emps.map(([,v])=>v), backgroundColor:['#003865','#e74c3c','#8e44ad','#1abc9c'], borderWidth:1 }]
+      datasets:[{ data:emps.map(([,v])=>v), backgroundColor:RUMO_PAL, borderWidth:1 }]
     },
     options:{ ...opts, plugins:{ legend:{ position:'bottom', labels:{ color:'#1a2740', font:{size:11} } } } }
   });
@@ -1042,7 +1044,7 @@ function renderProcCharts(){
   const andEntries = Object.entries(andCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
   destroyProcChart('ch-andamento');
   _procCharts['ch-andamento'] = new Chart(document.getElementById('ch-andamento'),{
-    type:'bar', data:{labels:andEntries.map(([k])=>k), datasets:[{data:andEntries.map(([,v])=>v), backgroundColor:'#27ae60', barThickness:14, borderRadius:3}]},
+    type:'bar', data:{labels:andEntries.map(([k])=>k), datasets:[{data:andEntries.map(([,v])=>v), backgroundColor:'#1a6999', barThickness:14, borderRadius:3}]},
     options:{...optsDark, indexAxis:'y', plugins:{legend:{display:false}}}
   });
 
@@ -1052,7 +1054,7 @@ function renderProcCharts(){
   destroyProcChart('ch-sigilo');
   _procCharts['ch-sigilo'] = new Chart(document.getElementById('ch-sigilo'),{
     type:'pie',
-    data:{labels:['Sim','Não'], datasets:[{data:[sigiloData.Sim,sigiloData['Não']], backgroundColor:['#e74c3c','#27ae60'], borderWidth:1}]},
+    data:{labels:['Sim','Não'], datasets:[{data:[sigiloData.Sim,sigiloData['Não']], backgroundColor:['#F78344','#003865'], borderWidth:0}]},
     options:{responsive:true, plugins:{legend:{position:'bottom',labels:{color:'#1a2740',font:{size:12}}}}}
   });
 }
