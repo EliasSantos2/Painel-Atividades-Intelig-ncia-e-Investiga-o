@@ -362,19 +362,19 @@ select,input,button,textarea,label{font-family:'Cera Pro','Segoe UI',Arial,sans-
     </label>
     <label>DEINTER:
       <select id="map-deinter" onchange="renderMap()">
-        <option value="">Todos</option>
-        <option value="1">DEINTER 1 – Baixada Santista</option>
-        <option value="2">DEINTER 2 – Campinas</option>
-        <option value="3">DEINTER 3 – Ribeirão Preto</option>
-        <option value="4">DEINTER 4 – Bauru</option>
-        <option value="5">DEINTER 5 – S.J. do Rio Preto</option>
-        <option value="6">DEINTER 6 – Vale do Paraíba</option>
-        <option value="7">DEINTER 7 – Sorocaba</option>
-        <option value="8">DEINTER 8 – Pres. Prudente</option>
-        <option value="9">DEINTER 9 – Araçatuba</option>
-        <option value="10">DEINTER 10 – Piracicaba</option>
-        <option value="outros">Fora do Estado de SP</option>
-      </select>
+      <option value="">Todos</option>
+      <option value="1">DEINTER 1 – São José dos Campos</option>
+      <option value="2">DEINTER 2 – Campinas</option>
+      <option value="3">DEINTER 3 – Ribeirão Preto</option>
+      <option value="4">DEINTER 4 – Bauru</option>
+      <option value="5">DEINTER 5 – S.J. do Rio Preto</option>
+      <option value="6">DEINTER 6 – Santos</option>
+      <option value="7">DEINTER 7 – Sorocaba</option>
+      <option value="8">DEINTER 8 – Pres. Prudente</option>
+      <option value="9">DEINTER 9 – Piracicaba</option>
+      <option value="10">DEINTER 10 – Araçatuba</option>
+      <option value="outros">Fora do Estado de SP</option>
+    </select>
     </label>
     <label><input type="checkbox" id="map-inq" onchange="renderMap()"> Somente com Inquérito</label>
     <label><input type="checkbox" id="map-deinter-show" checked onchange="toggleDeinterLayer()"> Exibir DEINTERs</label>
@@ -553,162 +553,339 @@ function buildCharts(data) {
   });
 }
 
-// ── DEINTER REGIONS — carregamento dinâmico via API IBGE ────
-// Mapeamento: nome da Região Geográfica Intermediária (IBGE) → DEINTER
-const IBGE_TO_DEINTER = {
-  'Santos':                '1',
-  'Campinas':              '2',
-  'Ribeirão Preto':        '3',
-  'Bauru':                 '4',
-  'São José do Rio Preto': '5',
-  'São José dos Campos':   '6',
-  'Sorocaba':              '7',
-  'Presidente Prudente':   '8',
-  'Araçatuba':             '9',
+// ── DEINTER — fronteiras municipais reais (geodata-br + decretos PCSP) ──────
+// Fonte municipal: tbrugz/geodata-br (IBGE)
+// Fonte jurisdição: Decreto 44.448/1999, Decreto 51.039/2006 e posteriores
+
+// Normaliza nome de município para lookup: minúsculo, sem acentos, sem hífen
+function _normMun(s){
+  return s.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[-']/g,' ').replace(/\s+/g,' ').trim();
+}
+
+// Mapeamento município (normalizado) → DEINTER
+// DEINTER 1 – São José dos Campos (Vale do Paraíba + Litoral Norte)
+// DEINTER 2 – Campinas
+// DEINTER 3 – Ribeirão Preto
+// DEINTER 4 – Bauru
+// DEINTER 5 – São José do Rio Preto
+// DEINTER 6 – Santos (Baixada Santista + Vale do Ribeira)
+// DEINTER 7 – Sorocaba
+// DEINTER 8 – Presidente Prudente
+// DEINTER 9 – Piracicaba
+// DEINTER 10 – Araçatuba
+const MUN_DEINTER = {
+  // ── DEINTER 1 – São José dos Campos ──────────────────────────────
+  'sao jose dos campos':'1','cacapava':'1','monteiro lobato':'1',
+  'cruzeiro':'1','bananal':'1','queluz':'1','arapei':'1','areias':'1',
+  'lavrinhas':'1','sao jose do barreiro':'1','silveiras':'1',
+  'guaratingueta':'1','aparecida':'1','cachoeira paulista':'1',
+  'lorena':'1','cunha':'1','piquete':'1','canas':'1','potim':'1','roseira':'1',
+  'jacarei':'1','paraibuna':'1','santa branca':'1','igarata':'1','jambeiro':'1',
+  'sao sebastiao':'1','caraguatatuba':'1','ilhabela':'1','ubatuba':'1',
+  'taubate':'1','pindamonhangaba':'1','campos do jordao':'1','tremembe':'1',
+  'sao bento do sapucai':'1','sao luiz do paraitinga':'1','lagoinha':'1',
+  'natividade da serra':'1','redencao da serra':'1','santo antonio do pinhal':'1',
+  // ── DEINTER 2 – Campinas ─────────────────────────────────────────
+  // Seccionais: Campinas, Bragança Paulista, Jundiaí, Mogi-Guaçu
+  // (Americana, Piracicaba, Rio Claro, Limeira, S.J.Boa Vista, Casa Branca → D9)
+  'campinas':'2','indaiatuba':'2','valinhos':'2','paulinia':'2','vinhedo':'2',
+  'braganca paulista':'2','aguas de lindoia':'2','amparo':'2','atibaia':'2',
+  'piracaia':'2','serra negra':'2','socorro':'2','lindoia':'2',
+  'bom jesus dos perdoes':'2','joanopolis':'2','monte alegre do sul':'2',
+  'nazare paulista':'2','pedra bela':'2','pinhalzinho':'2','tuiuti':'2','vargem':'2',
+  'jundiai':'2','itatiba':'2','varzea paulista':'2','campo limpo paulista':'2',
+  'cabreuva':'2','itupeva':'2','jarinu':'2','louveira':'2','morungaba':'2',
+  'mogi guacu':'2','itapira':'2','jaguariuna':'2','mogi mirim':'2',
+  'pedreira':'2','santo antonio de posse':'2','estiva gerbi':'2','holambra':'2',
+  // ── DEINTER 3 – Ribeirão Preto ───────────────────────────────────
+  'ribeirao preto':'3','cajuru':'3','jardinopolis':'3','serrana':'3',
+  'altinopolis':'3','brodosqui':'3','cravinhos':'3','santa rosa do viterbo':'3',
+  'sao simao':'3','cassia dos coqueiros':'3','guatapara':'3','luiz antonio':'3',
+  'santa cruz da esperanca':'3','santo antonio da alegria':'3','serra azul':'3',
+  'araraquara':'3','americo brasiliense':'3','ibitinga':'3','itapolis':'3',
+  'matao':'3','taquaritinga':'3','boa esperanca do sul':'3','borborema':'3',
+  'dobrada':'3','rincao':'3','santa ernestina':'3','candido rodrigues':'3',
+  'fernando prestes':'3','gaviao peixoto':'3','motuca':'3','nova europa':'3',
+  'santa lucia':'3','tabatinga':'3','trabiju':'3',
+  'barretos':'3','guaira':'3','olimpia':'3','colina':'3','severinia':'3',
+  'altair':'3','cajobi':'3','colombia':'3','embaubu':'3','guaraci':'3','jaborandi':'3',
+  'bebedouro':'3','viradouro':'3','monte azul paulista':'3','pirangi':'3',
+  'taiacu':'3','taiuva':'3','terra roxa':'3','vista alegre do alto':'3',
+  'franca':'3','batatais':'3','igarapava':'3','ituverava':'3','miguelopolis':'3',
+  'guara':'3','patrocinio paulista':'3','pedregulho':'3','aramina':'3',
+  'buritizal':'3','cristais paulista':'3','itirapua':'3','jeriquara':'3',
+  'restinga':'3','ribeirao corrente':'3','rifaina':'3','sao jose da bela vista':'3',
+  'sao carlos':'3','descalvado':'3','porto ferreira':'3',
+  'santa rita do passa quatro':'3','ibate':'3','ribeirao bonito':'3','dourado':'3',
+  'sao joaquim da barra':'3','orlandia':'3','ipua':'3','morro agudo':'3',
+  'nuporanga':'3','sales de oliveira':'3',
+  'sertaozinho':'3','guariba':'3','jaboticabal':'3','monte alto':'3',
+  'pitangueiras':'3','barrinha':'3','pradopolis':'3','pontal':'3',
+  'dumont':'3','taquaral':'3',
+  // ── DEINTER 4 – Bauru ────────────────────────────────────────────
+  // Seccionais: Bauru, Jaú, Lins, Marília, Ourinhos, Tupã
+  // (Adamantina, Assis, Dracena, Presidente Prudente, Presidente Venceslau → D8)
+  'bauru':'4','agudos':'4','lencois paulista':'4','pederneiras':'4',
+  'duartina':'4','macatuba':'4','pirajui':'4','piratininga':'4','arealva':'4',
+  'avai':'4','balbinos':'4','borebi':'4','cabralia paulista':'4','iacanga':'4',
+  'lucianopolis':'4','paulistania':'4','presidente alves':'4','reginopolis':'4','ubirajara':'4',
+  'jau':'4','bariri':'4','barra bonita':'4','dois corregos':'4',
+  'igaracu do tiete':'4','bocaina':'4','boraceia':'4','itaju':'4','itapui':'4','mineiros do tiete':'4',
+  'lins':'4','promissao':'4','cafelanida':'4','getulina':'4','guaicara':'4',
+  'guaimbe':'4','guaranta':'4','pongai':'4','sabino':'4','uru':'4',
+  'marilia':'4','garca':'4','pompeia':'4','galia':'4','vera cruz':'4',
+  'alvaro de carvalho':'4','alvinlandia':'4','echapora':'4','fernao':'4',
+  'julio mesquita':'4','lupercio':'4','ocaucu':'4','oriente':'4','oscar bressane':'4',
+  'ourinhos':'4','santa cruz do rio pardo':'4','bernardino de campos':'4',
+  'chavantes':'4','ipaussu':'4','canitar':'4','espirito santo do turvo':'4',
+  'oleo':'4','ribeirao do sul':'4','salto grande':'4','sao pedro do turvo':'4','timburi':'4',
+  'tupa':'4','bastos':'4','parapua':'4','quata':'4','rinopolis':'4',
+  'arco iris':'4','bora':'4','herculandia':'4','iacri':'4','joao ramalho':'4',
+  'queiroz':'4','quintana':'4',
+  // ── DEINTER 5 – São José do Rio Preto ───────────────────────────
+  // Seccionais: São José do Rio Preto, Catanduva, Fernandópolis, Jales, Novo Horizonte, Votuporanga
+  // (Andradina, Araçatuba → D10)
+  'sao jose do rio preto':'5','jose bonifacio':'5','mirassol':'5',
+  'monte aprazivel':'5','nova granada':'5','tanabi':'5','guapiacu':'5','ibira':'5',
+  'icem':'5','palestina':'5','paulo de faria':'5','potirendaba':'5',
+  'adolfo':'5','bady bassit':'5','balsamo':'5','cedral':'5','ipigua':'5','jaci':'5',
+  'mendonca':'5','mirassolandia':'5','neves paulista':'5','nipoa':'5',
+  'nova alianca':'5','onda verde':'5','orindiuva':'5','planalto':'5',
+  'poloni':'5','ubarana':'5','uchoa':'5','uniao paulista':'5','zacarias':'5',
+  'catanduva':'5','pindorama':'5','santa adelia':'5','tabapua':'5',
+  'ariranha':'5','catigua':'5','elisario':'5','novais':'5','palmares paulista':'5','paraiso':'5',
+  'fernandopolis':'5','estrela do oeste':'5','guarani do oeste':'5','indiapoca':'5',
+  'macedonia':'5','meridiano':'5','mira estrela':'5','ouroeste':'5',
+  'pedranopolis':'5','populina':'5','sao joao das duas pontes':'5','turmalina':'5',
+  'jales':'5','santa fe do sul':'5','palmeira do oeste':'5','tres fronteiras':'5',
+  'urania':'5','aspasia':'5','aparecida do oeste':'5','dirce reis':'5',
+  'dolcinopolis':'5','marinopolis':'5','mesopolis':'5','nova canaa paulista':'5',
+  'paranapua':'5','pontalinda':'5','rubineia':'5','santa albertina':'5',
+  'santa clara do oeste':'5','santa rita do oeste':'5','santa salete':'5',
+  'santana da ponte pensa':'5','sao francisco':'5','vitoria brasil':'5',
+  'novo horizonte':'5','itajobi':'5','urupes':'5','irapua':'5','marapoama':'5','sales':'5',
+  'votuporanga':'5','cardoso':'5','macaubal':'5','nhandeara':'5',
+  'alvares florence':'5','americo de campos':'5','cosmorama':'5',
+  'floreal':'5','magda':'5','moncoes':'5','parisi':'5','pontes gestal':'5',
+  'riolandia':'5','sebastianopolis do sul':'5','valentim gentil':'5',
+  // ── DEINTER 6 – Santos ───────────────────────────────────────────
+  'santos':'6','bertioga':'6','cubatao':'6','guaruja':'6','praia grande':'6','sao vicente':'6',
+  'itanhaem':'6','mongagua':'6','peruibe':'6',
+  'jacupiranga':'6','barra do turvo':'6','cajati':'6','cananeia':'6',
+  'eldorado':'6','pariquera acu':'6',
+  'registro':'6','iguape':'6','miracatu':'6','ilha comprida':'6',
+  'itariri':'6','juquia':'6','sete barras':'6','pedro de toledo':'6',
+  // ── DEINTER 7 – Sorocaba ─────────────────────────────────────────
+  'sorocaba':'7','itu':'7','votorantim':'7','ibiuna':'7','mairinque':'7',
+  'piedade':'7','porto feliz':'7','salto':'7','salto de pirapora':'7',
+  'sao roque':'7','tiete':'7','aluminio':'7','aracariguama':'7',
+  'aracoiaba da serra':'7','ipero':'7','pilar do sul':'7','jumirim':'7','tapiral':'7',
+  'avare':'7','piraju':'7','taquarituba':'7','aguas de santa barbara':'7',
+  'cerqueira cesar':'7','fartura':'7','itai':'7','itaporanga':'7',
+  'manduri':'7','paranapanema':'7','arandu':'7','barao de antonina':'7',
+  'coronel macedo':'7','iaras':'7','sarutaia':'7','taguai':'7','tejupa':'7',
+  'botucatu':'7','conchas':'7','laranjal paulista':'7','sao manuel':'7',
+  'itatinga':'7','porangaba':'7','anhembi':'7','areiopolis':'7','bofete':'7',
+  'pardinho':'7','pereiras':'7','pratania':'7','torre de pedra':'7',
+  'itapetininga':'7','angatuba':'7','boituva':'7','cerquilho':'7',
+  'sao miguel arcanjo':'7','tatui':'7','capela do alto':'7','cesario lange':'7',
+  'guarei':'7','alambari':'7','campina do monte alegre':'7','quadra':'7','sarapui':'7',
+  'itapeva':'7','apiai':'7','capao bonito':'7','itarare':'7','buri':'7',
+  'guapiara':'7','itabera':'7','ribeirao branco':'7','riversul':'7',
+  'barra do chapeu':'7','bom sucesso do itarare':'7','iporanga':'7',
+  'itaoca':'7','itapirapua paulista':'7','nova campina':'7','ribeira':'7',
+  'ribeirao grande':'7','taquarivai':'7',
+  // ── DEINTER 8 – Presidente Prudente ─────────────────────────────
+  'assis':'8','candido mota':'8','palmital':'8','paraguacu paulista':'8',
+  'maracai':'8','campos novos paulista':'8','cruzalia':'8','florinia':'8',
+  'ibirarema':'8','lutecia':'8','pedrinhas paulista':'8','platina':'8','taruma':'8',
+  'adamantina':'8','lucelia':'8','osvaldo cruz':'8','florida paulista':'8',
+  'irapuru':'8','pacaembu':'8','flora rica':'8','inubia paulista':'8',
+  'mariopolis':'8','pracinha':'8','sagres':'8','salmorao':'8',
+  'dracena':'8','tupi paulista':'8','junqueiropolis':'8','panorama':'8',
+  'monte castelo':'8','nova guataporanga':'8','ouro verde':'8','pauliceia':'8',
+  'santa mercedes':'8','sao joao do pau dalho':'8',
+  'presidente prudente':'8','alvares machado':'8','martinopolis':'8',
+  'pirapozinho':'8','rancharia':'8','iepe':'8','presidente bernardes':'8',
+  'regente feijo':'8','alfredo marcondes':'8','anhumas':'8','caiabu':'8',
+  'emilianopolis':'8','estrela do norte':'8','indiana':'8','nantes':'8',
+  'narandiba':'8','sandovalina':'8','santo expedito':'8','taciba':'8','tarabi':'8',
+  'presidente venceslau':'8','presidente epitacio':'8','santo anastacio':'8',
+  'teodoro sampaio':'8','euclides da cunha paulista':'8',
+  'mirante do paranapanema':'8','rosana':'8','caiua':'8','maraba paulista':'8',
+  'piquerobi':'8','ribeirao dos indios':'8',
+  // ── DEINTER 9 – Piracicaba ───────────────────────────────────────
+  'piracicaba':'9','capivari':'9','sao pedro':'9','aguas de sao pedro':'9',
+  'charqueada':'9','elias fausto':'9','rio das pedras':'9','mombuca':'9',
+  'rafard':'9','saltinho':'9','santa maria da serra':'9',
+  'americana':'9','hortolandia':'9','sumare':'9','santa barbara do oeste':'9',
+  'arthur nogueira':'9','cosmopolis':'9','monte mor':'9','nova odessa':'9',
+  'engenheiro coelho':'9',
+  'sao joao da boa vista':'9','aguai':'9','espirito santo do pinhal':'9',
+  'vargem grande do sul':'9','aguas da prata':'9','divinolandia':'9',
+  'santo antonio do jardim':'9','sao sebastiao da grama':'9',
+  'limeira':'9','araras':'9','leme':'9','pirassununga':'9','cordeiropolis':'9',
+  'conchal':'9','iracemapolis':'9','santa cruz da conceicao':'9',
+  'rio claro':'9','brotas':'9','itirapina':'9','santa gertrudes':'9',
+  'analandia':'9','corumbatai':'9','ipeuna':'9','torrinha':'9',
+  'casa branca':'9','mococa':'9','sao jose do rio pardo':'9','caconde':'9',
+  'santa cruz das palmeiras':'9','tambau':'9','tapiratiba':'9','itobi':'9',
+  // ── DEINTER 10 – Araçatuba ───────────────────────────────────────
+  'aracatuba':'10','birigui':'10','buritama':'10','guararapes':'10','penapolis':'10',
+  'auriflama':'10','bilac':'10','general salgado':'10','valparaiso':'10',
+  'alto alegre':'10','avanhandava':'10','barbosa':'10','bento de abreu':'10',
+  'brauna':'10','brejo alegre':'10','clementina':'10','coroados':'10',
+  'gabriel monteiro':'10','gastao vidigal':'10','glicerio':'10','guzolândia':'10',
+  'lourdes':'10','luiziania':'10','nova castilho':'10','nova luzitania':'10',
+  'piacatu':'10','rubiacea':'10','santopolis do aguapei':'10',
+  'santo antonio do aracangua':'10','sao joao de iracema':'10','turiuba':'10',
+  'andradina':'10','ilha solteira':'10','mirandopolis':'10','pereira barreto':'10',
+  'castilho':'10','guaracai':'10','itapura':'10','lavinia':'10',
+  'murutinga do sul':'10','nova independencia':'10','sud menucci':'10','susanapolis':'10',
 };
+
 const DEINTER_INFO = {
-  '1':  { name:'DEINTER 1 – Baixada Santista',    abbr:'D1' },
+  '1':  { name:'DEINTER 1 – São José dos Campos', abbr:'D1' },
   '2':  { name:'DEINTER 2 – Campinas',             abbr:'D2' },
   '3':  { name:'DEINTER 3 – Ribeirão Preto',       abbr:'D3' },
   '4':  { name:'DEINTER 4 – Bauru',                abbr:'D4' },
   '5':  { name:'DEINTER 5 – S.J. do Rio Preto',    abbr:'D5' },
-  '6':  { name:'DEINTER 6 – Vale do Paraíba',      abbr:'D6' },
+  '6':  { name:'DEINTER 6 – Santos',               abbr:'D6' },
   '7':  { name:'DEINTER 7 – Sorocaba',             abbr:'D7' },
   '8':  { name:'DEINTER 8 – Pres. Prudente',       abbr:'D8' },
-  '9':  { name:'DEINTER 9 – Araçatuba',            abbr:'D9' },
+  '9':  { name:'DEINTER 9 – Piracicaba',           abbr:'D9' },
+  '10': { name:'DEINTER 10 – Araçatuba',           abbr:'D10' },
 };
-// GeoJSON carregado de cada DEINTER para ponto-em-polígono
+
+// GeoJSON de cada DEINTER (FeatureCollection com municípios agrupados)
 const deinterGeoJSON = {};
 
-// ── POINT-IN-GEOJSON ─────────────────────────────────────────
-function _pipRing(lat, lng, ring){
-  // ring: [[lng,lat],...] GeoJSON order
+// ── POINT-IN-GEOJSON (ray casting) ──────────────────────────────────────────
+function _pipRing(lat,lng,ring){
   let inside=false;
   for(let i=0,j=ring.length-1;i<ring.length;j=i++){
     const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];
-    if(((yi>lat)!==(yj>lat))&&(lng<(xj-xi)*(lat-yi)/(yj-yi)+xi)) inside=!inside;
+    if(((yi>lat)!==(yj>lat))&&(lng<(xj-xi)*(lat-yi)/(yj-yi)+xi))inside=!inside;
   }
   return inside;
 }
 function _pipPolygon(lat,lng,rings){
-  if(!_pipRing(lat,lng,rings[0])) return false;
-  for(let i=1;i<rings.length;i++) if(_pipRing(lat,lng,rings[i])) return false;
+  if(!_pipRing(lat,lng,rings[0]))return false;
+  for(let i=1;i<rings.length;i++)if(_pipRing(lat,lng,rings[i]))return false;
   return true;
 }
 function pointInGeoJSON(lat,lng,geo){
   const feats=(geo.type==='FeatureCollection')?geo.features:[geo];
   for(const f of feats){
     const g=f.geometry||f;
-    if(g.type==='Polygon'){ if(_pipPolygon(lat,lng,g.coordinates)) return true; }
-    else if(g.type==='MultiPolygon'){ if(g.coordinates.some(rings=>_pipPolygon(lat,lng,rings))) return true; }
+    if(g.type==='Polygon'){if(_pipPolygon(lat,lng,g.coordinates))return true;}
+    else if(g.type==='MultiPolygon'){if(g.coordinates.some(r=>_pipPolygon(lat,lng,r)))return true;}
   }
   return false;
 }
 function getDeinterForPoint(lat,lng){
-  for(const [id,geo] of Object.entries(deinterGeoJSON)){
-    if(pointInGeoJSON(lat,lng,geo)) return id;
+  for(const[id,geo]of Object.entries(deinterGeoJSON)){
+    if(pointInGeoJSON(lat,lng,geo))return id;
   }
   return 'outros';
 }
 
-let _deinterLayer = null;
-let _deinterLoaded = false;
+let _deinterLayer=null, _deinterLoaded=false;
 
 async function loadDeinterPolygons(){
-  if(_deinterLoaded) return;
-  if(!_map) return;
-  _deinterLoaded = true;
-
-  const lbl = document.getElementById('deinter-status');
-  if(lbl) lbl.textContent = 'Carregando DEINTERs…';
-
+  if(_deinterLoaded||!_map)return;
+  _deinterLoaded=true;
+  const lbl=document.getElementById('deinter-status');
+  if(lbl)lbl.textContent='Carregando fronteiras municipais...';
   try{
-    const listResp = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/35/regioes-intermediarias');
-    const regions  = await listResp.json();
+    // Busca GeoJSON de todos os municípios de SP (tbrugz/geodata-br via IBGE)
+    const resp=await fetch('https://raw.githubusercontent.com/tbrugz/geodata-br/master/geojson/geojs-35-mun.json');
+    if(!resp.ok)throw new Error('geodata-br '+resp.status);
+    const geoAll=await resp.json();
 
-    if(_deinterLayer){ _map.removeLayer(_deinterLayer); }
-    _deinterLayer = L.layerGroup();
+    // Agrupa features por DEINTER usando o lookup de nomes
+    const byD={};
+    for(const feat of geoAll.features){
+      const nome=feat.properties&&feat.properties.name;
+      if(!nome)continue;
+      const norm=_normMun(nome);
+      const did=MUN_DEINTER[norm];
+      if(!did)continue; // São Paulo capital, ABCD, etc.
+      if(!byD[did])byD[did]=[];
+      byD[did].push(feat);
+    }
 
-    await Promise.all(regions.map(async(region)=>{
-      const dId = IBGE_TO_DEINTER[region.nome];
-      if(!dId) return; // São Paulo capital — sem DEINTER
-      const info = DEINTER_INFO[dId];
-      if(!info) return;
+    if(_deinterLayer)_map.removeLayer(_deinterLayer);
+    _deinterLayer=L.layerGroup();
 
-      try{
-        const geoResp = await fetch(
-          `https://servicodados.ibge.gov.br/api/v3/malhas/regioes-intermediarias/${region.id}?formato=application/vnd.geo+json&resolucao=3`
-        );
-        const geo = await geoResp.json();
-        deinterGeoJSON[dId] = geo;
+    for(const[did,feats]of Object.entries(byD)){
+      const info=DEINTER_INFO[did];
+      if(!info)continue;
+      const fc={type:'FeatureCollection',features:feats};
+      deinterGeoJSON[did]=fc;
+      L.geoJSON(fc,{
+        style:{
+          color:'#003865',      // azul Rumo — linha contínua
+          weight:1.5,
+          opacity:1,
+          fillColor:'#003865',
+          fillOpacity:0.04,
+          dashArray:null
+        }
+      })
+      .bindTooltip(
+        '<span style="font-family:\'Cera Pro\',sans-serif;font-size:12px;font-weight:700;color:#003865">'+info.name+'</span>',
+        {permanent:false,direction:'center',className:'deinter-tooltip'}
+      )
+      .addTo(_deinterLayer);
+    }
 
-        const layer = L.geoJSON(geo,{
-          style:{
-            color:'#003865',   // azul Rumo — linha contínua
-            weight:2,
-            opacity:1,
-            fillColor:'#003865',
-            fillOpacity:0.04,
-            dashArray:null
-          }
-        });
-        layer.bindTooltip(
-          `<span style="font-family:'Cera Pro','Segoe UI',Arial,sans-serif;font-size:12px;font-weight:700;color:#003865">${info.name}</span>`,
-          {permanent:false, direction:'center', className:'deinter-tooltip'}
-        );
-        layer.addTo(_deinterLayer);
-      }catch(e){ console.warn('Falha ao carregar região', region.nome, e); }
-    }));
-
-    const show = document.getElementById('map-deinter-show');
-    if(!show||show.checked) _deinterLayer.addTo(_map);
-    if(lbl) lbl.textContent = 'DEINTERs carregados';
-    setTimeout(()=>{ if(lbl) lbl.textContent=''; }, 2000);
+    const show=document.getElementById('map-deinter-show');
+    if(!show||show.checked)_deinterLayer.addTo(_map);
+    if(lbl){lbl.textContent='DEINTERs carregados';setTimeout(()=>lbl.textContent='',2000);}
 
   }catch(e){
-    console.warn('API IBGE indisponível, usando polígonos aproximados', e);
-    if(lbl) lbl.textContent = '';
+    console.warn('geodata-br falhou, usando polígonos aproximados',e);
+    if(lbl)lbl.textContent='';
     _renderDeinterFallback();
   }
 }
 
 function _renderDeinterFallback(){
-  // Polígonos retangulares aproximados caso a API IBGE falhe
-  const FALLBACK=[
-    { id:'1', poly:[[-23.30,-47.50],[-23.30,-45.00],[-24.80,-45.00],[-24.80,-47.50]] },
-    { id:'2', poly:[[-22.20,-48.80],[-22.20,-46.60],[-23.60,-46.60],[-23.60,-48.80]] },
-    { id:'3', poly:[[-20.40,-49.20],[-20.40,-46.90],[-22.30,-46.90],[-22.30,-49.20]] },
-    { id:'4', poly:[[-21.80,-50.80],[-21.80,-48.50],[-23.60,-48.50],[-23.60,-50.80]] },
-    { id:'5', poly:[[-19.80,-51.20],[-19.80,-49.00],[-21.50,-49.00],[-21.50,-51.20]] },
-    { id:'6', poly:[[-22.40,-46.70],[-22.40,-44.00],[-23.60,-44.00],[-23.60,-46.70]] },
-    { id:'7', poly:[[-23.00,-48.60],[-23.00,-46.70],[-24.20,-46.70],[-24.20,-48.60]] },
-    { id:'8', poly:[[-21.50,-53.10],[-21.50,-51.20],[-23.80,-51.20],[-23.80,-53.10]] },
-    { id:'9', poly:[[-20.40,-52.80],[-20.40,-50.60],[-22.50,-50.60],[-22.50,-52.80]] },
+  const FB=[
+    {id:'1',p:[[-22.40,-46.70],[-22.40,-44.00],[-23.60,-44.00],[-23.60,-46.70]]},
+    {id:'2',p:[[-22.20,-48.80],[-22.20,-46.60],[-23.60,-46.60],[-23.60,-48.80]]},
+    {id:'3',p:[[-20.40,-49.20],[-20.40,-46.90],[-22.30,-46.90],[-22.30,-49.20]]},
+    {id:'4',p:[[-21.80,-50.80],[-21.80,-48.50],[-23.60,-48.50],[-23.60,-50.80]]},
+    {id:'5',p:[[-19.80,-51.20],[-19.80,-49.00],[-21.50,-49.00],[-21.50,-51.20]]},
+    {id:'6',p:[[-23.30,-47.50],[-23.30,-45.00],[-24.80,-45.00],[-24.80,-47.50]]},
+    {id:'7',p:[[-23.00,-48.60],[-23.00,-46.70],[-24.20,-46.70],[-24.20,-48.60]]},
+    {id:'8',p:[[-21.50,-53.10],[-21.50,-51.20],[-23.80,-51.20],[-23.80,-53.10]]},
+    {id:'9',p:[[-22.00,-49.00],[-22.00,-47.20],[-23.20,-47.20],[-23.20,-49.00]]},
+    {id:'10',p:[[-20.40,-52.80],[-20.40,-50.60],[-22.50,-50.60],[-22.50,-52.80]]},
   ];
-  if(_deinterLayer){ _map.removeLayer(_deinterLayer); }
-  _deinterLayer = L.layerGroup();
-  FALLBACK.forEach(d=>{
-    const info=DEINTER_INFO[d.id]; if(!info) return;
-    const latlngs=d.poly.map(p=>[p[0],p[1]]);
-    // Store as GeoJSON for point-in-polygon
-    deinterGeoJSON[d.id]={ type:'Feature', geometry:{ type:'Polygon',
-      coordinates:[d.poly.map(p=>[p[1],p[0]])] }};
-    L.polygon(latlngs,{ color:'#003865', weight:2, opacity:1,
-      fillColor:'#003865', fillOpacity:0.04, dashArray:null })
-     .bindTooltip(`<span style="font-family:'Cera Pro',sans-serif;font-size:12px;font-weight:700;color:#003865">${info.name}</span>`,
-       {permanent:false,direction:'center',className:'deinter-tooltip'})
+  if(_deinterLayer)_map.removeLayer(_deinterLayer);
+  _deinterLayer=L.layerGroup();
+  FB.forEach(d=>{
+    const info=DEINTER_INFO[d.id];if(!info)return;
+    deinterGeoJSON[d.id]={type:'Feature',geometry:{type:'Polygon',coordinates:[d.p.map(p=>[p[1],p[0]])]}};
+    L.polygon(d.p.map(p=>[p[0],p[1]]),{color:'#003865',weight:2,opacity:1,fillColor:'#003865',fillOpacity:.04,dashArray:null})
+     .bindTooltip('<span style="font-family:\'Cera Pro\',sans-serif;font-size:12px;font-weight:700;color:#003865">'+info.name+'</span>',{permanent:false,direction:'center',className:'deinter-tooltip'})
      .addTo(_deinterLayer);
   });
   const show=document.getElementById('map-deinter-show');
-  if(!show||show.checked) _deinterLayer.addTo(_map);
+  if(!show||show.checked)_deinterLayer.addTo(_map);
 }
 
 function toggleDeinterLayer(){
   const show=document.getElementById('map-deinter-show');
-  if(!_deinterLayer) return;
-  if(show?.checked) _deinterLayer.addTo(_map);
+  if(!_deinterLayer)return;
+  if(show?.checked)_deinterLayer.addTo(_map);
   else _map.removeLayer(_deinterLayer);
 }
+
 
 
 // ── MAP ──────────────────────────────────────────────────────
@@ -902,6 +1079,11 @@ applyFilters();
 </script>
 </body>
 </html>
+
+
+
+
+
 
 
 
