@@ -43,6 +43,23 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#0a1628;color:#e8eef5;he
   <label>Empresa:<select id="f-emp" onchange="apply()"><option value="">Todas</option></select></label>
   <label>Tipo:<select id="f-tipo" onchange="apply()"><option value="">Todos</option></select></label>
   <label>Ano:<select id="f-ano" onchange="apply()"><option value="">Todos</option></select></label>
+  <label>DEINTER:
+    <select id="f-deinter" onchange="apply()">
+      <option value="">Todos</option>
+      <option value="1">DEINTER 1 – Baixada Santista</option>
+      <option value="2">DEINTER 2 – Campinas</option>
+      <option value="3">DEINTER 3 – Ribeirão Preto</option>
+      <option value="4">DEINTER 4 – Bauru</option>
+      <option value="5">DEINTER 5 – S.J. do Rio Preto</option>
+      <option value="6">DEINTER 6 – Vale do Paraíba</option>
+      <option value="7">DEINTER 7 – Sorocaba</option>
+      <option value="8">DEINTER 8 – Pres. Prudente</option>
+      <option value="9">DEINTER 9 – Araçatuba</option>
+      <option value="10">DEINTER 10 – Piracicaba</option>
+      <option value="outros">Fora do Estado de SP</option>
+    </select>
+  </label>
+  <label><input type="checkbox" id="map-deinter-show" checked onchange="toggleDeinterLayer()"> Exibir DEINTERs</label>
   <label><input type="checkbox" id="f-inq" onchange="apply()"> Somente com Inquérito</label>
   <button onclick="reset()">Limpar</button>
   <span class="count" id="count-label">— pontos</span>
@@ -75,6 +92,7 @@ const map = L.map('map').setView([-23.9,-46.4],10);
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:19});
 const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri',maxZoom:19});
 osm.addTo(map);
+renderDeinterPolygons();
 L.control.layers({'Mapa':osm,'Satélite':sat},{},{position:'topright'}).addTo(map);
 
 let cluster = null;
@@ -116,12 +134,41 @@ function buildPopup(c){
   return h;
 }
 
+// DEINTER REGIONS
+const DEINTER_REGIONS = [
+  { id:'1', name:'DEINTER 1 – Baixada Santista', color:'#003865', poly:[[-23.30,-47.50],[-23.30,-45.00],[-24.80,-45.00],[-24.80,-47.50]] },
+  { id:'2', name:'DEINTER 2 – Campinas', color:'#F78344', poly:[[-22.20,-48.80],[-22.20,-46.60],[-23.60,-46.60],[-23.60,-48.80]] },
+  { id:'3', name:'DEINTER 3 – Ribeirão Preto', color:'#7c3aed', poly:[[-20.40,-49.20],[-20.40,-46.90],[-22.30,-46.90],[-22.30,-49.20]] },
+  { id:'4', name:'DEINTER 4 – Bauru', color:'#0891b2', poly:[[-21.80,-50.80],[-21.80,-48.50],[-23.60,-48.50],[-23.60,-50.80]] },
+  { id:'5', name:'DEINTER 5 – S.J. do Rio Preto', color:'#16a34a', poly:[[-19.80,-51.20],[-19.80,-49.00],[-21.50,-49.00],[-21.50,-51.20]] },
+  { id:'6', name:'DEINTER 6 – Vale do Paraíba', color:'#dc2626', poly:[[-22.40,-46.70],[-22.40,-44.00],[-23.60,-44.00],[-23.60,-46.70]] },
+  { id:'7', name:'DEINTER 7 – Sorocaba', color:'#d97706', poly:[[-23.00,-48.60],[-23.00,-46.70],[-24.20,-46.70],[-24.20,-48.60]] },
+  { id:'8', name:'DEINTER 8 – Pres. Prudente', color:'#be185d', poly:[[-21.50,-53.10],[-21.50,-51.20],[-23.80,-51.20],[-23.80,-53.10]] },
+  { id:'9', name:'DEINTER 9 – Araçatuba', color:'#059669', poly:[[-20.40,-52.80],[-20.40,-50.60],[-22.50,-50.60],[-22.50,-52.80]] },
+  { id:'10', name:'DEINTER 10 – Piracicaba', color:'#7f1d1d', poly:[[-22.00,-49.00],[-22.00,-47.20],[-23.20,-47.20],[-23.20,-49.00]] },
+];
+function pointInPoly(lat,lng,poly){let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const xi=poly[i][1],yi=poly[i][0],xj=poly[j][1],yj=poly[j][0];if(((yi>lat)!==(yj>lat))&&(lng<(xj-xi)*(lat-yi)/(yj-yi)+xi))inside=!inside;}return inside;}
+function getDeinterForPoint(lat,lng){for(const d of DEINTER_REGIONS){if(pointInPoly(lat,lng,d.poly))return d.id;}return 'outros';}
+let _deinterLayer=null;
+function renderDeinterPolygons(){
+  if(_deinterLayer)map.removeLayer(_deinterLayer);
+  _deinterLayer=L.layerGroup();
+  DEINTER_REGIONS.forEach(d=>{
+    const p=L.polygon(d.poly.map(p=>[p[0],p[1]]),{color:d.color,weight:2,opacity:.8,fillColor:d.color,fillOpacity:.06,dashArray:'5,5'});
+    p.bindTooltip(`<strong style="font-family:'Cera Pro',sans-serif;color:${d.color}">${d.name}</strong>`,{permanent:false,direction:'center'});
+    p.addTo(_deinterLayer);
+  });
+  if(document.getElementById('map-deinter-show')?.checked) _deinterLayer.addTo(map);
+}
+function toggleDeinterLayer(){const s=document.getElementById('map-deinter-show');if(!_deinterLayer)return;if(s?.checked)_deinterLayer.addTo(map);else map.removeLayer(_deinterLayer);}
+
 function apply(){
   const clF=document.getElementById('f-cl').value;
   const empF=document.getElementById('f-emp').value;
   const tpF=document.getElementById('f-tipo').value;
   const anoF=document.getElementById('f-ano').value;
   const inqF=document.getElementById('f-inq').checked;
+  const deinterF=document.getElementById('f-deinter')?.value||'';
 
   const filtered=DATA.filter(c=>{
     if(clF&&c.cl!==clF)return false;
@@ -129,6 +176,7 @@ function apply(){
     if(tpF&&c.tp!==tpF)return false;
     if(anoF&&String(c.y||'')!==anoF)return false;
     if(inqF&&!c.inq)return false;
+    if(deinterF){const cd=getDeinterForPoint(c.la,c.lo);if(cd!==deinterF)return false;}
     return true;
   });
 
@@ -149,6 +197,7 @@ function apply(){
 function reset(){
   ['f-cl','f-emp','f-tipo','f-ano'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-inq').checked=false;
+  const fd=document.getElementById('f-deinter');if(fd)fd.value='';
   apply();
 }
 
@@ -156,5 +205,6 @@ apply();
 </script>
 </body>
 </html>
+
 
 
