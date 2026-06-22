@@ -147,6 +147,11 @@ body{font-family:'Cera Pro','Segoe UI',Arial,sans-serif;background:var(--bg);col
 #map{flex:1;min-height:400px}
 .map-legend-bar{background:#fff;padding:8px 20px;display:flex;gap:20px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);font-weight:600}
 .leg-dot{width:11px;height:11px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle;flex-shrink:0}
+
+/* CERA PRO UNIVERSAL */
+select,input,button,textarea,label{font-family:'Cera Pro','Segoe UI',Arial,sans-serif!important}
+.leaflet-popup-content,.leaflet-popup-content *{font-family:'Cera Pro','Segoe UI',Arial,sans-serif!important}
+.leaflet-container{font-family:'Cera Pro','Segoe UI',Arial,sans-serif!important}
 </style>
 </head>
 <body>
@@ -341,7 +346,7 @@ body{font-family:'Cera Pro','Segoe UI',Arial,sans-serif;background:var(--bg);col
       <select id="map-cl" onchange="renderMap()">
         <option value="">Todas</option>
         <option value="CRIMINAL">Criminal</option>
-        <option value="NAO CRIMINAL">Não Criminal</option>
+        <option value="NÃO CRIMINAL">Não Criminal</option>
       </select>
     </label>
     <label>Empresa:
@@ -359,9 +364,9 @@ body{font-family:'Cera Pro','Segoe UI',Arial,sans-serif;background:var(--bg);col
   <div id="map-container">
     <div id="map"></div>
     <div class="map-legend-bar">
-      <span><span class="leg-dot" style="background:#C0392B"></span>Com Inquérito</span>
-      <span><span class="leg-dot" style="background:#003865"></span>Criminal</span>
-      <span><span class="leg-dot" style="background:#F78344"></span>Não Criminal</span>
+      <span><span><span class="leg-dot" style="background:#C0392B"></span>Com Inquérito</span>
+      <span><span><span class="leg-dot" style="background:#003865"></span>Criminal (Azul Rumo)</span>
+      <span><span><span class="leg-dot" style="background:#F78344"></span>Não Criminal</span>
     </div>
   </div>
 </div>
@@ -717,6 +722,8 @@ applyFilters();
 </script>
 </body>
 </html>
+
+
 
 
 
