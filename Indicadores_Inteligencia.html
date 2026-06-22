@@ -553,75 +553,164 @@ function buildCharts(data) {
   });
 }
 
-// ── DEINTER REGIONS ─────────────────────────────────────────
-// Polígonos aproximados dos DEINTERs da Polícia Civil de SP
-// Baseados nas regiões territoriais de cada departamento
-const DEINTER_REGIONS = [
-  { id:'1', name:'DEINTER 1 – Baixada Santista', color:'#003865',
-    poly:[[-23.30,-47.50],[-23.30,-45.00],[-24.80,-45.00],[-24.80,-47.50]] },
-  { id:'2', name:'DEINTER 2 – Campinas', color:'#F78344',
-    poly:[[-22.20,-48.80],[-22.20,-46.60],[-23.60,-46.60],[-23.60,-48.80]] },
-  { id:'3', name:'DEINTER 3 – Ribeirão Preto', color:'#7c3aed',
-    poly:[[-20.40,-49.20],[-20.40,-46.90],[-22.30,-46.90],[-22.30,-49.20]] },
-  { id:'4', name:'DEINTER 4 – Bauru', color:'#0891b2',
-    poly:[[-21.80,-50.80],[-21.80,-48.50],[-23.60,-48.50],[-23.60,-50.80]] },
-  { id:'5', name:'DEINTER 5 – S.J. do Rio Preto', color:'#16a34a',
-    poly:[[-19.80,-51.20],[-19.80,-49.00],[-21.50,-49.00],[-21.50,-51.20]] },
-  { id:'6', name:'DEINTER 6 – Vale do Paraíba', color:'#dc2626',
-    poly:[[-22.40,-46.70],[-22.40,-44.00],[-23.60,-44.00],[-23.60,-46.70]] },
-  { id:'7', name:'DEINTER 7 – Sorocaba', color:'#d97706',
-    poly:[[-23.00,-48.60],[-23.00,-46.70],[-24.20,-46.70],[-24.20,-48.60]] },
-  { id:'8', name:'DEINTER 8 – Pres. Prudente', color:'#be185d',
-    poly:[[-21.50,-53.10],[-21.50,-51.20],[-23.80,-51.20],[-23.80,-53.10]] },
-  { id:'9', name:'DEINTER 9 – Araçatuba', color:'#059669',
-    poly:[[-20.40,-52.80],[-20.40,-50.60],[-22.50,-50.60],[-22.50,-52.80]] },
-  { id:'10', name:'DEINTER 10 – Piracicaba', color:'#7f1d1d',
-    poly:[[-22.00,-49.00],[-22.00,-47.20],[-23.20,-47.20],[-23.20,-49.00]] },
-];
+// ── DEINTER REGIONS — carregamento dinâmico via API IBGE ────
+// Mapeamento: nome da Região Geográfica Intermediária (IBGE) → DEINTER
+const IBGE_TO_DEINTER = {
+  'Santos':                '1',
+  'Campinas':              '2',
+  'Ribeirão Preto':        '3',
+  'Bauru':                 '4',
+  'São José do Rio Preto': '5',
+  'São José dos Campos':   '6',
+  'Sorocaba':              '7',
+  'Presidente Prudente':   '8',
+  'Araçatuba':             '9',
+};
+const DEINTER_INFO = {
+  '1':  { name:'DEINTER 1 – Baixada Santista',    abbr:'D1' },
+  '2':  { name:'DEINTER 2 – Campinas',             abbr:'D2' },
+  '3':  { name:'DEINTER 3 – Ribeirão Preto',       abbr:'D3' },
+  '4':  { name:'DEINTER 4 – Bauru',                abbr:'D4' },
+  '5':  { name:'DEINTER 5 – S.J. do Rio Preto',    abbr:'D5' },
+  '6':  { name:'DEINTER 6 – Vale do Paraíba',      abbr:'D6' },
+  '7':  { name:'DEINTER 7 – Sorocaba',             abbr:'D7' },
+  '8':  { name:'DEINTER 8 – Pres. Prudente',       abbr:'D8' },
+  '9':  { name:'DEINTER 9 – Araçatuba',            abbr:'D9' },
+};
+// GeoJSON carregado de cada DEINTER para ponto-em-polígono
+const deinterGeoJSON = {};
 
-// Point-in-polygon (ray casting)
-function pointInPoly(lat, lng, poly){
+// ── POINT-IN-GEOJSON ─────────────────────────────────────────
+function _pipRing(lat, lng, ring){
+  // ring: [[lng,lat],...] GeoJSON order
   let inside=false;
-  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
-    const xi=poly[i][1],yi=poly[i][0],xj=poly[j][1],yj=poly[j][0];
+  for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+    const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];
     if(((yi>lat)!==(yj>lat))&&(lng<(xj-xi)*(lat-yi)/(yj-yi)+xi)) inside=!inside;
   }
   return inside;
 }
-
+function _pipPolygon(lat,lng,rings){
+  if(!_pipRing(lat,lng,rings[0])) return false;
+  for(let i=1;i<rings.length;i++) if(_pipRing(lat,lng,rings[i])) return false;
+  return true;
+}
+function pointInGeoJSON(lat,lng,geo){
+  const feats=(geo.type==='FeatureCollection')?geo.features:[geo];
+  for(const f of feats){
+    const g=f.geometry||f;
+    if(g.type==='Polygon'){ if(_pipPolygon(lat,lng,g.coordinates)) return true; }
+    else if(g.type==='MultiPolygon'){ if(g.coordinates.some(rings=>_pipPolygon(lat,lng,rings))) return true; }
+  }
+  return false;
+}
 function getDeinterForPoint(lat,lng){
-  for(const d of DEINTER_REGIONS){
-    if(pointInPoly(lat,lng,d.poly)) return d.id;
+  for(const [id,geo] of Object.entries(deinterGeoJSON)){
+    if(pointInGeoJSON(lat,lng,geo)) return id;
   }
   return 'outros';
 }
 
 let _deinterLayer = null;
+let _deinterLoaded = false;
 
-function renderDeinterPolygons(){
-  if(_deinterLayer) _map.removeLayer(_deinterLayer);
+async function loadDeinterPolygons(){
+  if(_deinterLoaded) return;
+  if(!_map) return;
+  _deinterLoaded = true;
+
+  const lbl = document.getElementById('deinter-status');
+  if(lbl) lbl.textContent = 'Carregando DEINTERs…';
+
+  try{
+    const listResp = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/35/regioes-intermediarias');
+    const regions  = await listResp.json();
+
+    if(_deinterLayer){ _map.removeLayer(_deinterLayer); }
+    _deinterLayer = L.layerGroup();
+
+    await Promise.all(regions.map(async(region)=>{
+      const dId = IBGE_TO_DEINTER[region.nome];
+      if(!dId) return; // São Paulo capital — sem DEINTER
+      const info = DEINTER_INFO[dId];
+      if(!info) return;
+
+      try{
+        const geoResp = await fetch(
+          `https://servicodados.ibge.gov.br/api/v3/malhas/regioes-intermediarias/${region.id}?formato=application/vnd.geo+json&resolucao=3`
+        );
+        const geo = await geoResp.json();
+        deinterGeoJSON[dId] = geo;
+
+        const layer = L.geoJSON(geo,{
+          style:{
+            color:'#003865',   // azul Rumo — linha contínua
+            weight:2,
+            opacity:1,
+            fillColor:'#003865',
+            fillOpacity:0.04,
+            dashArray:null
+          }
+        });
+        layer.bindTooltip(
+          `<span style="font-family:'Cera Pro','Segoe UI',Arial,sans-serif;font-size:12px;font-weight:700;color:#003865">${info.name}</span>`,
+          {permanent:false, direction:'center', className:'deinter-tooltip'}
+        );
+        layer.addTo(_deinterLayer);
+      }catch(e){ console.warn('Falha ao carregar região', region.nome, e); }
+    }));
+
+    const show = document.getElementById('map-deinter-show');
+    if(!show||show.checked) _deinterLayer.addTo(_map);
+    if(lbl) lbl.textContent = 'DEINTERs carregados';
+    setTimeout(()=>{ if(lbl) lbl.textContent=''; }, 2000);
+
+  }catch(e){
+    console.warn('API IBGE indisponível, usando polígonos aproximados', e);
+    if(lbl) lbl.textContent = '';
+    _renderDeinterFallback();
+  }
+}
+
+function _renderDeinterFallback(){
+  // Polígonos retangulares aproximados caso a API IBGE falhe
+  const FALLBACK=[
+    { id:'1', poly:[[-23.30,-47.50],[-23.30,-45.00],[-24.80,-45.00],[-24.80,-47.50]] },
+    { id:'2', poly:[[-22.20,-48.80],[-22.20,-46.60],[-23.60,-46.60],[-23.60,-48.80]] },
+    { id:'3', poly:[[-20.40,-49.20],[-20.40,-46.90],[-22.30,-46.90],[-22.30,-49.20]] },
+    { id:'4', poly:[[-21.80,-50.80],[-21.80,-48.50],[-23.60,-48.50],[-23.60,-50.80]] },
+    { id:'5', poly:[[-19.80,-51.20],[-19.80,-49.00],[-21.50,-49.00],[-21.50,-51.20]] },
+    { id:'6', poly:[[-22.40,-46.70],[-22.40,-44.00],[-23.60,-44.00],[-23.60,-46.70]] },
+    { id:'7', poly:[[-23.00,-48.60],[-23.00,-46.70],[-24.20,-46.70],[-24.20,-48.60]] },
+    { id:'8', poly:[[-21.50,-53.10],[-21.50,-51.20],[-23.80,-51.20],[-23.80,-53.10]] },
+    { id:'9', poly:[[-20.40,-52.80],[-20.40,-50.60],[-22.50,-50.60],[-22.50,-52.80]] },
+  ];
+  if(_deinterLayer){ _map.removeLayer(_deinterLayer); }
   _deinterLayer = L.layerGroup();
-  DEINTER_REGIONS.forEach(d=>{
-    const latlngs = d.poly.map(p=>[p[0],p[1]]);
-    const poly = L.polygon(latlngs,{
-      color: d.color, weight:2, opacity:0.8,
-      fillColor: d.color, fillOpacity:0.06,
-      dashArray:'5,5'
-    });
-    poly.bindTooltip(`<strong style="font-family:'Cera Pro','Segoe UI',Arial,sans-serif;color:${d.color}">${d.name}</strong>`,
-      {permanent:false, direction:'center', className:'deinter-tooltip'});
-    poly.addTo(_deinterLayer);
+  FALLBACK.forEach(d=>{
+    const info=DEINTER_INFO[d.id]; if(!info) return;
+    const latlngs=d.poly.map(p=>[p[0],p[1]]);
+    // Store as GeoJSON for point-in-polygon
+    deinterGeoJSON[d.id]={ type:'Feature', geometry:{ type:'Polygon',
+      coordinates:[d.poly.map(p=>[p[1],p[0]])] }};
+    L.polygon(latlngs,{ color:'#003865', weight:2, opacity:1,
+      fillColor:'#003865', fillOpacity:0.04, dashArray:null })
+     .bindTooltip(`<span style="font-family:'Cera Pro',sans-serif;font-size:12px;font-weight:700;color:#003865">${info.name}</span>`,
+       {permanent:false,direction:'center',className:'deinter-tooltip'})
+     .addTo(_deinterLayer);
   });
-  const show = document.getElementById('map-deinter-show');
+  const show=document.getElementById('map-deinter-show');
   if(!show||show.checked) _deinterLayer.addTo(_map);
 }
 
 function toggleDeinterLayer(){
-  const show = document.getElementById('map-deinter-show');
+  const show=document.getElementById('map-deinter-show');
   if(!_deinterLayer) return;
-  if(show.checked) _deinterLayer.addTo(_map);
+  if(show?.checked) _deinterLayer.addTo(_map);
   else _map.removeLayer(_deinterLayer);
 }
+
+
 // ── MAP ──────────────────────────────────────────────────────
 let _map = null, _cluster = null;
 
@@ -693,7 +782,7 @@ function renderMap(){
     const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri',maxZoom:19});
     osm.addTo(_map);
     L.control.layers({'Mapa':osm,'Satélite':sat},{},{position:'topright'}).addTo(_map);
-    renderDeinterPolygons();
+    loadDeinterPolygons();
   }
 
   if(_cluster){ _map.removeLayer(_cluster); }
@@ -813,6 +902,8 @@ applyFilters();
 </script>
 </body>
 </html>
+
+
 
 
 

@@ -25,6 +25,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#0a1628;color:#e8eef5;he
 #map{flex:1}
 .legend-bar{background:#0d1f36;padding:6px 16px;display:flex;gap:20px;font-size:11px;color:#cdd;border-top:1px solid #1a3356}
 .leg-dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+.deinter-tooltip{background:rgba(255,255,255,.95)!important;border:1px solid #003865!important;border-radius:4px!important;box-shadow:0 2px 8px rgba(0,56,101,.15)!important;padding:4px 8px!important;}.deinter-tooltip::before{display:none!important;}
 </style>
 </head>
 <body>
@@ -59,7 +60,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#0a1628;color:#e8eef5;he
       <option value="outros">Fora do Estado de SP</option>
     </select>
   </label>
-  <label><input type="checkbox" id="map-deinter-show" checked onchange="toggleDeinterLayer()"> Exibir DEINTERs</label>
+  <label><input type="checkbox" id="map-deinter-show" checked  <span id='deinter-status' style='font-size:11px;color:#5a6e8a;margin-left:6px;font-style:italic'></span>>
   <label><input type="checkbox" id="f-inq" onchange="apply()"> Somente com Inquérito</label>
   <button onclick="reset()">Limpar</button>
   <span class="count" id="count-label">— pontos</span>
@@ -92,7 +93,7 @@ const map = L.map('map').setView([-23.9,-46.4],10);
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:19});
 const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri',maxZoom:19});
 osm.addTo(map);
-renderDeinterPolygons();
+loadDeinterPolygons();
 L.control.layers({'Mapa':osm,'Satélite':sat},{},{position:'topright'}).addTo(map);
 
 let cluster = null;
@@ -134,31 +135,53 @@ function buildPopup(c){
   return h;
 }
 
-// DEINTER REGIONS
-const DEINTER_REGIONS = [
-  { id:'1', name:'DEINTER 1 – Baixada Santista', color:'#003865', poly:[[-23.30,-47.50],[-23.30,-45.00],[-24.80,-45.00],[-24.80,-47.50]] },
-  { id:'2', name:'DEINTER 2 – Campinas', color:'#F78344', poly:[[-22.20,-48.80],[-22.20,-46.60],[-23.60,-46.60],[-23.60,-48.80]] },
-  { id:'3', name:'DEINTER 3 – Ribeirão Preto', color:'#7c3aed', poly:[[-20.40,-49.20],[-20.40,-46.90],[-22.30,-46.90],[-22.30,-49.20]] },
-  { id:'4', name:'DEINTER 4 – Bauru', color:'#0891b2', poly:[[-21.80,-50.80],[-21.80,-48.50],[-23.60,-48.50],[-23.60,-50.80]] },
-  { id:'5', name:'DEINTER 5 – S.J. do Rio Preto', color:'#16a34a', poly:[[-19.80,-51.20],[-19.80,-49.00],[-21.50,-49.00],[-21.50,-51.20]] },
-  { id:'6', name:'DEINTER 6 – Vale do Paraíba', color:'#dc2626', poly:[[-22.40,-46.70],[-22.40,-44.00],[-23.60,-44.00],[-23.60,-46.70]] },
-  { id:'7', name:'DEINTER 7 – Sorocaba', color:'#d97706', poly:[[-23.00,-48.60],[-23.00,-46.70],[-24.20,-46.70],[-24.20,-48.60]] },
-  { id:'8', name:'DEINTER 8 – Pres. Prudente', color:'#be185d', poly:[[-21.50,-53.10],[-21.50,-51.20],[-23.80,-51.20],[-23.80,-53.10]] },
-  { id:'9', name:'DEINTER 9 – Araçatuba', color:'#059669', poly:[[-20.40,-52.80],[-20.40,-50.60],[-22.50,-50.60],[-22.50,-52.80]] },
-  { id:'10', name:'DEINTER 10 – Piracicaba', color:'#7f1d1d', poly:[[-22.00,-49.00],[-22.00,-47.20],[-23.20,-47.20],[-23.20,-49.00]] },
-];
-function pointInPoly(lat,lng,poly){let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const xi=poly[i][1],yi=poly[i][0],xj=poly[j][1],yj=poly[j][0];if(((yi>lat)!==(yj>lat))&&(lng<(xj-xi)*(lat-yi)/(yj-yi)+xi))inside=!inside;}return inside;}
-function getDeinterForPoint(lat,lng){for(const d of DEINTER_REGIONS){if(pointInPoly(lat,lng,d.poly))return d.id;}return 'outros';}
-let _deinterLayer=null;
-function renderDeinterPolygons(){
-  if(_deinterLayer)map.removeLayer(_deinterLayer);
-  _deinterLayer=L.layerGroup();
-  DEINTER_REGIONS.forEach(d=>{
-    const p=L.polygon(d.poly.map(p=>[p[0],p[1]]),{color:d.color,weight:2,opacity:.8,fillColor:d.color,fillOpacity:.06,dashArray:'5,5'});
-    p.bindTooltip(`<strong style="font-family:'Cera Pro',sans-serif;color:${d.color}">${d.name}</strong>`,{permanent:false,direction:'center'});
-    p.addTo(_deinterLayer);
-  });
-  if(document.getElementById('map-deinter-show')?.checked) _deinterLayer.addTo(map);
+// ── DEINTER REGIONS — carregamento dinâmico via API IBGE ────
+const IBGE_TO_DEINTER = {
+  'Santos':'1','Campinas':'2','Ribeirão Preto':'3','Bauru':'4',
+  'São José do Rio Preto':'5','São José dos Campos':'6',
+  'Sorocaba':'7','Presidente Prudente':'8','Araçatuba':'9',
+};
+const DEINTER_INFO = {
+  '1':{ name:'DEINTER 1 – Baixada Santista' },'2':{ name:'DEINTER 2 – Campinas' },
+  '3':{ name:'DEINTER 3 – Ribeirão Preto' }, '4':{ name:'DEINTER 4 – Bauru' },
+  '5':{ name:'DEINTER 5 – S.J. do Rio Preto'},'6':{ name:'DEINTER 6 – Vale do Paraíba' },
+  '7':{ name:'DEINTER 7 – Sorocaba' },        '8':{ name:'DEINTER 8 – Pres. Prudente' },
+  '9':{ name:'DEINTER 9 – Araçatuba' },
+};
+const deinterGeoJSON={};
+function _pipRing(lat,lng,ring){let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];if(((yi>lat)!==(yj>lat))&&(lng<(xj-xi)*(lat-yi)/(yj-yi)+xi))inside=!inside;}return inside;}
+function _pipPoly(lat,lng,rings){if(!_pipRing(lat,lng,rings[0]))return false;for(let i=1;i<rings.length;i++)if(_pipRing(lat,lng,rings[i]))return false;return true;}
+function pointInGeoJSON(lat,lng,geo){const feats=(geo.type==='FeatureCollection')?geo.features:[geo];for(const f of feats){const g=f.geometry||f;if(g.type==='Polygon'){if(_pipPoly(lat,lng,g.coordinates))return true;}else if(g.type==='MultiPolygon'){if(g.coordinates.some(r=>_pipPoly(lat,lng,r)))return true;}}return false;}
+function getDeinterForPoint(lat,lng){for(const[id,geo]of Object.entries(deinterGeoJSON)){if(pointInGeoJSON(lat,lng,geo))return id;}return 'outros';}
+let _deinterLayer=null,_deinterLoaded=false;
+async function loadDeinterPolygons(){
+  if(_deinterLoaded||!map)return;_deinterLoaded=true;
+  const lbl=document.getElementById('deinter-status');if(lbl)lbl.textContent='Carregando DEINTERs...';
+  try{
+    const r=await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/35/regioes-intermediarias');
+    const regs=await r.json();
+    if(_deinterLayer)map.removeLayer(_deinterLayer);
+    _deinterLayer=L.layerGroup();
+    await Promise.all(regs.map(async reg=>{
+      const dId=IBGE_TO_DEINTER[reg.nome];if(!dId)return;
+      const info=DEINTER_INFO[dId];if(!info)return;
+      try{
+        const gr=await fetch('https://servicodados.ibge.gov.br/api/v3/malhas/regioes-intermediarias/'+reg.id+'?formato=application/vnd.geo+json&resolucao=3');
+        const geo=await gr.json();deinterGeoJSON[dId]=geo;
+        L.geoJSON(geo,{style:{color:'#003865',weight:2,opacity:1,fillColor:'#003865',fillOpacity:.04,dashArray:null}})
+         .bindTooltip('<span style="font-family:\'Cera Pro\',sans-serif;font-size:12px;font-weight:700;color:#003865">'+info.name+'</span>',{permanent:false,direction:'center',className:'deinter-tooltip'})
+         .addTo(_deinterLayer);
+      }catch(e){console.warn('Falha',reg.nome,e);}
+    }));
+    if(document.getElementById('map-deinter-show')?.checked)_deinterLayer.addTo(map);
+    if(lbl){lbl.textContent='DEINTERs carregados';setTimeout(()=>lbl.textContent='',2000);}
+  }catch(e){
+    console.warn('IBGE API falhou',e);if(lbl)lbl.textContent='';
+    const FB=[{id:'1',p:[[-23.30,-47.50],[-23.30,-45.00],[-24.80,-45.00],[-24.80,-47.50]]},{id:'2',p:[[-22.20,-48.80],[-22.20,-46.60],[-23.60,-46.60],[-23.60,-48.80]]},{id:'3',p:[[-20.40,-49.20],[-20.40,-46.90],[-22.30,-46.90],[-22.30,-49.20]]},{id:'4',p:[[-21.80,-50.80],[-21.80,-48.50],[-23.60,-48.50],[-23.60,-50.80]]},{id:'5',p:[[-19.80,-51.20],[-19.80,-49.00],[-21.50,-49.00],[-21.50,-51.20]]},{id:'6',p:[[-22.40,-46.70],[-22.40,-44.00],[-23.60,-44.00],[-23.60,-46.70]]},{id:'7',p:[[-23.00,-48.60],[-23.00,-46.70],[-24.20,-46.70],[-24.20,-48.60]]},{id:'8',p:[[-21.50,-53.10],[-21.50,-51.20],[-23.80,-51.20],[-23.80,-53.10]]},{id:'9',p:[[-20.40,-52.80],[-20.40,-50.60],[-22.50,-50.60],[-22.50,-52.80]]}];
+    if(_deinterLayer)map.removeLayer(_deinterLayer);_deinterLayer=L.layerGroup();
+    FB.forEach(d=>{const info=DEINTER_INFO[d.id];if(!info)return;deinterGeoJSON[d.id]={type:'Feature',geometry:{type:'Polygon',coordinates:[d.p.map(p=>[p[1],p[0]])]}};L.polygon(d.p.map(p=>[p[0],p[1]]),{color:'#003865',weight:2,opacity:1,fillColor:'#003865',fillOpacity:.04,dashArray:null}).bindTooltip('<span style="font-family:\'Cera Pro\',sans-serif;font-size:12px;font-weight:700;color:#003865">'+DEINTER_INFO[d.id].name+'</span>',{permanent:false,direction:'center',className:'deinter-tooltip'}).addTo(_deinterLayer);});
+    if(document.getElementById('map-deinter-show')?.checked)_deinterLayer.addTo(map);
+  }
 }
 function toggleDeinterLayer(){const s=document.getElementById('map-deinter-show');if(!_deinterLayer)return;if(s?.checked)_deinterLayer.addTo(map);else map.removeLayer(_deinterLayer);}
 
@@ -205,6 +228,8 @@ apply();
 </script>
 </body>
 </html>
+
+
 
 
 
