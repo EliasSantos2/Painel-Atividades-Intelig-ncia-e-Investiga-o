@@ -949,34 +949,83 @@ function svgCircle(color, r=10){
 function buildMapPopup(c){
   const hasInq = c.inq != null;
   const headColor = hasInq ? '#C0392B' : (c.cl==='CRIMINAL' ? '#003865' : '#F78344');
-  const badge = hasInq ? '<span style="background:#C0392B;color:#fff;padding:2px 6px;border-radius:3px;font-size:10px">COM INQUÉRITO</span>'
-                       : (c.cl==='CRIMINAL' ? '<span style="background:#003865;color:#fff;padding:2px 6px;border-radius:3px;font-size:10px">CRIMINAL</span>'
-                                            : '<span style="background:#F78344;color:#fff;padding:2px 6px;border-radius:3px;font-size:10px">NÃO CRIMINAL</span>');
-  let h = `<div style="font-family:Arial,sans-serif;font-size:12px;min-width:260px;max-width:320px">
-    <div style="background:${headColor};color:#fff;padding:8px 10px;border-radius:4px 4px 0 0;margin:-1px -1px 0">
-      <strong>B.O. ${c.bo||'—'}</strong> ${badge}
-    </div>
-    <div style="padding:8px 10px;border:1px solid #ddd;border-top:none;border-radius:0 0 4px 4px">
-      <div style="margin-bottom:6px"><strong>${c.nat||c.tp||'—'}</strong> · ${c.tp||''} · ${c.sb||''}</div>
-      <div style="color:#555;font-size:11px;margin-bottom:4px">${c.dt||'—'} ${c.hr?'às '+c.hr:''}</div>
-      <div style="color:#555;font-size:11px;margin-bottom:4px">${c.cid||'—'}/${c.uf||'—'} · ${c.circ||'—'} · KM ${c.km||'—'}</div>
-      <div style="color:#555;font-size:11px;margin-bottom:8px">${c.emp||'—'} · Art. ${c.cr||'—'}</div>`;
+  const badge = hasInq
+    ? '<span style="background:#C0392B;color:#fff;padding:2px 6px;border-radius:3px;font-size:10px;margin-left:6px">COM INQUÉRITO</span>'
+    : (c.cl==='CRIMINAL'
+        ? '<span style="background:#003865;color:#fff;padding:2px 6px;border-radius:3px;font-size:10px;margin-left:6px">CRIMINAL</span>'
+        : '<span style="background:#F78344;color:#fff;padding:2px 6px;border-radius:3px;font-size:10px;margin-left:6px">NÃO CRIMINAL</span>');
+
+  const R = (lbl,val) => val ? `<tr><td style="color:#888;padding:2px 8px 2px 0;white-space:nowrap;font-size:10px;font-weight:600;text-transform:uppercase">${lbl}</td><td style="padding:2px 0;font-size:11px;color:#1a2740">${val}</td></tr>` : '';
+  const SEC = (title) => `<tr><td colspan="2" style="padding:8px 0 3px;font-size:10px;font-weight:700;color:${headColor};text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #eee">${title}</td></tr>`;
+
+  let rows = `<table style="width:100%;border-collapse:collapse">`;
+
+  rows += SEC('Identificação');
+  rows += R('B.O.',c.bo);
+  rows += R('Classificação',c.cl);
+  rows += R('Protocolo',c.prot);
+  rows += R('Recebido Via',c.recv);
+
+  rows += SEC('Data & Hora');
+  rows += R('Data',c.dt);
+  rows += R('Hora',c.hr);
+  rows += R('Hora Início',c.hi);
+  rows += R('Hora Final',c.hf);
+
+  rows += SEC('Localização');
+  rows += R('Cidade/UF', c.cid ? c.cid+(c.uf?'/'+c.uf:'') : '');
+  rows += R('Circunscrição',c.circ);
+  rows += R('KM',c.km);
+  rows += R('Trecho',c.tre);
+  rows += R('SB',c.sbn);
+
+  rows += SEC('Ocorrência');
+  rows += R('Natureza',c.nat);
+  rows += R('Tipo',c.tp);
+  rows += R('Subtipo',c.sb);
+  rows += R('Crime',c.cr);
+  rows += R('Artigo',c.art);
+  rows += R('Especificação',c.esp);
+  rows += R('Tipos',c.tipos);
+  rows += R('Grau',c.grau);
+  rows += R('Código Grau',c.cgr);
+
+  rows += SEC('Produto');
+  rows += R('Quantidade',c.qtd);
+  rows += R('THP Total',c.thp);
+  rows += R('Valor',c.val);
+
+  rows += SEC('Empresa / Composição');
+  rows += R('Empresa',c.emp);
+  rows += R('Composição',c.comp);
+  rows += R('Performance',c.perf);
+  rows += R('Rastreio',c.ras);
+  rows += R('Maquinista',c.maq);
+  rows += R('RE',c.re);
+
+  rows += SEC('Autoria');
+  rows += R('Autoria',c.aut);
+  rows += R('CPF',c.cpf);
+
+  rows += '</table>';
+
+  let proc = '';
   if(hasInq){
     const p = c.inq;
-    h += `<div style="background:#fff8f8;border:1px solid #C0392B;border-radius:4px;padding:6px 8px;font-size:11px">
-      <div style="color:#C0392B;font-weight:700;margin-bottom:4px">Processo Vinculado</div>
-      <div><strong>Proc.:</strong> ${p.proc||'—'} · Nº ${p.num||'—'}</div>
-      <div><strong>DP:</strong> ${p.dp||'—'}</div>
-      <div><strong>Vara:</strong> ${p.vara||'—'}</div>
-      <div><strong>Andamento:</strong> ${p.and||'—'}</div>
-      <div><strong>Quebra de Sigilo:</strong> ${p.sig||'—'}</div>
-    </div>`;
-  } else {
-    h += `<div style="background:#f0fff4;border:1px solid #27ae60;border-radius:4px;padding:6px 8px;font-size:11px;color:#27ae60">
-      Não há inquérito em aberto para este B.O.</div>`;
+    proc = `<div style="background:#fff8f8;border:1px solid #C0392B;border-radius:4px;padding:8px 10px;margin-top:8px;font-size:11px">
+      <div style="color:#C0392B;font-weight:700;margin-bottom:6px;font-size:10px;text-transform:uppercase;letter-spacing:.5px">Processo Vinculado</div>
+      <table style="width:100%;border-collapse:collapse">
+        ${R('Proc.',p.proc)}${R('DP',p.dp)}${R('Vara',p.vara)}${R('Andamento',p.and)}${R('Quebra de Sigilo',p.sig)}
+      </table></div>`;
   }
-  h += '</div></div>';
-  return h;
+
+  return `<div style="font-family:Arial,sans-serif;font-size:12px;min-width:300px;max-width:380px;max-height:520px;overflow-y:auto">
+    <div style="background:${headColor};color:#fff;padding:9px 12px;border-radius:4px 4px 0 0;position:sticky;top:0;z-index:1">
+      <strong style="font-size:13px">B.O. ${c.bo||'—'}</strong>${badge}
+    </div>
+    <div style="padding:8px 12px 10px;border:1px solid #ddd;border-top:none;border-radius:0 0 4px 4px">
+      ${rows}${proc}
+    </div></div>`;
 }
 
 function _renderMapFiltered(){ renderMap(); }
@@ -1129,6 +1178,7 @@ applyFilters();
 </script>
 </body>
 </html>
+
 
 
 

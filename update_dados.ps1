@@ -88,7 +88,7 @@ for($i=2; $i -le 30000; $i++){
     if($v -ne $null -and "$v".Trim() -ne ''){ $rowsWithCoord.Add($i) }
 }
 $lastRow = if($rowsWithCoord.Count -gt 0){ $rowsWithCoord[$rowsWithCoord.Count-1] }else{ 2 }
-$lastCol = 34
+$lastCol = 38
 Log "Planilha: $($rowsWithCoord.Count) linhas com T preenchido, última = $lastRow"
 
 # Leitura em bulk de todas as colunas necessárias até a última linha com coord
@@ -101,8 +101,15 @@ Log "Array lido: $($data.GetLength(0)) x $($data.GetLength(1)) (linhas x colunas
 
 # Mapear índices de colunas (1-based)
 $colB=2;$colC=3;$colD=4;$colE=5;$colF=6;$colG=7;$colH=8;$colI=9;$colJ=10
-$colK=11;$colL=12;$colO=15;$colP=16;$colQ=17;$colT=20;$colU=21;$colV=22
-$colW=23;$colZ=26;$colAC=29;$colAD=30;$colAH=34
+$colK=11;$colL=12;$colM=13;$colN=14;$colO=15;$colP=16;$colQ=17;$colR=18;$colS=19
+$colT=20;$colU=21;$colV=22;$colW=23;$colY=25;$colZ=26;$colAA=27;$colAB=28
+$colAC=29;$colAD=30;$colAE=31;$colAF=32;$colAG=33;$colAH=34;$colAI=35;$colAJ=36;$colAK=37;$colAL=38
+
+function CvTime($arr,$r,$c){
+    $v = Cv $arr $r $c
+    if($v -eq ''){ return '' }
+    try{ $tot=[double]$v*24; $h=[math]::Floor($tot); $mi=[math]::Floor(($tot-$h)*60); return "{0:D2}:{1:D2}" -f $h,$mi }catch{ return $v }
+}
 
 function Cv($arr,$r,$c){ if($c -le $arr.GetUpperBound(1)){ $v=$arr[$r,$c]; if($v -ne $null){"$v".Trim()}else{''} }else{''} }
 
@@ -146,6 +153,20 @@ for($r=2; $r -le $lastRow; $r++){
                 ras =Cv $data $r $colB
                 perf=Cv $data $r $colG
                 thp =Cv $data $r $colAH
+                tre =Cv $data $r $colM
+                sbn =Cv $data $r $colN
+                maq =Cv $data $r $colR
+                re  =Cv $data $r $colS
+                qtd =Cv $data $r $colY
+                cpf =Cv $data $r $colAA
+                prot=Cv $data $r $colAB
+                recv=Cv $data $r $colAE
+                hi  =CvTime $data $r $colAF
+                hf  =CvTime $data $r $colAG
+                cgr =Cv $data $r $colAI
+                grau=Cv $data $r $colAJ
+                tipos=Cv $data $r $colAK
+                val =Cv $data $r $colAL
                 inq =$inqData}
             $coords.Add($rec)
         }
