@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -123,6 +123,45 @@
     .header-title p{display:none;}
     .search-box{width:100%;}
   }
+
+/* ===== ADMIN PANEL ===== */
+#admin-lock-btn{position:fixed;bottom:24px;right:24px;z-index:9000;background:var(--navy);color:#fff;border:none;border-radius:50%;width:46px;height:46px;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.35);transition:.2s}
+#admin-lock-btn:hover{background:var(--orange)}
+#login-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9100;align-items:center;justify-content:center}
+#login-overlay.show{display:flex}
+#login-box{background:#fff;border-radius:12px;padding:36px 40px;width:340px;box-shadow:0 8px 40px rgba(0,0,0,.3)}
+#login-box h3{color:var(--navy);font-size:18px;margin-bottom:20px;text-align:center}
+#login-box input{width:100%;padding:10px 12px;border:1.5px solid #d0d9e8;border-radius:7px;font-size:14px;margin-bottom:12px;outline:none}
+#login-box input:focus{border-color:var(--navy)}
+#login-box .btn-login{width:100%;background:var(--navy);color:#fff;border:none;padding:11px;border-radius:7px;font-size:14px;cursor:pointer;font-weight:700}
+#login-box .btn-login:hover{background:var(--orange)}
+#login-error{color:#dc2626;font-size:12px;text-align:center;min-height:18px;margin-top:-6px;margin-bottom:8px}
+#admin-panel{display:none;position:fixed;top:0;right:0;width:320px;height:100vh;background:#fff;z-index:9050;box-shadow:-4px 0 24px rgba(0,0,0,.18);overflow-y:auto;flex-direction:column}
+#admin-panel.show{display:flex}
+#admin-panel .ap-header{background:var(--navy);color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#admin-panel .ap-header h3{font-size:14px;font-weight:700;letter-spacing:.5px}
+#admin-panel .ap-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1}
+#admin-panel .ap-section{padding:14px 18px;border-bottom:1px solid #e8edf5}
+#admin-panel .ap-section h4{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#5a6a80;margin-bottom:10px}
+#admin-panel .ap-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px}
+#admin-panel .ap-row label{font-size:12px;color:#1a2535;flex:1}
+#admin-panel .ap-row input[type=color]{width:36px;height:28px;border:1px solid #d0d9e8;border-radius:4px;cursor:pointer;padding:2px}
+#admin-panel .ap-row input[type=range]{flex:1;accent-color:var(--navy)}
+#admin-panel .ap-row input[type=text],.admin-panel .ap-row textarea{flex:1;padding:5px 8px;border:1px solid #d0d9e8;border-radius:5px;font-size:12px}
+#admin-panel .ap-row select{flex:1;padding:5px 8px;border:1px solid #d0d9e8;border-radius:5px;font-size:12px}
+#admin-panel .ap-row span.val{font-size:11px;color:#5a6a80;min-width:32px;text-align:right}
+#admin-panel .ap-btn{width:100%;margin-top:8px;padding:9px;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600}
+#admin-panel .ap-btn-navy{background:var(--navy);color:#fff}
+#admin-panel .ap-btn-orange{background:var(--orange);color:#fff}
+#admin-panel .ap-btn-green{background:#2e9e57;color:#fff}
+#admin-panel .ap-btn-red{background:#dc2626;color:#fff}
+#admin-panel .ap-btn:hover{opacity:.85}
+/* Edit mode styles */
+body.edit-mode [data-editable]{outline:2px dashed var(--orange)!important;cursor:text!important;min-height:1.2em}
+body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
+.img-drop-zone{border:2px dashed #d0d9e8;border-radius:8px;padding:16px;text-align:center;font-size:12px;color:#5a6a80;cursor:pointer;margin-top:8px;transition:.2s}
+.img-drop-zone:hover{border-color:var(--orange);color:var(--orange)}
+#img-target-info{font-size:11px;color:#5a6a80;margin-bottom:6px;font-style:italic}
 </style>
 </head>
 <body>
@@ -663,5 +702,318 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelect
 updateOpSelects();
 renderDashboard();
 </script>
-</body>
+
+<!-- ===== ADMIN SYSTEM ===== -->
+<button id="admin-lock-btn" title="Configuração do Painel" onclick="openLogin()">⚙️</button>
+
+<!-- Login Modal -->
+<div id="login-overlay">
+  <div id="login-box">
+    <h3>🔐 Acesso Restrito</h3>
+    <input type="text" id="login-user" placeholder="Usuário" autocomplete="off"/>
+    <input type="password" id="login-pass" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <div id="login-error"></div>
+    <button class="btn-login" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- Admin Panel -->
+<div id="admin-panel">
+  <div class="ap-header">
+    <h3>⚙️ Configuração do Painel</h3>
+    <button class="ap-close" onclick="closeAdmin()">✕</button>
+  </div>
+
+  <!-- CORES DO PAINEL -->
+  <div class="ap-section">
+    <h4>🎨 Cores do Painel</h4>
+    <div class="ap-row"><label>Cor Principal (Navy)</label><input type="color" id="c-navy" oninput="applyColor('--navy',this.value)"></div>
+    <div class="ap-row"><label>Cor Secundária (Navy 2)</label><input type="color" id="c-navy2" oninput="applyColor('--navy2',this.value)"></div>
+    <div class="ap-row"><label>Cor de Destaque (Laranja)</label><input type="color" id="c-orange" oninput="applyColor('--orange',this.value)"></div>
+    <div class="ap-row"><label>Fundo Geral</label><input type="color" id="c-bg" oninput="applyColor('--bg',this.value)"></div>
+    <div class="ap-row"><label>Fundo Cards</label><input type="color" id="c-bg2" oninput="applyColor('--bg2',this.value)"></div>
+    <div class="ap-row"><label>Cor de Texto</label><input type="color" id="c-text" oninput="applyColor('--text',this.value)"></div>
+    <div class="ap-row"><label>Cor de Texto Secundário</label><input type="color" id="c-text2" oninput="applyColor('--text2',this.value)"></div>
+    <div class="ap-row"><label>Verde (Status)</label><input type="color" id="c-green" oninput="applyColor('--green',this.value)"></div>
+    <div class="ap-row"><label>Amarelo (Alerta)</label><input type="color" id="c-yellow" oninput="applyColor('--yellow',this.value)"></div>
+    <div class="ap-row"><label>Vermelho (Crítico)</label><input type="color" id="c-red" oninput="applyColor('--red',this.value)"></div>
+  </div>
+
+  <!-- TIPOGRAFIA -->
+  <div class="ap-section">
+    <h4>✏️ Tipografia</h4>
+    <div class="ap-row">
+      <label>Fonte Base</label>
+      <select id="c-font" onchange="applyFont(this.value)">
+        <option value="'Cera Pro','Segoe UI',Arial,sans-serif">Cera Pro</option>
+        <option value="'Segoe UI',Arial,sans-serif">Segoe UI</option>
+        <option value="Arial,sans-serif">Arial</option>
+        <option value="'Helvetica Neue',sans-serif">Helvetica Neue</option>
+        <option value="Georgia,serif">Georgia</option>
+        <option value="'Times New Roman',serif">Times New Roman</option>
+        <option value="'Courier New',monospace">Courier New</option>
+      </select>
+    </div>
+    <div class="ap-row">
+      <label>Tamanho Base</label>
+      <input type="range" id="c-fontsize" min="10" max="20" value="14" oninput="applyFontSize(this.value);document.getElementById('fs-val').textContent=this.value+'px'">
+      <span class="val" id="fs-val">14px</span>
+    </div>
+  </div>
+
+  <!-- EDIÇÃO DE TEXTO -->
+  <div class="ap-section">
+    <h4>📝 Editar Textos</h4>
+    <button class="ap-btn ap-btn-navy" onclick="toggleEditMode()" id="btn-edit-mode">Ativar Modo Edição</button>
+    <p style="font-size:11px;color:#5a6a80;margin-top:8px">No modo edição, clique em qualquer texto do painel para editá-lo diretamente.</p>
+  </div>
+
+  <!-- INSERIR IMAGEM -->
+  <div class="ap-section">
+    <h4>🖼️ Inserir Imagem</h4>
+    <p style="font-size:11px;color:#5a6a80;margin-bottom:8px">Selecione a seção onde inserir a imagem:</p>
+    <div class="ap-row">
+      <label>Seção</label>
+      <select id="img-section">
+        <option value="header">Cabeçalho</option>
+        <option value="section-1">Seção 1</option>
+        <option value="section-2">Seção 2</option>
+        <option value="section-3">Seção 3</option>
+        <option value="section-4">Seção 4</option>
+        <option value="body-top">Topo do conteúdo</option>
+        <option value="body-bottom">Fim do conteúdo</option>
+      </select>
+    </div>
+    <div class="ap-row">
+      <label>Largura</label>
+      <input type="range" id="img-width" min="50" max="100" value="100" oninput="document.getElementById('img-w-val').textContent=this.value+'%'">
+      <span class="val" id="img-w-val">100%</span>
+    </div>
+    <div class="img-drop-zone" onclick="document.getElementById('img-file').click()">
+      📁 Clique para selecionar imagem (JPG, PNG, GIF, SVG)
+    </div>
+    <input type="file" id="img-file" accept="image/*" style="display:none" onchange="insertImage(this)">
+    <div class="ap-row" style="margin-top:8px">
+      <label>Ou URL da imagem:</label>
+    </div>
+    <div class="ap-row">
+      <input type="text" id="img-url" placeholder="https://..." style="flex:1;padding:6px 8px;border:1px solid #d0d9e8;border-radius:5px;font-size:12px">
+    </div>
+    <button class="ap-btn ap-btn-orange" onclick="insertImageUrl()" style="margin-top:4px">Inserir por URL</button>
+  </div>
+
+  <!-- SALVAR / RESETAR -->
+  <div class="ap-section">
+    <h4>💾 Configurações</h4>
+    <button class="ap-btn ap-btn-green" onclick="saveConfig()">Salvar Configurações</button>
+    <button class="ap-btn ap-btn-red" style="margin-top:8px" onclick="resetConfig()">Restaurar Padrão</button>
+    <p style="font-size:11px;color:#5a6a80;margin-top:8px">As configurações são salvas localmente neste navegador.</p>
+  </div>
+</div>
+
+<script>
+// ===== ADMIN SYSTEM =====
+const ADMIN_USER = 'Cord_Elias';
+const ADMIN_PASS = '73546829';
+let adminLoggedIn = false;
+let editMode = false;
+
+const defaultConfig = {
+  '--navy':'#003865','--navy2':'#1a3a5c','--orange':'#F78344',
+  '--bg':'#f4f6fa','--bg2':'#ffffff','--bg3':'#eef1f7',
+  '--text':'#1a2535','--text2':'#5a6a80',
+  '--green':'#2e9e57','--yellow':'#d97706','--red':'#dc2626',
+  font:"'Cera Pro','Segoe UI',Arial,sans-serif", fontSize:'14'
+};
+
+function openLogin(){
+  if(adminLoggedIn){ toggleAdminPanel(); return; }
+  document.getElementById('login-overlay').classList.add('show');
+  document.getElementById('login-user').focus();
+  document.getElementById('login-error').textContent='';
+}
+
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim();
+  const p=document.getElementById('login-pass').value;
+  if(u===ADMIN_USER && p===ADMIN_PASS){
+    adminLoggedIn=true;
+    document.getElementById('login-overlay').classList.remove('show');
+    document.getElementById('admin-lock-btn').textContent='⚙️';
+    document.getElementById('admin-lock-btn').style.background='var(--orange)';
+    document.getElementById('admin-panel').classList.add('show');
+    loadColorPickers();
+  } else {
+    document.getElementById('login-error').textContent='Usuário ou senha incorretos.';
+    document.getElementById('login-pass').value='';
+  }
+}
+
+function toggleAdminPanel(){
+  document.getElementById('admin-panel').classList.toggle('show');
+}
+
+function closeAdmin(){
+  document.getElementById('admin-panel').classList.remove('show');
+}
+
+function loadColorPickers(){
+  const root = getComputedStyle(document.documentElement);
+  const map = {'--navy':'c-navy','--navy2':'c-navy2','--orange':'c-orange','--bg':'c-bg','--bg2':'c-bg2','--text':'c-text','--text2':'c-text2','--green':'c-green','--yellow':'c-yellow','--red':'c-red'};
+  for(const [varName,elId] of Object.entries(map)){
+    const el=document.getElementById(elId);
+    if(!el) continue;
+    const val=root.getPropertyValue(varName).trim();
+    if(val) try{ el.value=rgbToHex(val)||val; } catch(e){}
+  }
+}
+
+function rgbToHex(color){
+  if(color.startsWith('#')) return color;
+  const m=color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if(!m) return color;
+  return '#'+[m[1],m[2],m[3]].map(x=>parseInt(x).toString(16).padStart(2,'0')).join('');
+}
+
+function applyColor(varName, value){
+  document.documentElement.style.setProperty(varName, value);
+}
+
+function applyFont(value){
+  document.body.style.fontFamily=value;
+}
+
+function applyFontSize(value){
+  document.body.style.fontSize=value+'px';
+}
+
+// ── EDIT MODE ──────────────────────────────────────────────
+function toggleEditMode(){
+  editMode=!editMode;
+  const btn=document.getElementById('btn-edit-mode');
+  if(editMode){
+    enableEditMode();
+    btn.textContent='Desativar Modo Edição';
+    btn.style.background='#dc2626';
+  } else {
+    disableEditMode();
+    btn.textContent='Ativar Modo Edição';
+    btn.style.background='var(--navy)';
+  }
+}
+
+function enableEditMode(){
+  document.body.classList.add('edit-mode');
+  // Make all text nodes in p, h1-h6, span, td, th, li, div.kpi-val etc editable
+  const selectors=['h1','h2','h3','h4','h5','h6','p','li','td','th','.kpi-val','.kpi-sub','.kpi-lbl','.section-title','.card-title','.badge','.tag-value'];
+  selectors.forEach(sel=>{
+    document.querySelectorAll(sel).forEach(el=>{
+      if(!el.closest('#admin-panel') && !el.closest('#login-overlay') && !el.closest('#admin-lock-btn')){
+        el.setAttribute('contenteditable','true');
+        el.setAttribute('data-editable','1');
+      }
+    });
+  });
+}
+
+function disableEditMode(){
+  document.body.classList.remove('edit-mode');
+  document.querySelectorAll('[data-editable]').forEach(el=>{
+    el.removeAttribute('contenteditable');
+    el.removeAttribute('data-editable');
+  });
+}
+
+// ── IMAGE INSERTION ─────────────────────────────────────────
+function getTargetSection(){
+  const sel=document.getElementById('img-section').value;
+  const targets={
+    'header': document.querySelector('header'),
+    'body-top': document.querySelector('main,section,.content,.tab-content.active') || document.querySelector('nav+*'),
+    'body-bottom': document.querySelector('footer') || document.body,
+    'section-1': document.querySelectorAll('section,.card,.section-block')[0],
+    'section-2': document.querySelectorAll('section,.card,.section-block')[1],
+    'section-3': document.querySelectorAll('section,.card,.section-block')[2],
+    'section-4': document.querySelectorAll('section,.card,.section-block')[3],
+  };
+  return targets[sel] || document.body;
+}
+
+function createImgElement(src){
+  const width=document.getElementById('img-width').value+'%';
+  const wrapper=document.createElement('div');
+  wrapper.style.cssText='position:relative;display:block;margin:12px auto;text-align:center';
+  wrapper.setAttribute('data-admin-img','1');
+  const img=document.createElement('img');
+  img.src=src; img.style.cssText=`max-width:${width};height:auto;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.15)`;
+  const removeBtn=document.createElement('button');
+  removeBtn.textContent='✕';
+  removeBtn.style.cssText='position:absolute;top:6px;right:6px;background:rgba(220,38,38,.85);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:13px;line-height:1;display:none';
+  wrapper.onmouseenter=()=>removeBtn.style.display='block';
+  wrapper.onmouseleave=()=>removeBtn.style.display='none';
+  removeBtn.onclick=()=>wrapper.remove();
+  wrapper.appendChild(img); wrapper.appendChild(removeBtn);
+  return wrapper;
+}
+
+function insertImage(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const target=getTargetSection();
+    if(target) target.appendChild(createImgElement(e.target.result));
+  };
+  reader.readAsDataURL(file);
+  input.value='';
+}
+
+function insertImageUrl(){
+  const url=document.getElementById('img-url').value.trim();
+  if(!url) return;
+  const target=getTargetSection();
+  if(target){ target.appendChild(createImgElement(url)); document.getElementById('img-url').value=''; }
+}
+
+// ── SAVE / LOAD / RESET ─────────────────────────────────────
+function saveConfig(){
+  const vars=['--navy','--navy2','--orange','--bg','--bg2','--bg3','--text','--text2','--green','--yellow','--red'];
+  const root=getComputedStyle(document.documentElement);
+  const cfg={};
+  vars.forEach(v=>{ cfg[v]=root.getPropertyValue(v).trim(); });
+  cfg.font=document.body.style.fontFamily || defaultConfig.font;
+  cfg.fontSize=document.getElementById('c-fontsize').value;
+  localStorage.setItem('painel_config', JSON.stringify(cfg));
+  alert('✅ Configurações salvas!');
+}
+
+function loadConfig(){
+  try{
+    const raw=localStorage.getItem('painel_config');
+    if(!raw) return;
+    const cfg=JSON.parse(raw);
+    for(const [k,v] of Object.entries(cfg)){
+      if(k.startsWith('--')) document.documentElement.style.setProperty(k,v);
+    }
+    if(cfg.font) document.body.style.fontFamily=cfg.font;
+    if(cfg.fontSize){ document.body.style.fontSize=cfg.fontSize+'px'; const sl=document.getElementById('c-fontsize'); if(sl){sl.value=cfg.fontSize; document.getElementById('fs-val').textContent=cfg.fontSize+'px';} }
+  }catch(e){}
+}
+
+function resetConfig(){
+  if(!confirm('Restaurar todas as cores e fontes para o padrão?')) return;
+  localStorage.removeItem('painel_config');
+  for(const [k,v] of Object.entries(defaultConfig)){
+    if(k.startsWith('--')) document.documentElement.style.setProperty(k,v);
+  }
+  document.body.style.fontFamily=defaultConfig.font;
+  document.body.style.fontSize=defaultConfig.fontSize+'px';
+  loadColorPickers();
+  alert('✅ Configurações restauradas ao padrão!');
+}
+
+// Load saved config on startup
+loadConfig();
+</script></body>
 </html>
+
+
