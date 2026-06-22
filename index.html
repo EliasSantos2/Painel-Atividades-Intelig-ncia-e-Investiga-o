@@ -155,7 +155,7 @@ nav.hnav{display:flex;align-items:center;gap:4px;}
 }
 .mcard-visual-bg{position:absolute;inset:0;}
 .mcard-vshade{position:absolute;inset:0;background:linear-gradient(160deg,rgba(0,56,101,.25) 0%,rgba(0,20,40,.7) 100%);}
-.mcard-icon{position:relative;z-index:2;font-size:72px;transition:transform .3s;filter:drop-shadow(0 6px 18px rgba(0,0,0,.3));}
+.mcard-icon{position:relative;z-index:2;width:72px;height:72px;transition:transform .3s;filter:drop-shadow(0 6px 18px rgba(0,0,0,.3));display:flex;align-items:center;justify-content:center;}.mcard-icon svg{width:72px;height:72px;stroke:rgba(255,255,255,0.92);stroke-width:1.4;fill:none;}
 .mcard-badge{
   position:absolute;top:14px;right:14px;z-index:3;
   font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
@@ -236,6 +236,7 @@ footer p{font-size:12px;color:rgba(255,255,255,.3);}
   footer{padding:20px 18px;flex-direction:column;text-align:center;}
 }
 </style>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 
@@ -310,7 +311,7 @@ footer p{font-size:12px;color:rgba(255,255,255,.3);}
     <a class="mcard anim" href="Painel_Investigacoes.html">
       <div class="mcard-visual bg-invest">
         <div class="mcard-vshade"></div>
-        <div class="mcard-icon">🔍</div>
+        <div class="mcard-icon"><i data-lucide="shield-search"></i></div>
         <span class="mcard-badge badge-live">● Ativo</span>
       </div>
       <div class="mcard-body">
@@ -318,11 +319,11 @@ footer p{font-size:12px;color:rgba(255,255,255,.3);}
         <h3>Painel de Investigações</h3>
         <p>Gestão completa das operações investigativas em andamento. Acompanhe status, tarefas, responsáveis e marcos de cada operação em tempo real.</p>
         <div class="mcard-chips">
-          <span class="chip">📋 Operações</span>
-          <span class="chip">✅ Tarefas</span>
-          <span class="chip">📅 Agenda</span>
-          <span class="chip">💬 WhatsApp</span>
-          <span class="chip">📊 Dashboard</span>
+          <span class="chip">Operações</span>
+          <span class="chip">Tarefas</span>
+          <span class="chip">Agenda</span>
+          <span class="chip">WhatsApp</span>
+          <span class="chip">Dashboard</span>
         </div>
         <div class="mcard-foot">
           <span class="mcta">Acessar módulo <span class="mcard-arrow">→</span></span>
@@ -335,7 +336,7 @@ footer p{font-size:12px;color:rgba(255,255,255,.3);}
     <a class="mcard anim" href="Indicadores_Inteligencia.html">
       <div class="mcard-visual bg-indicadores">
         <div class="mcard-vshade"></div>
-        <div class="mcard-icon">📈</div>
+        <div class="mcard-icon"><i data-lucide="bar-chart-2"></i></div>
         <span class="mcard-badge badge-live">● Ativo</span>
       </div>
       <div class="mcard-body">
@@ -343,11 +344,11 @@ footer p{font-size:12px;color:rgba(255,255,255,.3);}
         <h3>Indicadores da Inteligência</h3>
         <p>Painel de KPIs estratégicos do núcleo de inteligência. Métricas de desempenho, tendências, mapa de ocorrências e relatórios consolidados.</p>
         <div class="mcard-chips">
-          <span class="chip">📊 KPIs</span>
-          <span class="chip">🗺️ Mapa</span>
-          <span class="chip">📉 Tendências</span>
-          <span class="chip">📄 Relatórios</span>
-          <span class="chip">🎯 Metas</span>
+          <span class="chip">KPIs</span>
+          <span class="chip">Mapa</span>
+          <span class="chip">Tendências</span>
+          <span class="chip">Relatórios</span>
+          <span class="chip">Metas</span>
         </div>
         <div class="mcard-foot">
           <span class="mcta">Acessar módulo <span class="mcard-arrow">→</span></span>
@@ -424,6 +425,7 @@ const obs = new IntersectionObserver((entries) => {
 }, { threshold: 0.15 });
 document.querySelectorAll('.anim').forEach(el => obs.observe(el));
 </script>
+<script>lucide.createIcons();</script>
 </body>
 </html>
 

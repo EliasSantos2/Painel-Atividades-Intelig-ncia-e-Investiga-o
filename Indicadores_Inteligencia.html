@@ -212,14 +212,14 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
 
 <div class="tabs">
   <div class="tab active" onclick="switchTab('painel')"><i data-lucide="bar-chart-2"></i> Painel Principal</div>
-  <div class="tab" onclick="switchTab('desdo')"><i data-lucide="git-merge"></i> Desdobramentos · BO → Inquérito</div>
+  <div class="tab" onclick="switchTab('desdo')"><i data-lucide="git-branch"></i> Desdobramentos · BO → Inquérito</div>
   <div class="tab" onclick="switchTab('mapa')"><i data-lucide="map-pin"></i> Mapa Operacional</div>
 </div>
 
 <!-- PAINEL PRINCIPAL -->
 <div id="tab-painel" class="tab-content active">
   <div class="kpis">
-    <div class="kpi k1"><i data-lucide="file-text" style="color:var(--orange);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">B.O Registrados</div><div class="kpi-val" id="kpi-total">—</div><div class="kpi-sub">registros no período</div></div>
+    <div class="kpi k1"><i data-lucide="clipboard-list" style="color:var(--orange);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">B.O Registrados</div><div class="kpi-val" id="kpi-total">—</div><div class="kpi-sub">registros no período</div></div>
     <div class="kpi k2"><i data-lucide="shield-alert" style="color:var(--red);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Criminal</div><div class="kpi-val" id="kpi-crim">—</div><div class="kpi-sub" id="kpi-crim-pct">—</div></div>
     <div class="kpi k3"><i data-lucide="shield-check" style="color:var(--navy2);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Não Criminal</div><div class="kpi-val" id="kpi-naocrim">—</div><div class="kpi-sub" id="kpi-naocrim-pct">—</div></div>
     <div class="kpi k4"><i data-lucide="user-check" style="color:var(--green);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Autoria Conhecida</div><div class="kpi-val" id="kpi-aut">—</div><div class="kpi-sub" id="kpi-aut-pct">—</div></div>
@@ -234,7 +234,7 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
     <div class="cbox"><div class="cbox-title"><i data-lucide="pie-chart"></i>Classificação</div><canvas id="ch-class"></canvas></div>
 
     <!-- Bar Artigo -->
-    <div class="cbox"><div class="cbox-title"><i data-lucide="hash"></i>Total por Artigo</div><canvas id="ch-artigo"></canvas></div>
+    <div class="cbox"><div class="cbox-title"><i data-lucide="scroll"></i>Total por Artigo</div><canvas id="ch-artigo"></canvas></div>
 
     <!-- Line Mês/Ano -->
     <div class="cbox"><div class="cbox-title"><i data-lucide="trending-up"></i>Total por Mês</div><canvas id="ch-mes" style="max-height:220px"></canvas></div>
@@ -245,7 +245,7 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
     <div class="cbox"><div class="cbox-title"><i data-lucide="layers"></i>Total por Tipo</div><canvas id="ch-tipo" style="max-height:260px"></canvas></div>
 
     <!-- Bar Subtipo -->
-    <div class="cbox"><div class="cbox-title"><i data-lucide="list"></i>Total por Subtipo</div><canvas id="ch-subtipo" style="max-height:260px"></canvas></div>
+    <div class="cbox"><div class="cbox-title"><i data-lucide="list-tree"></i>Total por Subtipo</div><canvas id="ch-subtipo" style="max-height:260px"></canvas></div>
 
     <!-- Bar Circunscrição -->
     <div class="cbox"><div class="cbox-title"><i data-lucide="map"></i>Circunscrição</div><canvas id="ch-circ" style="max-height:260px"></canvas></div>
@@ -253,7 +253,7 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
 
   <div class="brow2">
     <!-- Autoria -->
-    <div class="cbox"><div class="cbox-title"><i data-lucide="user"></i>Autoria</div><canvas id="ch-aut" style="max-height:200px"></canvas></div>
+    <div class="cbox"><div class="cbox-title"><i data-lucide="users"></i>Autoria</div><canvas id="ch-aut" style="max-height:200px"></canvas></div>
     <!-- Empresa -->
     <div class="cbox"><div class="cbox-title"><i data-lucide="building-2"></i>Por Empresa</div><canvas id="ch-emp" style="max-height:200px"></canvas></div>
   </div>
