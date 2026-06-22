@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Arial,sans-serif;background:#0a1628;color:#e8eef5;height:100vh;display:flex;flex-direction:column}
@@ -27,6 +28,8 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#0a1628;color:#e8eef5;he
 .leg-dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
 .deinter-tooltip{background:rgba(255,255,255,.95)!important;border:1px solid #003865!important;border-radius:4px!important;box-shadow:0 2px 8px rgba(0,56,101,.15)!important;padding:4px 8px!important;}.deinter-tooltip::before{display:none!important;}
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="topbar">
@@ -418,7 +421,7 @@ async function loadDeinterPolygons(){
         }
       })
       .bindTooltip(
-        '<span style="font-family:\'Cera Pro\',sans-serif;font-size:12px;font-weight:700;color:#003865">'+info.name+'</span>',
+        '<span style="font-family:\'Plus Jakarta Sans\',sans-serif;font-size:12px;font-weight:700;color:#003865">'+info.name+'</span>',
         {permanent:false,direction:'center',className:'deinter-tooltip'}
       )
       .addTo(_deinterLayer);
@@ -454,7 +457,7 @@ function _renderDeinterFallback(){
     const info=DEINTER_INFO[d.id];if(!info)return;
     deinterGeoJSON[d.id]={type:'Feature',geometry:{type:'Polygon',coordinates:[d.p.map(p=>[p[1],p[0]])]}};
     L.polygon(d.p.map(p=>[p[0],p[1]]),{color:'#003865',weight:2,opacity:1,fillColor:'#003865',fillOpacity:.04,dashArray:null})
-     .bindTooltip('<span style="font-family:\'Cera Pro\',sans-serif;font-size:12px;font-weight:700;color:#003865">'+info.name+'</span>',{permanent:false,direction:'center',className:'deinter-tooltip'})
+     .bindTooltip('<span style="font-family:\'Plus Jakarta Sans\',sans-serif;font-size:12px;font-weight:700;color:#003865">'+info.name+'</span>',{permanent:false,direction:'center',className:'deinter-tooltip'})
      .addTo(_deinterLayer);
   });
   const show=document.getElementById('map-deinter-show');
@@ -512,6 +515,10 @@ apply();
 </script>
 </body>
 </html>
+
+
+
+
 
 
 
