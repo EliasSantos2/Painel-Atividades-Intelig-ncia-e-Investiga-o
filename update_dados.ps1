@@ -214,6 +214,38 @@ foreach ($p in $procs2) {
 $procsJson = $procsArr | ConvertTo-Json -Compress -Depth 3
 $indHtml = [regex]::Replace($indHtml, 'const PROCS = \[.*?\];', "const PROCS = $procsJson;", [System.Text.RegularExpressions.RegexOptions]::Singleline)
 
+# ── COTAÇÕES (internet) — futuros CBOT/NYMEX convertidos por USD-BRL ──────────
+# Sem chave de API. Valores de referência internacional (não é preço spot BR).
+$usdbrl = 5.20
+try{ $fx = Invoke-RestMethod -Uri 'https://economia.awesomeapi.com.br/json/last/USD-BRL' -TimeoutSec 20; $usdbrl=[double]($fx.USDBRL.bid) }catch{ Log "FX USD-BRL falhou, usando $usdbrl" }
+function YPrice($sym){ try{ $r=Invoke-RestMethod -Uri "https://query1.finance.yahoo.com/v8/finance/chart/$sym" -Headers @{'User-Agent'='Mozilla/5.0'} -TimeoutSec 20; return [double]$r.chart.result[0].meta.regularMarketPrice }catch{ return 0 } }
+$zs=YPrice 'ZS=F'   # soja  cents/bushel (27,2155 kg/bu)
+$zc=YPrice 'ZC=F'   # milho cents/bushel (25,401 kg/bu)
+$zm=YPrice 'ZM=F'   # farelo USD/short ton (907,18474 kg)
+$ho=YPrice 'HO=F'   # diesel (oleo aquec.) USD/galao (3,785411784 L)
+$rb=YPrice 'RB=F'   # gasolina USD/galao
+$eh=YPrice 'EH=F'   # etanol USD/galao
+$GAL=3.785411784
+$unit=@{
+    soja   = if($zs){ ($zs/100)/27.2155*$usdbrl }else{0}      # R$/kg
+    milho  = if($zc){ ($zc/100)/25.401*$usdbrl }else{0}       # R$/kg
+    farelo = if($zm){ $zm/907.18474*$usdbrl }else{0}          # R$/kg
+    diesel = if($ho){ $ho/$GAL*$usdbrl }else{0}               # R$/L
+    gasolina = if($rb){ $rb/$GAL*$usdbrl }else{0}             # R$/L
+    etanol = if($eh){ $eh/$GAL*$usdbrl }else{0}               # R$/L
+}
+Log ("Cotacoes (USD-BRL={0:N2}): soja={1:N3} milho={2:N3} farelo={3:N3} diesel={4:N3} gasolina={5:N3} etanol={6:N3}" -f $usdbrl,$unit.soja,$unit.milho,$unit.farelo,$unit.diesel,$unit.gasolina,$unit.etanol)
+function ProdDe($txt){
+    $t=("$txt").ToUpper()
+    if($t -match 'FARELO'){return 'farelo'}
+    if($t -match 'SOJA'){return 'soja'}
+    if($t -match 'MILHO'){return 'milho'}
+    if($t -match 'DIESEL|[ÓO]LEO DIESEL'){return 'diesel'}
+    if($t -match 'ETANOL|[ÁA]LCOOL'){return 'etanol'}
+    if($t -match 'GASOLINA'){return 'gasolina'}
+    return ''
+}
+
 # ── APREENSÕES (TIPO = APREENSÃO) — Produto Recuperado ─────────────────────────
 $apre = New-Object System.Collections.Generic.List[object]
 for($r=2; $r -le $lastRow; $r++){
@@ -230,11 +262,24 @@ for($r=2; $r -le $lastRow; $r++){
         try{ $la=[double]$ap[0]; $lo=[double]$ap[1]
             if($la -gt -35 -and $la -lt 5 -and $lo -gt -75 -and $lo -lt -30){ $aLat=$la; $aLng=$lo } }catch{}
     }
+    $subV = Cv $data $r $colW
+    $espV = Cv $data $r $colZ
+    $qtdV = Cv $data $r $colY
+    # Identifica produto (esp tem prioridade; senao tenta subtipo)
+    $prod = ProdDe $espV
+    if(-not $prod){ $prod = ProdDe $subV }
+    # Valor estimado = quantidade x cotacao unitaria (somente os 6 produtos)
+    $valNum = 0.0
+    if($prod -and $unit.ContainsKey($prod)){
+        $qn = 0.0; $qclean = ("$qtdV" -replace '[^\d,\.]','') -replace ',','.'
+        if([double]::TryParse($qclean,[ref]$qn)){ $valNum = [math]::Round($qn * [double]$unit[$prod], 2) }
+    }
     $apre.Add([ordered]@{
-        sub =Cv $data $r $colW    # SUBTIPO = tipo de produto
-        esp =Cv $data $r $colZ    # ESPECIFICAÇÃO = produto específico
-        qtd =Cv $data $r $colY    # QUANTIDADE (kg/litros)
-        val =Cv $data $r $colAL   # VALOR (R$) — somatória de recuperação em dinheiro
+        sub =$subV                # SUBTIPO = categoria
+        esp =$espV                # ESPECIFICAÇÃO = produto específico
+        prod=$prod                # produto normalizado (soja/milho/farelo/diesel/etanol/gasolina)
+        qtd =$qtdV                # QUANTIDADE (kg/litros)
+        val =$valNum              # VALOR estimado (R$) pela cotação atual
         tre =Cv $data $r $colM    # TRECHO
         cid =Cv $data $r $colK
         emp =Cv $data $r $colQ
@@ -247,6 +292,18 @@ $apreJson = $apre | ConvertTo-Json -Compress -Depth 3
 if(-not $apreJson.StartsWith('[')){ $apreJson = "[$apreJson]" }  # 1 item vira objeto; força array
 $indHtml = [regex]::Replace($indHtml, 'const APREENSOES = \[.*?\];', "const APREENSOES = $apreJson;", [System.Text.RegularExpressions.RegexOptions]::Singleline)
 Log "Apreensões extraídas: $($apre.Count)"
+
+# Cotações para a UI (preços unitários + dólar + data)
+$cot=[ordered]@{
+    usdbrl=[math]::Round($usdbrl,4)
+    data=(Get-Date -Format 'dd/MM/yyyy HH:mm')
+    unidades=[ordered]@{
+        soja=[math]::Round($unit.soja,4); milho=[math]::Round($unit.milho,4); farelo=[math]::Round($unit.farelo,4)
+        diesel=[math]::Round($unit.diesel,4); gasolina=[math]::Round($unit.gasolina,4); etanol=[math]::Round($unit.etanol,4)
+    }
+}
+$cotJson=$cot | ConvertTo-Json -Compress -Depth 4
+$indHtml = [regex]::Replace($indHtml, 'const COTACOES = \{.*?\};', "const COTACOES = $cotJson;", [System.Text.RegularExpressions.RegexOptions]::Singleline)
 
 $indHtml | Out-File "$outDir\Indicadores_Inteligencia.html" -Encoding utf8
 Log "Indicadores_Inteligencia.html atualizado (COORDS: $($coords.Count), PROCS: $($procsArr.Count), APREENSOES: $($apre.Count))"
