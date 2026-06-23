@@ -286,6 +286,11 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
     <div class="form-group full"><label>Ponto Cego / Obstáculo</label><input id="op-pontocego" placeholder="Ex: Aguardando manifestação do órgão"></div>
     <div class="form-group full"><label>Objetivo da Operação</label><textarea id="op-objetivo" placeholder="Descreva o objetivo principal…"></textarea></div>
     <div class="form-group full"><label>Principais Entregas Realizadas</label><textarea id="op-entregas" placeholder="Liste as entregas já concluídas…"></textarea></div>
+    <div class="form-group full">
+      <label>RELINT Final da Investigação</label>
+      <input type="file" id="op-relint-file" accept=".pdf,.doc,.docx" onchange="onRelintSelected(this)" style="font-size:13px">
+      <div id="op-relint-status" style="margin-top:8px;font-size:12px;color:var(--text2)"></div>
+    </div>
   </div></div>
   <div class="modal-footer">
     <button class="btn btn-ghost" onclick="closeModal('op-modal')">Cancelar</button>
@@ -503,22 +508,54 @@ function renderOps(){
     <td style="font-size:12px;color:var(--text2);max-width:140px;white-space:normal">${op.marco||'—'}</td>
     <td style="font-size:12px;color:var(--text2);max-width:120px;white-space:normal">${op.pontocego||'—'}</td>
     <td><div style="display:flex;gap:4px">
+      ${op.relint?`<button class="btn btn-ghost btn-sm btn-icon" title="Ver RELINT: ${op.relint.name}" onclick="viewRelint(${op.id})">📎</button>`:''}
       <button class="btn btn-ghost btn-sm btn-icon" onclick="openOpModal(${op.id})">✏️</button>
       <button class="btn btn-danger btn-sm btn-icon" onclick="deleteOp(${op.id})">🗑️</button>
     </div></td>
   </tr>`;}).join('');
 }
+let _relintPending=null; // {name,type,size,data} aguardando salvar; '' = remover; null = sem alteração
+function fmtBytes(b){if(!b)return'';const u=['B','KB','MB'];let i=0,n=b;while(n>=1024&&i<u.length-1){n/=1024;i++;}return n.toFixed(n<10&&i>0?1:0)+' '+u[i];}
+function renderRelintStatus(op){
+  const el=document.getElementById('op-relint-status');if(!el)return;
+  const r=(_relintPending!==null)?(_relintPending||null):(op&&op.relint?op.relint:null);
+  if(r){
+    el.innerHTML=`<span style="color:var(--green);font-weight:600">📎 ${r.name}</span> <span style="color:var(--text2)">(${fmtBytes(r.size)})</span> `
+      +`<button type="button" class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="removeRelint()">Remover</button>`;
+  }else{
+    el.innerHTML='<span style="color:var(--text2)">Nenhum RELINT anexado.</span>';
+  }
+}
+function onRelintSelected(input){
+  const file=input.files&&input.files[0];if(!file)return;
+  if(file.size>4.5*1024*1024){toast('Arquivo muito grande (máx. ~4,5 MB para armazenamento local).','error');input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=e=>{_relintPending={name:file.name,type:file.type,size:file.size,data:e.target.result,ts:Date.now()};renderRelintStatus(editingOpId?getOp(editingOpId):null);};
+  reader.onerror=()=>toast('Falha ao ler o arquivo','error');
+  reader.readAsDataURL(file);
+}
+function removeRelint(){_relintPending='';const f=document.getElementById('op-relint-file');if(f)f.value='';renderRelintStatus(editingOpId?getOp(editingOpId):null);}
+function viewRelint(id){
+  const op=getOp(id);if(!op||!op.relint){toast('Sem RELINT anexado','info');return;}
+  const w=window.open();
+  if(w){w.document.write(`<title>${op.relint.name}</title><iframe src="${op.relint.data}" style="border:0;width:100%;height:100vh"></iframe>`);}
+  else{const a=document.createElement('a');a.href=op.relint.data;a.download=op.relint.name;a.click();}
+}
 function openOpModal(id){
   editingOpId=id||null;
+  _relintPending=null;
+  const fileInput=document.getElementById('op-relint-file');if(fileInput)fileInput.value='';
   document.getElementById('op-modal-title').textContent=id?'Editar Operação':'Nova Operação';
   if(id){const op=getOp(id);
     document.getElementById('op-nome').value=op.nome;document.getElementById('op-local').value=op.local;
     document.getElementById('op-fase').value=op.fase;document.getElementById('op-status').value=op.status;
     document.getElementById('op-marco').value=op.marco||'';document.getElementById('op-pontocego').value=op.pontocego||'';
     document.getElementById('op-objetivo').value=op.objetivo||'';document.getElementById('op-entregas').value=op.entregas||'';
+    renderRelintStatus(op);
   }else{
     ['op-nome','op-local','op-fase','op-marco','op-pontocego','op-objetivo','op-entregas'].forEach(x=>document.getElementById(x).value='');
     document.getElementById('op-status').value='Em andamento';
+    renderRelintStatus(null);
   }
   document.getElementById('op-modal').classList.add('open');
 }
@@ -527,11 +564,16 @@ function saveOp(){
   const local=document.getElementById('op-local').value.trim();
   if(!nome||!local){toast('Preencha os campos obrigatórios','error');return;}
   const data={nome,local,fase:document.getElementById('op-fase').value.trim(),status:document.getElementById('op-status').value,marco:document.getElementById('op-marco').value.trim(),pontocego:document.getElementById('op-pontocego').value.trim(),objetivo:document.getElementById('op-objetivo').value.trim(),entregas:document.getElementById('op-entregas').value.trim()};
-  if(editingOpId)Object.assign(getOp(editingOpId),data);
-  else{data.id=nextId('op');db.operacoes.push(data);}
-  saveData();closeModal('op-modal');renderOps();renderDashboard();
+  let target;
+  if(editingOpId){target=getOp(editingOpId);Object.assign(target,data);}
+  else{data.id=nextId('op');db.operacoes.push(data);target=data;}
+  if(_relintPending!==null){ if(_relintPending==='')delete target.relint; else target.relint=_relintPending; }
+  try{saveData();}
+  catch(e){toast('Não foi possível salvar: armazenamento local cheio. Remova um anexo grande.','error');return;}
+  closeModal('op-modal');renderOps();renderDashboard();
   toast(editingOpId?'Operação atualizada!':'Operação adicionada!');
   updateOpSelects();
+  _relintPending=null;
 }
 function deleteOp(id){
   if(!confirm('Excluir esta operação e todas as suas tarefas?'))return;
