@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -175,76 +176,6 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
   <div class="hdr-logo"><img src="img/logo-rumo.png" alt="Rumo"></div>
 </div>
 <div class="accent-bar"></div>
-<div class="filters">
-  <div class="fgrp"><label>Ano</label>
-    <select id="f-ano" onchange="applyFilters()">
-      <option value="">Todos</option><option value="2023">2023</option>
-      <option value="2024">2024</option><option value="2025">2025</option>
-      <option value="2026">2026</option>
-    </select>
-  </div>
-  <div class="fgrp"><label>Mês</label>
-    <select id="f-mes" onchange="applyFilters()">
-      <option value="">Todos</option>
-      <option value="1">Janeiro</option><option value="2">Fevereiro</option>
-      <option value="3">Março</option><option value="4">Abril</option>
-      <option value="5">Maio</option><option value="6">Junho</option>
-      <option value="7">Julho</option><option value="8">Agosto</option>
-      <option value="9">Setembro</option><option value="10">Outubro</option>
-      <option value="11">Novembro</option><option value="12">Dezembro</option>
-    </select>
-  </div>
-  <div class="fgrp"><label>Empresa</label>
-    <select id="f-emp" onchange="applyFilters()">
-      <option value="">Todas</option><option value="RUMO">RUMO</option>
-      <option value="MRS">MRS</option><option value="VLI">VLI</option>
-    </select>
-  </div>
-  <div class="fgrp"><label>Classificação</label>
-    <select id="f-cl" onchange="applyFilters()">
-      <option value="">Todas</option><option value="C">Criminal</option>
-      <option value="N">Não Criminal</option>
-    </select>
-  </div>
-  <div class="fgrp"><label>Artigo</label>
-    <select id="f-ar" onchange="applyFilters()"><option value="">Todos</option></select>
-  </div>
-  <div class="fgrp"><label>Tipo</label>
-    <select id="f-tp" onchange="applyFilters()"><option value="">Todos</option></select>
-  </div>
-  <div class="fgrp"><label>Subtipo</label>
-    <select id="f-sb" onchange="applyFilters()"><option value="">Todos</option></select>
-  </div>
-  <div class="fgrp"><label>Circunscrição</label>
-    <select id="f-ci" onchange="applyFilters()"><option value="">Todas</option></select>
-  </div>
-  <div class="fgrp"><label>Cidade</label>
-    <select id="f-cd" onchange="applyFilters()"><option value="">Todas</option></select>
-  </div>
-  <div class="fgrp"><label>Autoria</label>
-    <select id="f-au" onchange="applyFilters()">
-      <option value="">Todas</option><option value="C">Conhecida</option>
-      <option value="D">Desconhecida</option>
-    </select>
-    </div>
-  <div class="fgrp"><label>Crime</label>
-    <select id="f-cr" onchange="applyFilters()"><option value="">Todos</option></select>
-  </div>
-  <div class="fgrp"><label>Data</label>
-    <select id="f-dt" onchange="applyFilters()"><option value="">Todas</option></select>
-  </div>
-  <div class="fgrp"><label>Trecho</label>
-    <select id="f-tre" onchange="applyFilters()"><option value="">Todos</option></select>
-  </div>
-  <div class="fgrp"><label>SB</label>
-    <select id="f-sbn" onchange="applyFilters()"><option value="">Todos</option></select>
-  </div>
-  <div class="fgrp"><label>Natureza</label>
-    <select id="f-nat" onchange="applyFilters()"><option value="">Todas</option></select>
-  </div>
-  <button class="btn-reset" onclick="resetFilters()"><i data-lucide="rotate-ccw" style="width:13px;height:13px"></i> Limpar</button>
-  <span id="count-label" style="margin-left:auto;font-size:12px;color:#8ab;align-self:center"></span>
-</div>
 
 <div class="tabs">
   <div class="tab active" onclick="switchTab('painel')"><i data-lucide="bar-chart-2"></i> Painel Principal</div>
@@ -420,7 +351,7 @@ const RAW = [{"cl":"C","ar":"260","tp":"FURTO","sb":"CABOS","ci":"03 D.P. CUBATA
 ;
 
 // Populate filters dinamicamente
-function _pop(id, values){ const s=document.getElementById(id); values.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; s.appendChild(o); }); }
+function _pop(id, values){ const s=document.getElementById(id); if(!s) return; values.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; s.appendChild(o); }); }
 _pop('f-ar', [...new Set(RAW.map(r=>r.ar).filter(Boolean))].sort());
 _pop('f-tp', [...new Set(RAW.map(r=>r.tp).filter(Boolean))].sort());
 _pop('f-sb', [...new Set(RAW.map(r=>r.sb).filter(Boolean))].sort());
@@ -434,22 +365,12 @@ _pop('f-nat', [...new Set((typeof COORDS!=='undefined'?COORDS:[]).map(c=>c.nat).
 
 // Estado global de filtros — compartilhado entre as 3 abas
 function getFilterState(){
+  const g = id => { const el = document.getElementById(id); return el ? el.value : ''; };
   return {
-    ano: document.getElementById('f-ano').value,
-    mes: document.getElementById('f-mes').value,
-    emp: document.getElementById('f-emp').value,
-    cl : document.getElementById('f-cl').value,
-    ar : document.getElementById('f-ar').value,
-    tp : document.getElementById('f-tp').value,
-    sb : document.getElementById('f-sb').value,
-    ci : document.getElementById('f-ci').value,
-    cd : document.getElementById('f-cd').value,
-    au : document.getElementById('f-au').value,
-    cr : document.getElementById('f-cr').value,
-    dt : document.getElementById('f-dt').value,
-    tre: document.getElementById('f-tre').value,
-    sbn: document.getElementById('f-sbn').value,
-    nat: document.getElementById('f-nat').value
+    ano: g('f-ano'), mes: g('f-mes'), emp: g('f-emp'), cl: g('f-cl'),
+    ar: g('f-ar'), tp: g('f-tp'), sb: g('f-sb'), ci: g('f-ci'),
+    cd: g('f-cd'), au: g('f-au'), cr: g('f-cr'), dt: g('f-dt'),
+    tre: g('f-tre'), sbn: g('f-sbn'), nat: g('f-nat')
   };
 }
 
@@ -527,7 +448,7 @@ function buildCharts(data) {
   document.getElementById('kpi-crim-pct').textContent  = total ? (crim/total*100).toFixed(1)+'% do total' : '';
   document.getElementById('kpi-naocrim-pct').textContent = total ? (naoCr/total*100).toFixed(1)+'% do total' : '';
   document.getElementById('kpi-aut-pct').textContent= total ? (aut/total*100).toFixed(1)+'% de autoria identificada' : '';
-  document.getElementById('count-label').textContent = total.toLocaleString('pt-BR') + ' registros';
+  { const _cl = document.getElementById('count-label'); if(_cl) _cl.textContent = total.toLocaleString('pt-BR') + ' registros'; }
 
 
   const opts = { responsive:true, plugins:{ legend:{ labels:{ color:'#1a2740', font:{size:11,family:"'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"} } } } };
@@ -556,7 +477,7 @@ function buildCharts(data) {
   });
 
   // LINE Mês/Ano
-  const selAno = document.getElementById('f-ano').value;
+  const selAno = (document.getElementById('f-ano')||{}).value || '';
   const anos = selAno ? [parseInt(selAno)] : [2023,2024,2025,2026];
   const mesData = {};
   anos.forEach(y => { mesData[y] = new Array(12).fill(0); });
@@ -875,7 +796,7 @@ async function loadDeinterPolygons(){
   if(_deinterLoaded||!_map)return;
   _deinterLoaded=true;
   const lbl=document.getElementById('deinter-status');
-  if(lbl)lbl.textContent='Carregando fronteiras municipais...';
+  if(lbl)lbl.textContent='Carregando abrangência dos DEINTERs...';
   try{
     // Busca GeoJSON de todos os municípios de SP (tbrugz/geodata-br via IBGE)
     const resp=await fetch('https://raw.githubusercontent.com/tbrugz/geodata-br/master/geojson/geojs-35-mun.json');
@@ -900,12 +821,25 @@ async function loadDeinterPolygons(){
     for(const[did,feats]of Object.entries(byD)){
       const info=DEINTER_INFO[did];
       if(!info)continue;
-      const fc={type:'FeatureCollection',features:feats};
-      deinterGeoJSON[did]=fc;
-      L.geoJSON(fc,{
+
+      // Dissolve os municípios em um único polígono = abrangência do DEINTER
+      // (remove as fronteiras internas, mantendo só o contorno externo da região)
+      let merged=null;
+      if(typeof turf!=='undefined' && turf.union){
+        try{
+          merged=feats[0];
+          for(let i=1;i<feats.length;i++){
+            try{ merged=turf.union(merged,feats[i]); }catch(ue){ /* geometria inválida — ignora */ }
+          }
+        }catch(e){ merged=null; }
+      }
+      const drawObj = merged ? merged : {type:'FeatureCollection',features:feats};
+      deinterGeoJSON[did]= drawObj.type==='FeatureCollection' ? drawObj : {type:'FeatureCollection',features:[drawObj]};
+
+      L.geoJSON(drawObj,{
         style:{
-          color:'#003865',      // azul Rumo — linha contínua
-          weight:1.5,
+          color:'#003865',      // azul Rumo — contorno do DEINTER
+          weight:2,
           opacity:1,
           fillColor:'#003865',
           fillOpacity:0.04,
@@ -1187,7 +1121,7 @@ function applyFilters() {
 }
 function resetFilters() {
   ['f-ano','f-mes','f-emp','f-cl','f-ar','f-tp','f-sb','f-ci','f-cd','f-au','f-cr','f-dt','f-tre','f-sbn','f-nat']
-    .forEach(id => document.getElementById(id).value = '');
+    .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   applyFilters();
 }
 function switchTab(name) {
@@ -1208,6 +1142,8 @@ applyFilters();
 </script>
 </body>
 </html>
+
+
 
 
 
