@@ -214,8 +214,42 @@ foreach ($p in $procs2) {
 $procsJson = $procsArr | ConvertTo-Json -Compress -Depth 3
 $indHtml = [regex]::Replace($indHtml, 'const PROCS = \[.*?\];', "const PROCS = $procsJson;", [System.Text.RegularExpressions.RegexOptions]::Singleline)
 
+# ── APREENSÕES (TIPO = APREENSÃO) — Produto Recuperado ─────────────────────────
+$apre = New-Object System.Collections.Generic.List[object]
+for($r=2; $r -le $lastRow; $r++){
+    $tipoVal = Cv $data $r $colV
+    if($tipoVal -ne 'APREENSÃO'){ continue }
+    $dataFmt=''
+    $rawI = Cv $data $r $colI
+    if($rawI){ try{ $d=[DateTime]::FromOADate([double]$rawI); $dataFmt=$d.ToString('dd/MM/yyyy') }catch{} }
+    # Coordenadas (col T) — para o mapa de calor das apreensões
+    $aLat=$null; $aLng=$null
+    $aCoord = Cv $data $r $colT
+    if($aCoord -and ($aCoord -match '^\s*-?\d+[\.,]\d+[\s,]+\s*-?\d+[\.,]\d+\s*$')){
+        $ap = ($aCoord -split '[,\s]+' | Where-Object{$_ -ne ''})
+        try{ $la=[double]$ap[0]; $lo=[double]$ap[1]
+            if($la -gt -35 -and $la -lt 5 -and $lo -gt -75 -and $lo -lt -30){ $aLat=$la; $aLng=$lo } }catch{}
+    }
+    $apre.Add([ordered]@{
+        sub =Cv $data $r $colW    # SUBTIPO = tipo de produto
+        esp =Cv $data $r $colZ    # ESPECIFICAÇÃO = produto específico
+        qtd =Cv $data $r $colY    # QUANTIDADE (kg/litros)
+        val =Cv $data $r $colAL   # VALOR (R$) — somatória de recuperação em dinheiro
+        tre =Cv $data $r $colM    # TRECHO
+        cid =Cv $data $r $colK
+        emp =Cv $data $r $colQ
+        dt  =$dataFmt
+        bo  =Cv $data $r $colAC
+        la  =$aLat; lo=$aLng
+    })
+}
+$apreJson = $apre | ConvertTo-Json -Compress -Depth 3
+if(-not $apreJson.StartsWith('[')){ $apreJson = "[$apreJson]" }  # 1 item vira objeto; força array
+$indHtml = [regex]::Replace($indHtml, 'const APREENSOES = \[.*?\];', "const APREENSOES = $apreJson;", [System.Text.RegularExpressions.RegexOptions]::Singleline)
+Log "Apreensões extraídas: $($apre.Count)"
+
 $indHtml | Out-File "$outDir\Indicadores_Inteligencia.html" -Encoding utf8
-Log "Indicadores_Inteligencia.html atualizado (COORDS: $($coords.Count), PROCS: $($procsArr.Count))"
+Log "Indicadores_Inteligencia.html atualizado (COORDS: $($coords.Count), PROCS: $($procsArr.Count), APREENSOES: $($apre.Count))"
 
 # ── GIT PUSH ──────────────────────────────────────────────────
 Set-Location $outDir
