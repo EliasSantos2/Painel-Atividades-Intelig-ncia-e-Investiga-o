@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel de Investigações — Rumo Logística</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --navy:#003865;--navy2:#1a3a5c;--orange:#F78344;--orange-h:#e06d30;
@@ -219,7 +220,6 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
 <div id="tab-operacoes" class="tab-panel">
   <div class="actions-row" style="margin-bottom:18px">
     <button class="btn btn-primary" onclick="openOpModal()">+ Nova Operação</button>
-    <a class="btn btn-ghost" href="https://drive.google.com/drive/folders/1j7XwWRP8ltTfll-H5imEPMWNLmGENTn-?usp=drive_link" target="_blank" style="text-decoration:none">📁 Pasta de RELINTs (Drive)</a>
     <input type="text" class="search-box" placeholder="Buscar operação…" oninput="filterOps(this.value)">
     <select class="filter-sel" id="op-status-filter" onchange="filterOps()">
       <option value="">Todos os status</option>
@@ -230,10 +230,11 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
   <div class="card">
     <table><thead><tr>
       <th>#</th><th>Operação</th><th>Local</th><th>Fase</th>
-      <th>Status</th><th>% Conc.</th><th>Pend.</th><th>Próximo Marco</th><th>Ponto Cego</th><th></th>
+      <th>Status</th><th>% Conc.</th><th>Pend.</th><th>Próximo Marco</th><th>RELINT</th><th></th>
     </tr></thead><tbody id="ops-table-body"></tbody></table>
   </div>
 </div>
+<input type="file" id="relint-hidden-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" style="display:none" onchange="onRelintFileChosen(this)">
 
 <!-- TAREFAS -->
 <div id="tab-tarefas" class="tab-panel">
@@ -288,14 +289,13 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
     <div class="form-group full"><label>Objetivo da Operação</label><textarea id="op-objetivo" placeholder="Descreva o objetivo principal…"></textarea></div>
     <div class="form-group full"><label>Principais Entregas Realizadas</label><textarea id="op-entregas" placeholder="Liste as entregas já concluídas…"></textarea></div>
     <div class="form-group full">
-      <label>RELINT Final da Investigação (link do Google Drive)</label>
-      <input id="op-relint-url" placeholder="Cole aqui o link de compartilhamento do RELINT no Drive">
-      <input id="op-relint-name" placeholder="Nome do arquivo (opcional) — ex: RELINT Operação Ponto Cego.pdf" style="margin-top:8px">
-      <div style="margin-top:8px;font-size:12px;color:var(--text2)">
-        1) Envie o RELINT para a <a href="https://drive.google.com/drive/folders/1j7XwWRP8ltTfll-H5imEPMWNLmGENTn-?usp=drive_link" target="_blank" style="color:var(--navy);font-weight:600">pasta de RELINTs no Drive</a>.
-        2) Defina o compartilhamento como <strong>"qualquer pessoa com o link pode ver"</strong>.
-        3) Copie o link do arquivo e cole no campo acima.
+      <label>RELINT Final da Investigação</label>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px">
+        Após salvar, use o botão <strong>"⬆️ Enviar RELINT"</strong> na coluna RELINT da tabela para anexar o arquivo diretamente (fica hospedado no repositório seguro e acessível por link).
+        Opcionalmente, cole abaixo um link já existente:
       </div>
+      <input id="op-relint-url" placeholder="Link do arquivo (opcional)">
+      <input id="op-relint-name" placeholder="Nome do arquivo (opcional)" style="margin-top:8px">
     </div>
   </div></div>
   <div class="modal-footer">
@@ -512,15 +512,77 @@ function renderOps(){
     <td>${statusBadge(op.status)}</td><td style="min-width:120px">${progressBar(s.pct)}</td>
     <td><span class="badge ${s.pend?'badge-orange':'badge-green'}">${s.pend}</span></td>
     <td style="font-size:12px;color:var(--text2);max-width:140px;white-space:normal">${op.marco||'—'}</td>
-    <td style="font-size:12px;color:var(--text2);max-width:120px;white-space:normal">${op.pontocego||'—'}</td>
+    <td style="max-width:160px">${relintCell(op)}</td>
     <td><div style="display:flex;gap:4px">
-      ${op.relint?`<button class="btn btn-ghost btn-sm btn-icon" title="Ver RELINT: ${op.relint.name}" onclick="viewRelint(${op.id})">📎</button>`:''}
       <button class="btn btn-ghost btn-sm btn-icon" onclick="openOpModal(${op.id})">✏️</button>
       <button class="btn btn-danger btn-sm btn-icon" onclick="deleteOp(${op.id})">🗑️</button>
     </div></td>
   </tr>`;}).join('');
 }
-const RELINT_FOLDER='https://drive.google.com/drive/folders/1j7XwWRP8ltTfll-H5imEPMWNLmGENTn-?usp=drive_link';
+// ─── SUPABASE STORAGE (repositório de arquivos do painel) ───────────────────
+// PREENCHA com os dados do seu projeto Supabase (Settings → API):
+const SUPABASE_URL      = 'COLE_AQUI_A_URL_DO_PROJETO';      // ex: https://xxxx.supabase.co
+const SUPABASE_ANON_KEY = 'COLE_AQUI_A_CHAVE_ANON_PUBLICA';  // chave "anon public"
+const SUPABASE_BUCKET   = 'relints';                          // nome do bucket (público)
+let _sb=null;
+function sb(){
+  if(_sb)return _sb;
+  if(typeof supabase==='undefined'||SUPABASE_URL.startsWith('COLE_'))return null;
+  _sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+  return _sb;
+}
+function relintConfigured(){ return !!sb(); }
+
+// Célula da coluna RELINT: mostra "Ver" se houver arquivo + botão de upload
+function relintCell(op){
+  const has=op.relint&&op.relint.url;
+  const ver=has?`<a href="${op.relint.url}" target="_blank" rel="noopener" class="badge badge-green" title="${op.relint.name||'RELINT'}" style="text-decoration:none">📎 Ver RELINT</a>`:'<span style="color:var(--text2);font-size:12px">—</span>';
+  const btn=`<button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="triggerUpload(${op.id})">${has?'Substituir':'⬆️ Enviar RELINT'}</button>`;
+  const rem=has?`<button class="btn btn-ghost btn-sm btn-icon" style="margin-top:6px" title="Remover vínculo" onclick="removeRelintLink(${op.id})">✖</button>`:'';
+  return `<div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px">${ver}<div style="display:flex;gap:4px">${btn}${rem}</div></div>`;
+}
+function triggerUpload(id){
+  if(!relintConfigured()){
+    toast('Armazenamento não configurado. Preencha SUPABASE_URL e SUPABASE_ANON_KEY no arquivo.','error');
+    return;
+  }
+  const inp=document.getElementById('relint-hidden-file');
+  inp.dataset.opId=id;
+  inp.value='';
+  inp.click();
+}
+async function onRelintFileChosen(input){
+  const id=parseInt(input.dataset.opId);
+  const file=input.files&&input.files[0];
+  if(!file||!id)return;
+  const client=sb();
+  if(!client){toast('Armazenamento não configurado.','error');return;}
+  const op=getOp(id);
+  if(file.size>50*1024*1024){toast('Arquivo muito grande (máx. 50 MB).','error');return;}
+  toast('Enviando arquivo…','info');
+  try{
+    const safe=file.name.replace(/[^\w.\-]+/g,'_');
+    const path=`op-${id}/${Date.now()}_${safe}`;
+    const {error}=await client.storage.from(SUPABASE_BUCKET).upload(path,file,{upsert:true,contentType:file.type});
+    if(error)throw error;
+    const {data}=client.storage.from(SUPABASE_BUCKET).getPublicUrl(path);
+    op.relint={url:data.publicUrl,name:file.name,path,ts:Date.now()};
+    saveData();renderOps();
+    toast('RELINT enviado com sucesso!');
+  }catch(e){
+    console.error(e);
+    toast('Falha no envio: '+(e.message||'verifique o bucket/políticas no Supabase'),'error');
+  }
+}
+async function removeRelintLink(id){
+  const op=getOp(id);
+  if(!op||!op.relint)return;
+  if(!confirm('Remover o RELINT vinculado a esta operação?'))return;
+  const client=sb();
+  try{ if(client&&op.relint.path){await client.storage.from(SUPABASE_BUCKET).remove([op.relint.path]);} }catch(e){console.warn(e);}
+  delete op.relint;saveData();renderOps();
+  toast('RELINT removido','info');
+}
 function viewRelint(id){
   const op=getOp(id);
   if(!op||!op.relint||!op.relint.url){toast('Sem RELINT vinculado','info');return;}
