@@ -551,8 +551,8 @@ function renderOps(){
 }
 // ─── SUPABASE — armazenamento PRIVADO + autenticação ────────────────────────
 // PREENCHA com os dados do seu projeto Supabase (Settings → API):
-const SUPABASE_URL      = 'COLE_AQUI_A_URL_DO_PROJETO';      // ex: https://xxxx.supabase.co
-const SUPABASE_ANON_KEY = 'COLE_AQUI_A_CHAVE_ANON_PUBLICA';  // chave "anon public"
+const SUPABASE_URL      = 'https://rfwmklqzlfvllsrkvgob.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmd21rbHF6bGZ2bGxzcmt2Z29iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzg4NzIsImV4cCI6MjA5NzgxNDg3Mn0.xwJItVzF3jW46BtMQBLSNj3rT64G0dybPZQZ_k-QlTM';
 const SUPABASE_BUCKET   = 'relints';                          // bucket PRIVADO
 const SIGNED_TTL        = 3600;                               // validade do link de visualização (s)
 let _sb=null, _session=null;
