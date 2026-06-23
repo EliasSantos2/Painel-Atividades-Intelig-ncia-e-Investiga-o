@@ -160,9 +160,36 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
 .img-drop-zone{border:2px dashed #d0d9e8;border-radius:8px;padding:16px;text-align:center;font-size:12px;color:#5a6a80;cursor:pointer;margin-top:8px;transition:.2s}
 .img-drop-zone:hover{border-color:var(--orange);color:var(--orange)}
 #img-target-info{font-size:11px;color:#5a6a80;margin-bottom:6px;font-style:italic}
+/* ── LOGIN GATE ── */
+#auth-gate{position:fixed;inset:0;background:linear-gradient(135deg,#003865,#1a3a5c);display:flex;align-items:center;justify-content:center;z-index:9999}
+#auth-gate .auth-card{background:#fff;border-radius:14px;padding:34px 32px;width:340px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+#auth-gate h2{margin:0 0 4px;font-size:20px;color:var(--navy)}
+#auth-gate p.sub{margin:0 0 20px;font-size:12px;color:var(--text2)}
+#auth-gate label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin:12px 0 4px}
+#auth-gate input{width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit}
+#auth-gate input:focus{border-color:var(--navy);outline:none}
+#auth-gate button{width:100%;margin-top:18px;padding:11px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
+#auth-gate button:hover{background:#00284a}
+#auth-error{color:#c0392b;font-size:12px;margin-top:10px;min-height:16px}
+#auth-userbox{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2)}
+#auth-userbox button{background:none;border:1px solid var(--border);color:var(--text2);padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer}
+#auth-userbox button:hover{border-color:var(--orange);color:var(--orange)}
 </style>
 </head>
 <body>
+
+<div id="auth-gate" style="display:none">
+  <div class="auth-card">
+    <h2>Painel de Investigações</h2>
+    <p class="sub">Acesso restrito — autentique-se para continuar</p>
+    <label>E-mail</label>
+    <input id="auth-email" type="email" autocomplete="username" placeholder="seu@email.com">
+    <label>Senha</label>
+    <input id="auth-pass" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authLogin()">
+    <button onclick="authLogin()">Entrar</button>
+    <div id="auth-error"></div>
+  </div>
+</div>
 
 <header>
   <div class="header-left">
@@ -171,7 +198,10 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
       <p>Fluxo operacional de atividades da Inteligência e Investigação</p>
     </div>
   </div>
-  <div class="header-right" id="last-updated"></div>
+  <div class="header-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+    <div id="auth-userbox" style="display:none"><span id="auth-username"></span><button onclick="authLogout()">Sair</button></div>
+    <span id="last-updated"></span>
+  </div>
 </header>
 <div class="accent-bar"></div>
 
@@ -519,12 +549,13 @@ function renderOps(){
     </div></td>
   </tr>`;}).join('');
 }
-// ─── SUPABASE STORAGE (repositório de arquivos do painel) ───────────────────
+// ─── SUPABASE — armazenamento PRIVADO + autenticação ────────────────────────
 // PREENCHA com os dados do seu projeto Supabase (Settings → API):
 const SUPABASE_URL      = 'COLE_AQUI_A_URL_DO_PROJETO';      // ex: https://xxxx.supabase.co
 const SUPABASE_ANON_KEY = 'COLE_AQUI_A_CHAVE_ANON_PUBLICA';  // chave "anon public"
-const SUPABASE_BUCKET   = 'relints';                          // nome do bucket (público)
-let _sb=null;
+const SUPABASE_BUCKET   = 'relints';                          // bucket PRIVADO
+const SIGNED_TTL        = 3600;                               // validade do link de visualização (s)
+let _sb=null, _session=null;
 function sb(){
   if(_sb)return _sb;
   if(typeof supabase==='undefined'||SUPABASE_URL.startsWith('COLE_'))return null;
@@ -532,61 +563,114 @@ function sb(){
   return _sb;
 }
 function relintConfigured(){ return !!sb(); }
+function isAuthed(){ return !!_session; }
 
-// Célula da coluna RELINT: mostra "Ver" se houver arquivo + botão de upload
+// ── Autenticação ──
+async function initAuth(){
+  const client=sb();
+  const gate=document.getElementById('auth-gate');
+  if(!client){
+    // Sem backend configurado: não exibe o gate, mas upload/ver ficam indisponíveis
+    if(gate)gate.style.display='none';
+    return;
+  }
+  const {data}=await client.auth.getSession();
+  _session=data.session||null;
+  client.auth.onAuthStateChange((_e,s)=>{ _session=s||null; reflectAuth(); });
+  reflectAuth();
+}
+function reflectAuth(){
+  const gate=document.getElementById('auth-gate');
+  const box=document.getElementById('auth-userbox');
+  if(isAuthed()){
+    if(gate)gate.style.display='none';
+    if(box){box.style.display='flex';document.getElementById('auth-username').textContent=_session.user.email||'autenticado';}
+    renderOps();
+  }else{
+    if(gate)gate.style.display='flex';
+    if(box)box.style.display='none';
+  }
+}
+async function authLogin(){
+  const client=sb();
+  const err=document.getElementById('auth-error');
+  if(!client){err.textContent='Backend não configurado (SUPABASE_URL/ANON_KEY).';return;}
+  const email=document.getElementById('auth-email').value.trim();
+  const pass=document.getElementById('auth-pass').value;
+  if(!email||!pass){err.textContent='Informe e-mail e senha.';return;}
+  err.textContent='Entrando…';
+  const {error}=await client.auth.signInWithPassword({email,password:pass});
+  if(error){err.textContent='Falha no login: '+error.message;return;}
+  err.textContent='';
+  document.getElementById('auth-pass').value='';
+}
+async function authLogout(){
+  const client=sb();
+  if(client)await client.auth.signOut();
+  _session=null;reflectAuth();
+}
+
+// Célula da coluna RELINT
 function relintCell(op){
-  const has=op.relint&&op.relint.url;
-  const ver=has?`<a href="${op.relint.url}" target="_blank" rel="noopener" class="badge badge-green" title="${op.relint.name||'RELINT'}" style="text-decoration:none">📎 Ver RELINT</a>`:'<span style="color:var(--text2);font-size:12px">—</span>';
+  const has=op.relint&&(op.relint.path||op.relint.url);
+  const ver=has?`<button class="badge badge-green" title="${op.relint.name||'RELINT'}" style="border:none;cursor:pointer" onclick="viewRelint(${op.id})">📎 Ver RELINT</button>`:'<span style="color:var(--text2);font-size:12px">—</span>';
   const btn=`<button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="triggerUpload(${op.id})">${has?'Substituir':'⬆️ Enviar RELINT'}</button>`;
-  const rem=has?`<button class="btn btn-ghost btn-sm btn-icon" style="margin-top:6px" title="Remover vínculo" onclick="removeRelintLink(${op.id})">✖</button>`:'';
+  const rem=has?`<button class="btn btn-ghost btn-sm btn-icon" style="margin-top:6px" title="Remover" onclick="removeRelintLink(${op.id})">✖</button>`:'';
   return `<div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px">${ver}<div style="display:flex;gap:4px">${btn}${rem}</div></div>`;
 }
 function triggerUpload(id){
-  if(!relintConfigured()){
-    toast('Armazenamento não configurado. Preencha SUPABASE_URL e SUPABASE_ANON_KEY no arquivo.','error');
-    return;
-  }
+  if(!relintConfigured()){toast('Armazenamento não configurado no arquivo.','error');return;}
+  if(!isAuthed()){toast('Faça login para enviar arquivos.','error');return;}
   const inp=document.getElementById('relint-hidden-file');
-  inp.dataset.opId=id;
-  inp.value='';
-  inp.click();
+  inp.dataset.opId=id;inp.value='';inp.click();
 }
 async function onRelintFileChosen(input){
   const id=parseInt(input.dataset.opId);
   const file=input.files&&input.files[0];
   if(!file||!id)return;
   const client=sb();
-  if(!client){toast('Armazenamento não configurado.','error');return;}
+  if(!client||!isAuthed()){toast('Sessão necessária para enviar.','error');return;}
   const op=getOp(id);
   if(file.size>50*1024*1024){toast('Arquivo muito grande (máx. 50 MB).','error');return;}
   toast('Enviando arquivo…','info');
   try{
+    if(op.relint&&op.relint.path){try{await client.storage.from(SUPABASE_BUCKET).remove([op.relint.path]);}catch(e){}}
     const safe=file.name.replace(/[^\w.\-]+/g,'_');
     const path=`op-${id}/${Date.now()}_${safe}`;
     const {error}=await client.storage.from(SUPABASE_BUCKET).upload(path,file,{upsert:true,contentType:file.type});
     if(error)throw error;
-    const {data}=client.storage.from(SUPABASE_BUCKET).getPublicUrl(path);
-    op.relint={url:data.publicUrl,name:file.name,path,ts:Date.now()};
+    op.relint={path,name:file.name,ts:Date.now()};
     saveData();renderOps();
     toast('RELINT enviado com sucesso!');
   }catch(e){
     console.error(e);
-    toast('Falha no envio: '+(e.message||'verifique o bucket/políticas no Supabase'),'error');
+    toast('Falha no envio: '+(e.message||'verifique bucket/políticas'),'error');
   }
 }
 async function removeRelintLink(id){
   const op=getOp(id);
   if(!op||!op.relint)return;
+  if(!isAuthed()){toast('Faça login para remover.','error');return;}
   if(!confirm('Remover o RELINT vinculado a esta operação?'))return;
   const client=sb();
   try{ if(client&&op.relint.path){await client.storage.from(SUPABASE_BUCKET).remove([op.relint.path]);} }catch(e){console.warn(e);}
   delete op.relint;saveData();renderOps();
   toast('RELINT removido','info');
 }
-function viewRelint(id){
+async function viewRelint(id){
   const op=getOp(id);
-  if(!op||!op.relint||!op.relint.url){toast('Sem RELINT vinculado','info');return;}
-  window.open(op.relint.url,'_blank','noopener');
+  if(!op||!op.relint){toast('Sem RELINT vinculado','info');return;}
+  if(op.relint.url&&!op.relint.path){window.open(op.relint.url,'_blank','noopener');return;}
+  const client=sb();
+  if(!client||!isAuthed()){toast('Faça login para visualizar.','error');return;}
+  try{
+    const {data,error}=await client.storage.from(SUPABASE_BUCKET).createSignedUrl(op.relint.path,SIGNED_TTL);
+    if(error)throw error;
+    window.open(data.signedUrl,'_blank','noopener');
+  }catch(e){
+    console.error(e);
+    toast('Não foi possível gerar o link: '+(e.message||''),'error');
+  }
 }
 function openOpModal(id){
   editingOpId=id||null;
@@ -614,7 +698,9 @@ function saveOp(){
   let target;
   if(editingOpId){target=getOp(editingOpId);Object.assign(target,data);}
   else{data.id=nextId('op');db.operacoes.push(data);target=data;}
+  // RELINT enviado por upload (com path) é preservado; URL manual só sobrescreve se preenchida
   if(relUrl){target.relint={url:relUrl,name:relName||'RELINT Final'};}
+  else if(target.relint&&target.relint.path){/* mantém o arquivo enviado */}
   else{delete target.relint;}
   saveData();closeModal('op-modal');renderOps();renderDashboard();
   toast(editingOpId?'Operação atualizada!':'Operação adicionada!');
@@ -785,6 +871,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelect
 
 updateOpSelects();
 renderDashboard();
+initAuth();
 </script>
 
 <!-- ===== ADMIN SYSTEM ===== -->
