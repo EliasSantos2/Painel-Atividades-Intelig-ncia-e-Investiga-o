@@ -176,6 +176,76 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
   <div class="hdr-logo"><img src="img/logo-rumo.png" alt="Rumo"></div>
 </div>
 <div class="accent-bar"></div>
+<div class="filters">
+  <div class="fgrp"><label>Ano</label>
+    <select id="f-ano" onchange="applyFilters()">
+      <option value="">Todos</option><option value="2023">2023</option>
+      <option value="2024">2024</option><option value="2025">2025</option>
+      <option value="2026">2026</option>
+    </select>
+  </div>
+  <div class="fgrp"><label>Mês</label>
+    <select id="f-mes" onchange="applyFilters()">
+      <option value="">Todos</option>
+      <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+      <option value="3">Março</option><option value="4">Abril</option>
+      <option value="5">Maio</option><option value="6">Junho</option>
+      <option value="7">Julho</option><option value="8">Agosto</option>
+      <option value="9">Setembro</option><option value="10">Outubro</option>
+      <option value="11">Novembro</option><option value="12">Dezembro</option>
+    </select>
+  </div>
+  <div class="fgrp"><label>Empresa</label>
+    <select id="f-emp" onchange="applyFilters()">
+      <option value="">Todas</option><option value="RUMO">RUMO</option>
+      <option value="MRS">MRS</option><option value="VLI">VLI</option>
+    </select>
+  </div>
+  <div class="fgrp"><label>Classificação</label>
+    <select id="f-cl" onchange="applyFilters()">
+      <option value="">Todas</option><option value="C">Criminal</option>
+      <option value="N">Não Criminal</option>
+    </select>
+  </div>
+  <div class="fgrp"><label>Crime</label>
+    <select id="f-cr" onchange="applyFilters()"><option value="">Todos</option></select>
+  </div>
+  <div class="fgrp"><label>Artigo</label>
+    <select id="f-ar" onchange="applyFilters()"><option value="">Todos</option></select>
+  </div>
+  <div class="fgrp"><label>Circunscrição</label>
+    <select id="f-ci" onchange="applyFilters()"><option value="">Todas</option></select>
+  </div>
+  <div class="fgrp"><label>Data</label>
+    <select id="f-dt" onchange="applyFilters()"><option value="">Todas</option></select>
+  </div>
+  <div class="fgrp"><label>Cidade</label>
+    <select id="f-cd" onchange="applyFilters()"><option value="">Todas</option></select>
+  </div>
+  <div class="fgrp"><label>Trecho</label>
+    <select id="f-tre" onchange="applyFilters()"><option value="">Todos</option></select>
+  </div>
+  <div class="fgrp"><label>SB</label>
+    <select id="f-sbn" onchange="applyFilters()"><option value="">Todos</option></select>
+  </div>
+  <div class="fgrp"><label>Natureza</label>
+    <select id="f-nat" onchange="applyFilters()"><option value="">Todas</option></select>
+  </div>
+  <div class="fgrp"><label>Tipo</label>
+    <select id="f-tp" onchange="applyFilters()"><option value="">Todos</option></select>
+  </div>
+  <div class="fgrp"><label>Subtipo</label>
+    <select id="f-sb" onchange="applyFilters()"><option value="">Todos</option></select>
+  </div>
+  <div class="fgrp"><label>Autoria</label>
+    <select id="f-au" onchange="applyFilters()">
+      <option value="">Todas</option><option value="C">Conhecida</option>
+      <option value="D">Desconhecida</option>
+    </select>
+  </div>
+  <button class="btn-reset" onclick="resetFilters()"><i data-lucide="rotate-ccw" style="width:13px;height:13px"></i> Limpar</button>
+  <span id="count-label" style="margin-left:auto;font-size:12px;color:#8ab;align-self:center"></span>
+</div>
 
 <div class="tabs">
   <div class="tab active" onclick="switchTab('painel')"><i data-lucide="bar-chart-2"></i> Painel Principal</div>
@@ -352,16 +422,21 @@ const RAW = [{"cl":"C","ar":"260","tp":"FURTO","sb":"CABOS","ci":"03 D.P. CUBATA
 
 // Populate filters dinamicamente
 function _pop(id, values){ const s=document.getElementById(id); if(!s) return; values.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; s.appendChild(o); }); }
-_pop('f-ar', [...new Set(RAW.map(r=>r.ar).filter(Boolean))].sort());
-_pop('f-tp', [...new Set(RAW.map(r=>r.tp).filter(Boolean))].sort());
-_pop('f-sb', [...new Set(RAW.map(r=>r.sb).filter(Boolean))].sort());
-_pop('f-ci', [...new Set(RAW.map(r=>r.ci).filter(Boolean))].sort());
-_pop('f-cd', [...new Set(RAW.map(r=>r.cd).filter(Boolean))].sort());
-_pop('f-cr',  [...new Set((typeof COORDS!=='undefined'?COORDS:[]).map(c=>c.cr).filter(Boolean))].sort());
-_pop('f-dt',  [...new Set((typeof COORDS!=='undefined'?COORDS:[]).map(c=>c.dt).filter(Boolean))].sort());
-_pop('f-tre', [...new Set((typeof COORDS!=='undefined'?COORDS:[]).map(c=>c.tre).filter(Boolean))].sort());
-_pop('f-sbn', [...new Set((typeof COORDS!=='undefined'?COORDS:[]).map(c=>c.sbn).filter(Boolean))].sort());
-_pop('f-nat', [...new Set((typeof COORDS!=='undefined'?COORDS:[]).map(c=>c.nat).filter(Boolean))].sort());
+const _C = (typeof COORDS!=='undefined') ? COORDS : [];
+const _uniq = (sel) => [...new Set(_C.map(sel).filter(Boolean))].sort();
+_pop('f-ar',  _uniq(c=>c.art));
+_pop('f-tp',  _uniq(c=>c.tp));
+_pop('f-sb',  _uniq(c=>c.sb));
+_pop('f-ci',  _uniq(c=>c.circ));
+_pop('f-cd',  _uniq(c=>c.cid));
+_pop('f-cr',  _uniq(c=>c.cr));
+_pop('f-dt',  [...new Set(_C.map(c=>c.dt).filter(Boolean))].sort((a,b)=>{
+  const pa=a.split('/'), pb=b.split('/');
+  return (pa[2]+pa[1]+pa[0]).localeCompare(pb[2]+pb[1]+pb[0]);
+}));
+_pop('f-tre', _uniq(c=>c.tre));
+_pop('f-sbn', _uniq(c=>c.sbn));
+_pop('f-nat', _uniq(c=>c.nat));
 
 // Estado global de filtros — compartilhado entre as 3 abas
 function getFilterState(){
@@ -374,9 +449,26 @@ function getFilterState(){
   };
 }
 
+// Converte um registro COORDS para o formato compacto que buildCharts() espera
+function coordsToRaw(c){
+  const A = (c.aut||'').toUpperCase();
+  const au = A.includes('DESCONHECIDA') ? 'D' : (A.includes('CONHECIDA') ? 'C' : '');
+  let m = parseInt(c.mes);
+  if(isNaN(m) && c.dt && c.dt.length===10) m = parseInt(c.dt.split('/')[1]);
+  let y = c.y; if(!y && c.dt && c.dt.length===10) y = parseInt(c.dt.split('/')[2]);
+  return {
+    cl: c.cl==='CRIMINAL' ? 'C' : 'N',
+    ar: c.art, tp: c.tp, sb: c.sb, ci: c.circ, cd: c.cid,
+    em: (c.emp||'').toUpperCase(), au, m, y,
+    cr: c.cr, dt: c.dt, tre: c.tre, sbn: c.sbn, nat: c.nat
+  };
+}
+
+// Base de dados unificada: deriva de COORDS para que TODOS os filtros
+// valham igualmente nas 3 abas (Painel, Mapa e Desdobramentos)
 function getFiltered() {
   const f = getFilterState();
-  return RAW.filter(r =>
+  return COORDS.map(coordsToRaw).filter(r =>
     (!f.ano || r.y  == f.ano) &&
     (!f.mes || r.m  == f.mes) &&
     (!f.emp || r.em == f.emp) &&
@@ -386,7 +478,12 @@ function getFiltered() {
     (!f.sb  || r.sb == f.sb)  &&
     (!f.ci  || r.ci == f.ci)  &&
     (!f.cd  || r.cd == f.cd)  &&
-    (!f.au  || r.au == f.au)
+    (!f.au  || r.au == f.au)  &&
+    (!f.cr  || r.cr  == f.cr)  &&
+    (!f.dt  || r.dt  == f.dt)  &&
+    (!f.tre || r.tre == f.tre) &&
+    (!f.sbn || r.sbn == f.sbn) &&
+    (!f.nat || r.nat == f.nat)
   );
 }
 
