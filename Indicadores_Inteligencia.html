@@ -418,27 +418,24 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
 </div>
 <!-- PRODUTO RECUPERADO (TIPO = APREENSÃO) -->
 <div id="tab-produto" class="tab-content">
-  <div class="kpis" style="grid-template-columns:repeat(5,1fr)">
+  <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
     <div class="kpi k1"><i data-lucide="package-check" style="color:var(--orange);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Apreensões (Produto Recuperado)</div><div class="kpi-val" id="pr-total">—</div><div class="kpi-sub">ocorrências do tipo APREENSÃO</div></div>
     <div class="kpi k4"><i data-lucide="banknote" style="color:var(--green);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Valor Recuperado</div><div class="kpi-val" id="pr-valor" style="color:var(--green)">—</div><div class="kpi-sub" id="pr-valor-sub">estimativa por cotação atual</div></div>
     <div class="kpi k3"><i data-lucide="wheat" style="color:var(--navy2);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Grãos / Carga Recuperada</div><div class="kpi-val" id="pr-graos">—</div><div class="kpi-sub">kg (registros de CARGA/GRÃOS)</div></div>
     <div class="kpi" style="border-top-color:#1a6999"><i data-lucide="fuel" style="color:#1a6999;width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Combustível Recuperado</div><div class="kpi-val" id="pr-comb">—</div><div class="kpi-sub">litros (registros de COMBUSTÍVEL)</div></div>
-    <div class="kpi k2"><i data-lucide="route" style="color:var(--red);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Trechos com Apreensão</div><div class="kpi-val" id="pr-trechos">—</div><div class="kpi-sub">trechos distintos</div></div>
   </div>
   <div id="pr-cotacoes" style="margin:0 24px 4px;font-size:12px;color:var(--muted)"></div>
   <div class="section-header">
     <h2><i data-lucide="package-check" style="display:inline;vertical-align:middle;width:16px;height:16px;color:var(--orange)"></i> Produto Recuperado · Apreensões</h2>
     <div class="sh-line"></div>
   </div>
-  <div class="bgrid">
-    <div class="cbox"><div class="cbox-title"><i data-lucide="layers"></i>Apreensões por Tipo de Produto</div><canvas id="pr-ch-tipo-qtde" style="max-height:260px"></canvas></div>
-    <div class="cbox"><div class="cbox-title"><i data-lucide="scale"></i>Quantidade por Tipo de Produto</div><canvas id="pr-ch-tipo-soma" style="max-height:260px"></canvas></div>
+    <div class="bgrid" style="grid-template-columns:1fr 1fr">
+    <div class="cbox"><div class="cbox-title"><i data-lucide="layers"></i>Apreensões por Tipo de Produto</div><canvas id="pr-ch-tipo-qtde" style="max-height:280px"></canvas></div>
+    <div class="cbox"><div class="cbox-title"><i data-lucide="scale"></i>Quantidade por Tipo de Produto</div><canvas id="pr-ch-tipo-soma" style="max-height:280px"></canvas></div>
+    <div class="cbox"><div class="cbox-title"><i data-lucide="route"></i>Apreensões por Trecho</div><canvas id="pr-ch-trecho-qtde" style="max-height:280px"></canvas></div>
+    <div class="cbox"><div class="cbox-title"><i data-lucide="scale"></i>Quantidade por Trecho</div><canvas id="pr-ch-trecho-soma" style="max-height:280px"></canvas></div>
   </div>
-  <div class="bgrid">
-    <div class="cbox"><div class="cbox-title"><i data-lucide="route"></i>Apreensões por Trecho</div><canvas id="pr-ch-trecho-qtde" style="max-height:260px"></canvas></div>
-    <div class="cbox"><div class="cbox-title"><i data-lucide="scale"></i>Quantidade por Trecho</div><canvas id="pr-ch-trecho-soma" style="max-height:260px"></canvas></div>
-  </div>
-  <div class="cbox" style="margin:0 24px 24px"><div class="cbox-title"><i data-lucide="flame"></i>Mapa de Calor das Apreensões</div><div id="pr-heatmap" style="height:460px;border-radius:8px;overflow:hidden"></div></div>
+  <div class="cbox" style="margin:0 24px 24px"><div class="cbox-title"><i data-lucide="map-pin"></i>Localização das Apreensões</div><div id="pr-mapa" style="height:480px;border-radius:8px;overflow:hidden"></div></div>
 </div>
 <script>
 const COTACOES = {"usdbrl":5.198,"data":"23/06/2026 20:33","unidades":{"soja":2.1802,"milho":0.8958,"farelo":1.7275,"diesel":4.2721,"gasolina":3.8962,"etanol":3.0484}};
@@ -1277,7 +1274,7 @@ function _prBar(id,labels,values,horizontal){
 let _prHeat=null;
 function renderProdutoRecuperado(){
   if(typeof APREENSOES==='undefined'||!APREENSOES.length){
-    ['pr-total','pr-valor','pr-graos','pr-comb','pr-trechos'].forEach(i=>{const e=document.getElementById(i);if(e)e.textContent='0';});
+    ['pr-total','pr-valor','pr-graos','pr-comb'].forEach(i=>{const e=document.getElementById(i);if(e)e.textContent='0';});
     return;
   }
   const A=APREENSOES;
@@ -1285,7 +1282,6 @@ function renderProdutoRecuperado(){
   const graos=A.filter(r=>/GR[ÃA]OS|CARGA/i.test(r.sub||'')).reduce((s,r)=>s+_prNum(r.qtd),0);
   const comb =A.filter(r=>/COMBUST/i.test(r.sub||'')).reduce((s,r)=>s+_prNum(r.qtd),0);
   const valor=A.reduce((s,r)=>s+_prNum(r.val),0);
-  const trechos=new Set(A.map(r=>(r.tre||'').trim()).filter(Boolean)).size;
   const fmt=n=>n.toLocaleString('pt-BR',{maximumFractionDigits:0});
   document.getElementById('pr-total').textContent=A.length.toLocaleString('pt-BR');
   document.getElementById('pr-valor').textContent='R$ '+valor.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -1305,7 +1301,6 @@ function renderProdutoRecuperado(){
   }catch(e){ console.warn('cotacoes',e); }
   document.getElementById('pr-graos').textContent=fmt(graos);
   document.getElementById('pr-comb').textContent=fmt(comb);
-  document.getElementById('pr-trechos').textContent=trechos;
   // Agrupamentos
   const grp=(keyFn,sum)=>{const m={};A.forEach(r=>{const k=(keyFn(r)||'').trim();if(!k)return;m[k]=(m[k]||0)+(sum?_prNum(r.qtd):1);});return Object.entries(m).sort((a,b)=>b[1]-a[1]);};
   const tipoQ=grp(r=>r.sub,false), tipoS=grp(r=>r.sub,true);
@@ -1314,20 +1309,31 @@ function renderProdutoRecuperado(){
   _prBar('pr-ch-tipo-soma', tipoS.map(x=>x[0]), tipoS.map(x=>x[1]), true);
   _prBar('pr-ch-trecho-qtde', treQ.map(x=>x[0]), treQ.map(x=>x[1]), false);
   _prBar('pr-ch-trecho-soma', treS.map(x=>x[0]), treS.map(x=>x[1]), false);
-  // Mapa de calor — somente apreensões com coordenada
-  const pts=A.filter(r=>r.la&&r.lo).map(r=>[r.la,r.lo,0.8]);
-  const el=document.getElementById('pr-heatmap');
-  if(el){
+  // Mapa de bolhas — uma bolha por coordenada de apreensão
+  const corProd={soja:'#1a6999',milho:'#F78344',farelo:'#005CA9',diesel:'#003865',gasolina:'#C0392B',etanol:'#007ACC'};
+  const apPts=A.filter(r=>r.la&&r.lo);
+  const elM=document.getElementById('pr-mapa');
+  if(elM){
     if(!_prHeat){
-      _prHeat=L.map('pr-heatmap').setView([-23.9,-46.4],7);
+      _prHeat=L.map('pr-mapa').setView([-23.9,-46.4],7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:19}).addTo(_prHeat);
-      _prHeat._heatLayer=null;
+      _prHeat._bolhas=null;
     }
-    if(_prHeat._heatLayer){ _prHeat.removeLayer(_prHeat._heatLayer); }
-    if(typeof L.heatLayer==='function' && pts.length){
-      _prHeat._heatLayer=L.heatLayer(pts,{radius:25,blur:18,maxZoom:12,gradient:{0.2:'#003865',0.4:'#005CA9',0.6:'#F7A878',0.8:'#F78344',1.0:'#C0392B'}}).addTo(_prHeat);
-      try{ _prHeat.fitBounds(pts.map(p=>[p[0],p[1]]),{padding:[30,30],maxZoom:9}); }catch(e){}
-    }
+    if(_prHeat._bolhas){ _prHeat.removeLayer(_prHeat._bolhas); }
+    _prHeat._bolhas=L.layerGroup();
+    apPts.forEach(r=>{
+      const cor=corProd[r.prod]||'#5a6e8a';
+      const pop='<div style="font-family:Arial;font-size:12px;min-width:180px"><strong>B.O. '+(r.bo||'—')+'</strong><br>'
+        +(r.prod?('Produto: <strong>'+r.prod.toUpperCase()+'</strong><br>'):'')
+        +(r.sub?('Tipo: '+r.sub+'<br>'):'')
+        +(r.qtd?('Quantidade: '+r.qtd+'<br>'):'')
+        +(r.val?('Valor estimado: R$ '+Number(r.val).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'<br>'):'')
+        +(r.cid?(r.cid+' · '):'')+(r.tre||'')+'<br>'+(r.dt||'')+'</div>';
+      L.circleMarker([r.la,r.lo],{radius:7,color:'#fff',weight:1.5,fillColor:cor,fillOpacity:0.85})
+        .bindPopup(pop,{maxWidth:260}).addTo(_prHeat._bolhas);
+    });
+    _prHeat._bolhas.addTo(_prHeat);
+    try{ if(apPts.length) _prHeat.fitBounds(apPts.map(r=>[r.la,r.lo]),{padding:[30,30],maxZoom:10}); }catch(e){}
     setTimeout(()=>{ if(_prHeat) _prHeat.invalidateSize(); },200);
   }
 }
@@ -1340,6 +1346,9 @@ applyFilters();
 </script>
 </body>
 </html>
+
+
+
 
 
 
