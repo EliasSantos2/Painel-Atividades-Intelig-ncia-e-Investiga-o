@@ -226,6 +226,21 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
       <option value="">Todas</option><option value="C">Conhecida</option>
       <option value="D">Desconhecida</option>
     </select>
+    </div>
+  <div class="fgrp"><label>Crime</label>
+    <select id="f-cr" onchange="applyFilters()"><option value="">Todos</option></select>
+  </div>
+  <div class="fgrp"><label>Data</label>
+    <select id="f-dt" onchange="applyFilters()"><option value="">Todas</option></select>
+  </div>
+  <div class="fgrp"><label>Trecho</label>
+    <select id="f-tre" onchange="applyFilters()"><option value="">Todos</option></select>
+  </div>
+  <div class="fgrp"><label>SB</label>
+    <select id="f-sbn" onchange="applyFilters()"><option value="">Todos</option></select>
+  </div>
+  <div class="fgrp"><label>Natureza</label>
+    <select id="f-nat" onchange="applyFilters()"><option value="">Todas</option></select>
   </div>
   <button class="btn-reset" onclick="resetFilters()"><i data-lucide="rotate-ccw" style="width:13px;height:13px"></i> Limpar</button>
   <span id="count-label" style="margin-left:auto;font-size:12px;color:#8ab;align-self:center"></span>
@@ -411,6 +426,11 @@ _pop('f-tp', [...new Set(RAW.map(r=>r.tp).filter(Boolean))].sort());
 _pop('f-sb', [...new Set(RAW.map(r=>r.sb).filter(Boolean))].sort());
 _pop('f-ci', [...new Set(RAW.map(r=>r.ci).filter(Boolean))].sort());
 _pop('f-cd', [...new Set(RAW.map(r=>r.cd).filter(Boolean))].sort());
+_pop('f-cr',  [...new Set((typeof COORDS!=='undefined'?COORDS:[]).map(c=>c.cr).filter(Boolean))].sort());
+_pop('f-dt',  [...new Set((typeof COORDS!=='undefined'?COORDS:[]).map(c=>c.dt).filter(Boolean))].sort());
+_pop('f-tre', [...new Set((typeof COORDS!=='undefined'?COORDS:[]).map(c=>c.tre).filter(Boolean))].sort());
+_pop('f-sbn', [...new Set((typeof COORDS!=='undefined'?COORDS:[]).map(c=>c.sbn).filter(Boolean))].sort());
+_pop('f-nat', [...new Set((typeof COORDS!=='undefined'?COORDS:[]).map(c=>c.nat).filter(Boolean))].sort());
 
 // Estado global de filtros — compartilhado entre as 3 abas
 function getFilterState(){
@@ -424,7 +444,12 @@ function getFilterState(){
     sb : document.getElementById('f-sb').value,
     ci : document.getElementById('f-ci').value,
     cd : document.getElementById('f-cd').value,
-    au : document.getElementById('f-au').value
+    au : document.getElementById('f-au').value,
+    cr : document.getElementById('f-cr').value,
+    dt : document.getElementById('f-dt').value,
+    tre: document.getElementById('f-tre').value,
+    sbn: document.getElementById('f-sbn').value,
+    nat: document.getElementById('f-nat').value
   };
 }
 
@@ -457,7 +482,12 @@ function getCoordFiltered(){
     (!f.sb  || c.sb  == f.sb) &&
     (!f.ci  || c.circ == f.ci) &&
     (!f.cd  || c.cid == f.cd) &&
-    (!f.au  || (c.aut||'').toUpperCase().includes(auMap[f.au]||f.au))
+    (!f.au  || (c.aut||'').toUpperCase().includes(auMap[f.au]||f.au)) &&
+    (!f.cr  || c.cr  == f.cr)  &&
+    (!f.dt  || c.dt  == f.dt)  &&
+    (!f.tre || c.tre == f.tre) &&
+    (!f.sbn || c.sbn == f.sbn) &&
+    (!f.nat || c.nat == f.nat)
   );
 }
 
@@ -1156,7 +1186,7 @@ function applyFilters() {
   if(lbl) lbl.textContent = data.length.toLocaleString('pt-BR') + ' registros';
 }
 function resetFilters() {
-  ['f-ano','f-mes','f-emp','f-cl','f-ar','f-tp','f-sb','f-ci','f-cd','f-au']
+  ['f-ano','f-mes','f-emp','f-cl','f-ar','f-tp','f-sb','f-ci','f-cd','f-au','f-cr','f-dt','f-tre','f-sbn','f-nat']
     .forEach(id => document.getElementById(id).value = '');
   applyFilters();
 }
@@ -1178,6 +1208,7 @@ applyFilters();
 </script>
 </body>
 </html>
+
 
 
 
