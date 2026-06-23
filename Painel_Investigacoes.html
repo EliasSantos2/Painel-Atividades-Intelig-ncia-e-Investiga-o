@@ -321,7 +321,7 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
     <div class="form-group full">
       <label>RELINT Final da Investigação</label>
       <div style="font-size:12px;color:var(--text2);margin-bottom:6px">
-        Após salvar, use o botão <strong>"⬆️ Enviar RELINT"</strong> na coluna RELINT da tabela para anexar o arquivo diretamente (fica hospedado no repositório seguro e acessível por link).
+        Após salvar, use o botão <strong>"⬆️ Anexar RELINT"</strong> na coluna RELINT da tabela para anexar o arquivo diretamente (fica hospedado no repositório seguro e acessível por link).
         Opcionalmente, cole abaixo um link já existente:
       </div>
       <input id="op-relint-url" placeholder="Link do arquivo (opcional)">
@@ -614,7 +614,7 @@ async function authLogout(){
 function relintCell(op){
   const has=op.relint&&(op.relint.path||op.relint.url);
   const ver=has?`<button class="badge badge-green" title="${op.relint.name||'RELINT'}" style="border:none;cursor:pointer" onclick="viewRelint(${op.id})">📎 Ver RELINT</button>`:'<span style="color:var(--text2);font-size:12px">—</span>';
-  const btn=`<button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="triggerUpload(${op.id})">${has?'Substituir':'⬆️ Enviar RELINT'}</button>`;
+  const btn=`<button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="triggerUpload(${op.id})">${has?'Substituir':'⬆️ Anexar RELINT'}</button>`;
   const rem=has?`<button class="btn btn-ghost btn-sm btn-icon" style="margin-top:6px" title="Remover" onclick="removeRelintLink(${op.id})">✖</button>`:'';
   return `<div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px">${ver}<div style="display:flex;gap:4px">${btn}${rem}</div></div>`;
 }
