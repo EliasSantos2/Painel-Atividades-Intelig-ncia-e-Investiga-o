@@ -446,7 +446,7 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
     <div class="sh-line"></div>
   </div>
   <div id="cir-legenda" style="margin:0 24px 10px;font-size:12px;color:var(--muted)">
-    Comparativo <strong>2024 · 2025 · 2026</strong> &nbsp;·&nbsp; Em 2026: <span style="display:inline-block;width:12px;height:12px;background:#003865;border-radius:2px;vertical-align:middle"></span> Realizado (Jan–Jun) &nbsp;·&nbsp;
+    Comparativo <strong>2025 · 2026</strong> &nbsp;·&nbsp; Em 2026: <span style="display:inline-block;width:12px;height:12px;background:#003865;border-radius:2px;vertical-align:middle"></span> Realizado (Jan–Jun) &nbsp;·&nbsp;
     <span style="display:inline-block;width:12px;height:12px;background:#C0392B;border-radius:2px;vertical-align:middle"></span> Projeção dos meses futuros (estimada a partir do histórico e do desempenho do ano)
   </div>
   <div class="bgrid" style="grid-template-columns:1fr 1fr">
@@ -1388,7 +1388,6 @@ function _cirProjeta(anos, anoAtual){
 function _cirBar(id, meses, ind){
   const el=document.getElementById(id); if(!el||!ind||!ind.anos) return;
   const A=CIRCULACAO.anoAtual;
-  const y24=(ind.anos['2024']||new Array(12).fill(null)).slice(0,12);
   const y25=(ind.anos['2025']||new Array(12).fill(null)).slice(0,12);
   const r=_cirProjeta(ind.anos, A); const real=r.real, proj=r.proj;
   const v26=[],c26=[];
@@ -1402,9 +1401,8 @@ function _cirBar(id, meses, ind){
   _cirCharts[id]=new Chart(el,{
     type:'bar',
     data:{labels:meses,datasets:[
-      {label:'2024',data:y24,backgroundColor:'#B7C7DA',borderRadius:2,maxBarThickness:20},
-      {label:'2025',data:y25,backgroundColor:'#5B8DB8',borderRadius:2,maxBarThickness:20},
-      {label:String(A),data:v26,backgroundColor:c26,borderRadius:2,maxBarThickness:20}
+      {label:'2025',data:y25,backgroundColor:'#5B8DB8',borderRadius:2,maxBarThickness:26},
+      {label:String(A),data:v26,backgroundColor:c26,borderRadius:2,maxBarThickness:26}
     ]},
     plugins:[ChartDataLabels],
     options:{responsive:true,
@@ -1438,6 +1436,8 @@ applyFilters();
 </script>
 </body>
 </html>
+
+
 
 
 
