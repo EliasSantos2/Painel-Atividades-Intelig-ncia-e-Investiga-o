@@ -6,6 +6,7 @@
 <title>Indicadores da Inteligência — Rumo Logística</title>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
@@ -445,8 +446,8 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
     <div class="sh-line"></div>
   </div>
   <div id="cir-legenda" style="margin:0 24px 10px;font-size:12px;color:var(--muted)">
-    <span style="display:inline-block;width:12px;height:12px;background:#003865;border-radius:2px;vertical-align:middle"></span> Realizado &nbsp;·&nbsp;
-    <span style="display:inline-block;width:12px;height:12px;background:#C0392B;border-radius:2px;vertical-align:middle"></span> Projeção (meses futuros, estimada a partir do histórico e do desempenho do ano)
+    Comparativo <strong>2024 · 2025 · 2026</strong> &nbsp;·&nbsp; Em 2026: <span style="display:inline-block;width:12px;height:12px;background:#003865;border-radius:2px;vertical-align:middle"></span> Realizado (Jan–Mai) &nbsp;·&nbsp;
+    <span style="display:inline-block;width:12px;height:12px;background:#C0392B;border-radius:2px;vertical-align:middle"></span> Projeção dos meses futuros (estimada a partir do histórico e do desempenho do ano)
   </div>
   <div class="bgrid" style="grid-template-columns:1fr 1fr">
     <div class="cbox"><div class="cbox-title"><i data-lucide="activity"></i>THP (mês)</div><canvas id="cir-thp" style="max-height:240px"></canvas></div>
@@ -459,7 +460,7 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
   <div class="cbox" style="margin:0 24px 24px"><div class="cbox-title"><i data-lucide="container"></i>Quantidade de Vagões Descarregados</div><canvas id="cir-descarga" style="max-height:260px"></canvas></div>
 </div>
 <script>
-const CIRCULACAO = {"anoAtual":2026,"meses":["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"],"ind":{"circulacao":{"anos":{"2023":[855,1071,1388,1428,1501,1478,1492,1453,1555,1416,1471,1456],"2025":[771,1098,1526,1469,1609,1594,1602,1694,1518,1577,1567,1381],"2024":[1076,1359,1592,1454,1546,1518,1536,1484,1519,1575,1480,1205],"2026":[1038,973,null,null,null,null,null,null,null,null,null,null]}},"thp":{"anos":{"2023":[238,277,185,130,207,90,89,168,104,144,55,51],"2025":[46,45,41,75,51,53,24,22,31,67,49,38],"2024":[31,77,33,31,52,37,32,32,28,37,12,46],"2026":[9,21,null,null,null,null,null,null,null,null,null,null]}},"sucesso":{"anos":{"2023":[86,90,93,93,90,93,95,92,94,94,97,96],"2025":[938,957,961,938,95,97.5,98.3,98.8,98.2,97.2,98.3,98.7],"2024":[97,94,96,97.3,96.1,96,95.1,95,96.5,97.1,98,94.2],"2026":[99,98.4,null,null,null,null,null,null,null,null,null,null]}},"descarga":{"anos":{"2023":[14321,26562,33377,34514,34061,33668,34442,32392,35289,30766,31928,29248],"2025":[13246,25275,32914,33049,37222,34571,32399,35443,32020,36516,34067,30611],"2024":[18211,27602,31953,32445,34111,35217,33037,33679,33051,34809,30574,23851],"2026":[21542,23742,null,null,null,null,null,null,null,null,null,null]}},"abertura":{"anos":{"2023":[30,54,74,12,27,19,37,18,7,2,2,7],"2025":[14,6,15,39,20,10,18,12,9,24,6,8],"2024":[8,11,9,9,19,15,17,8,7,10,2,19],"2026":[5,7,null,null,null,null,null,null,null,null,null,null]}},"vandalismo":{"anos":{"2023":[120,110,101,100,150,98,68,113,96,80,45,51],"2025":[48,47,56,91,80,40,28,21,27,44,27,18],"2024":[33,79,62,39,60,60,75,74,53,46,30,70],"2026":[10,16,null,null,null,null,null,null,null,null,null,null]}},"taxaabert":{"anos":{"2023":[0.209,0.203,0.222,0.035,0.079,0.056,0.107,0.056,0.02,0.007,0.006,0.024],"2025":[0.106,0.024,0.046,0.118,0.054,0.029,0.056,0.034,0.028,0.066,0.018,0.026],"2024":[0.044,0.04,0.028,0.028,0.056,0.043,0.051,0.024,0.021,0.029,0.007,0.08],"2026":[0.023,0.029,null,null,null,null,null,null,null,null,null,null]}}}};
+const CIRCULACAO = {"anoAtual":2026,"meses":["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"],"ind":{"circulacao":{"anos":{"2023":[855,1071,1388,1428,1501,1478,1492,1453,1555,1416,1471,1456],"2025":[771,1098,1526,1469,1609,1594,1602,1694,1518,1577,1567,1381],"2024":[1076,1359,1592,1454,1546,1518,1536,1484,1519,1575,1480,1205],"2026":[1038,1216,1585,1573,1164,null,null,null,null,null,null,null]}},"thp":{"anos":{"2023":[238,277,185,130,207,90,89,168,104,144,55,51],"2025":[46,45,41,75,51,53,24,22,31,67,49,38],"2024":[31,77,33,31,52,37,32,32,28,37,12,46],"2026":[9,22,33.9,13.4,6.36,null,null,null,null,null,null,null]}},"sucesso":{"anos":{"2023":[86,90,93,93,90,93,95,92,94,94,97,96],"2025":[93.8,95.7,96.1,93.8,95,97.5,98.3,98.8,98.2,97.2,98.3,98.7],"2024":[97,94,96,97.3,96.1,96,95.1,95,96.5,97.1,98,94.2],"2026":[99,98.5,98.3,99.2,99.4,null,null,null,null,null,null,null]}},"descarga":{"anos":{"2023":[14321,26562,33377,34514,34061,33668,34442,32392,35289,30766,31928,29248],"2025":[13246,25275,32914,33049,37222,34571,32399,35443,32020,36516,34067,30611],"2024":[18211,27602,31953,32445,34111,35217,33037,33679,33051,34809,30574,23851],"2026":[21542,30599,35281,37608,25294,null,null,null,null,null,null,null]}},"abertura":{"anos":{"2023":[30,54,74,12,27,19,37,18,7,2,2,7],"2025":[14,6,15,39,20,10,18,12,9,24,6,8],"2024":[8,11,9,9,19,15,17,8,7,10,2,19],"2026":[5,9,8,3,1,null,null,null,null,null,null,null]}},"vandalismo":{"anos":{"2023":[120,110,101,100,150,98,68,113,96,80,45,51],"2025":[48,47,56,91,80,40,28,21,27,44,27,18],"2024":[33,79,62,39,60,60,75,74,53,46,30,70],"2026":[10,18,27,12,7,null,null,null,null,null,null,null]}},"taxaabert":{"anos":{"2023":[0.209,0.203,0.222,0.035,0.079,0.056,0.107,0.056,0.02,0.007,0.006,0.024],"2025":[0.106,0.024,0.046,0.118,0.054,0.029,0.056,0.034,0.028,0.066,0.018,0.026],"2024":[0.044,0.04,0.028,0.028,0.056,0.043,0.051,0.024,0.021,0.029,0.007,0.08],"2026":[0.023,0.029,0.023,0.008,0.004,null,null,null,null,null,null,null]}}}};
 </script>
 <script>
 const COTACOES = {"usdbrl":5.198,"data":"23/06/2026 20:33","unidades":{"soja":2.1802,"milho":0.8958,"farelo":1.7275,"diesel":4.2721,"gasolina":3.8962,"etanol":3.0484}};
@@ -1365,6 +1366,7 @@ function renderProdutoRecuperado(){
 
 // ── INDICADORES DE CIRCULAÇÃO (com projeção) ───────────────────────────────
 const _cirCharts={};
+if(typeof ChartDataLabels!=='undefined' && typeof Chart!=='undefined'){ try{ Chart.register(ChartDataLabels); }catch(e){} Chart.defaults.plugins.datalabels = { display:false }; }
 function _cirDestroy(id){ if(_cirCharts[id]){ _cirCharts[id].destroy(); delete _cirCharts[id]; } }
 function _cirProjeta(anos, anoAtual){
   // anos = { 2023:[12], 2024:[12], 2025:[12], 2026:[..] }; retorna {real[12], proj[12]}
@@ -1384,17 +1386,35 @@ function _cirProjeta(anos, anoAtual){
   return {real,proj};
 }
 function _cirBar(id, meses, ind){
-  const el=document.getElementById(id); if(!el||!ind) return;
-  const {real,proj}=_cirProjeta(ind.anos, CIRCULACAO.anoAtual);
+  const el=document.getElementById(id); if(!el||!ind||!ind.anos) return;
+  const A=CIRCULACAO.anoAtual;
+  const y24=(ind.anos['2024']||new Array(12).fill(null)).slice(0,12);
+  const y25=(ind.anos['2025']||new Array(12).fill(null)).slice(0,12);
+  const r=_cirProjeta(ind.anos, A); const real=r.real, proj=r.proj;
+  const v26=[],c26=[];
+  for(let m=0;m<12;m++){
+    if(real[m]!=null){ v26[m]=real[m]; c26[m]='#003865'; }
+    else if(proj[m]!=null){ v26[m]=proj[m]; c26[m]='#C0392B'; }
+    else { v26[m]=null; c26[m]='#003865'; }
+  }
+  const fmtL=v=>{ if(v==null) return ''; const a=Math.abs(v); if(a>=1000) return (v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k'; return (Number.isInteger(v)?v:Number(v).toLocaleString('pt-BR',{maximumFractionDigits:2})); };
   _cirDestroy(id);
   _cirCharts[id]=new Chart(el,{
     type:'bar',
     data:{labels:meses,datasets:[
-      {label:'Realizado',data:real,backgroundColor:'#003865',borderRadius:3,maxBarThickness:30},
-      {label:'Projeção',data:proj,backgroundColor:'#C0392B',borderRadius:3,maxBarThickness:30}
+      {label:'2024',data:y24,backgroundColor:'#B7C7DA',borderRadius:2,maxBarThickness:20},
+      {label:'2025',data:y25,backgroundColor:'#5B8DB8',borderRadius:2,maxBarThickness:20},
+      {label:String(A),data:v26,backgroundColor:c26,borderRadius:2,maxBarThickness:20}
     ]},
-    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toLocaleString('pt-BR'):'—')}}},
-      scales:{x:{grid:{display:false},ticks:{color:'#5a6e8a',font:{size:10}}},y:{grid:{color:'#EBF0F8'},ticks:{color:'#5a6e8a',font:{size:10}},beginAtZero:true}}}
+    plugins:[ChartDataLabels],
+    options:{responsive:true,
+      plugins:{
+        legend:{display:true,position:'top',labels:{boxWidth:10,font:{size:10},color:'#1a2740'}},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toLocaleString('pt-BR'):'—')}},
+        datalabels:{display:true,anchor:'end',align:'end',rotation:-90,offset:2,clamp:true,font:{size:8,weight:'600'},color:'#3a4a5e',formatter:fmtL}
+      },
+      layout:{padding:{top:20}},
+      scales:{x:{grid:{display:false},ticks:{color:'#5a6e8a',font:{size:10}}},y:{grid:{color:'#EBF0F8'},ticks:{color:'#5a6e8a',font:{size:9}},beginAtZero:true}}}
   });
 }
 function renderCirculacao(){
@@ -1418,6 +1438,12 @@ applyFilters();
 </script>
 </body>
 </html>
+
+
+
+
+
+
 
 
 
