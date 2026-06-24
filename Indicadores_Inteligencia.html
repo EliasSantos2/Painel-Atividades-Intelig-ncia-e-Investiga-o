@@ -1325,7 +1325,7 @@ const _prCharts={};
 function _prNum(v){ const n=parseFloat(String(v==null?'':v).replace(/[^\d.,-]/g,'').replace(',','.')); return isNaN(n)?0:n; }
 function _prDestroy(id){ if(_prCharts[id]){ _prCharts[id].destroy(); delete _prCharts[id]; } }
 let _prFilters={};
-function prFilteredA(){ if(typeof APREENSOES==='undefined') return []; const ks=Object.keys(_prFilters); if(!ks.length) return APREENSOES; return APREENSOES.filter(function(r){ return ks.every(function(k){ return (r[k]==null?'':String(r[k])).trim()===_prFilters[k]; }); }); }
+function prFilteredA(){ if(typeof APREENSOES==='undefined') return []; const EXCL=/PR\s*-\s*SC|TRECHO\s*MRS|TRONCO\s*SUL|UP\s*-\s*NORTE/i; let base=APREENSOES.filter(function(r){ return !EXCL.test(r.tre||''); }); const ks=Object.keys(_prFilters); if(!ks.length) return base; return base.filter(function(r){ return ks.every(function(k){ return (r[k]==null?'':String(r[k])).trim()===_prFilters[k]; }); }); }
 function prApply(field,value){ if(value==null||value==='') return; if(_prFilters[field]===value) delete _prFilters[field]; else _prFilters[field]=value; renderProdutoRecuperado(); }
 function prRemove(field){ delete _prFilters[field]; renderProdutoRecuperado(); }
 function prClear(){ _prFilters={}; renderProdutoRecuperado(); }
@@ -1555,6 +1555,7 @@ applyFilters();
 </script>
 </body>
 </html>
+
 
 
 
