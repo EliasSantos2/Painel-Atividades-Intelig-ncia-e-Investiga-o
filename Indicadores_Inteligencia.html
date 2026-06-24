@@ -462,6 +462,7 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
     <div class="cbox" style="margin:0 24px 24px"><div class="cbox-title"><i data-lucide="share-2"></i>Teia de Vínculos de Parentesco (mesma mãe ou mesmo pai)</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Mostra apenas grupos com 2+ infratores que compartilham um genitor. <span style="color:var(--navy2)">●</span> Infrator &nbsp; <span style="color:#C0392B">●</span> Mãe &nbsp; <span style="color:var(--orange)">●</span> Pai</div>
       <div id="inf-teia" style="height:560px;border:1px solid var(--border);border-radius:8px"></div>
+      <div id="inf-teia-info" style="margin-top:12px"></div>
     </div>
   </div>
 </div>
@@ -1430,8 +1431,38 @@ function infTeia(rows){
   if(_infNet){ _infNet.destroy(); _infNet=null; }
   if(nodes.size===0){ container.innerHTML='<div style="padding:20px;color:#888">Nenhum vínculo de parentesco (mãe/pai compartilhado por 2+ infratores) identificado.</div>'; return; }
   _infNet=new vis.Network(container,{nodes:new vis.DataSet([...nodes.values()]),edges:new vis.DataSet(edges)},{physics:{stabilization:true,barnesHut:{gravitationalConstant:-8000,springLength:110}},interaction:{hover:true},nodes:{borderWidth:0},edges:{smooth:false,width:1}});
+  _infNet.on('click',function(params){ if(params.nodes&&params.nodes.length){ const id=params.nodes[0]; if(id.slice(0,2)==='i:') infShowPessoa(id.slice(2)); else if(id.slice(0,2)==='m:'||id.slice(0,2)==='p:') infShowParent(id); } });
 }
 
+function infEsc(s){ return (s==null?'':String(s)).replace(/[&<>]/g,function(m){return ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m];}); }
+function infShowPessoa(nomeNorm){
+  if(!_infRows) return;
+  const recs=_infRows.filter(r=>_infNorm(r.nome)===nomeNorm);
+  if(!recs.length) return;
+  const p=recs[0];
+  const coords=recs.filter(r=>r.la&&r.lo).map(r=>r.la.toFixed(5)+', '+r.lo.toFixed(5));
+  let h='<div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px;box-shadow:var(--shadow)">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:15px;font-weight:700;color:var(--navy)">'+infEsc(p.nome)+'</span><button onclick="document.getElementById(\'inf-teia-info\').innerHTML=\'\'" style="background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:#888;font-size:12px;padding:2px 8px">fechar X</button></div>';
+  h+='<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  const row=function(l,v){ return v?('<tr><td style="color:#888;padding:2px 10px 2px 0;white-space:nowrap;vertical-align:top">'+l+'</td><td style="padding:2px 0;color:#1a2740">'+infEsc(v)+'</td></tr>'):''; };
+  h+=row('Organizacao',p.org)+row('Nome da Mae',p.mae)+row('Nome do Pai',p.pai)+row('Coordenadas',[...new Set(coords)].join('  |  '));
+  h+='</table>';
+  h+='<div style="font-size:11px;font-weight:700;color:var(--navy);margin:12px 0 4px;text-transform:uppercase;letter-spacing:.5px">Ocorrencias ('+recs.length+')</div>';
+  h+='<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:#888;text-align:left;border-bottom:1px solid var(--border)"><th style="padding:4px 8px 4px 0">Status</th><th style="padding:4px 8px 4px 0">Organizacao</th><th style="padding:4px 8px 4px 0">Cidade</th><th style="padding:4px 8px 4px 0">Trecho</th></tr></thead><tbody>';
+  recs.forEach(function(r){ h+='<tr style="border-bottom:1px solid #f0f3f8"><td style="padding:3px 8px 3px 0">'+infEsc(r.status)+'</td><td style="padding:3px 8px 3px 0">'+infEsc(r.org)+'</td><td style="padding:3px 8px 3px 0">'+infEsc(r.cidade)+'</td><td style="padding:3px 8px 3px 0">'+infEsc(r.trecho)+'</td></tr>'; });
+  h+='</tbody></table></div>';
+  document.getElementById('inf-teia-info').innerHTML=h;
+}
+function infShowParent(id){
+  if(!_infRows) return;
+  const ehMae=id.charAt(0)==='m'; const nome=id.slice(2); const tipo=ehMae?'Mae':'Pai';
+  const filhos=[]; const seen={};
+  _infRows.forEach(function(r){ const par=_infNorm(ehMae?r.mae:r.pai); if(par===nome){ const k=_infNorm(r.nome); if(k&&!seen[k]){ seen[k]=1; filhos.push(r.nome); } } });
+  let h='<div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px;box-shadow:var(--shadow)">';
+  h+='<div style="font-size:14px;font-weight:700;color:var(--navy)">'+tipo+': '+infEsc(nome)+'</div>';
+  h+='<div style="font-size:12px;color:#555;margin-top:8px"><b>'+filhos.length+'</b> infrator(es) vinculado(s):<br>'+filhos.map(infEsc).join(' &nbsp;|&nbsp; ')+'</div></div>';
+  document.getElementById('inf-teia-info').innerHTML=h;
+}
 // Init
 lucide.createIcons();
 // Ensure year field populated from date string
@@ -1440,6 +1471,8 @@ applyFilters();
 </script>
 </body>
 </html>
+
+
 
 
 
