@@ -13,8 +13,8 @@
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<script src="infratores_enc.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -445,12 +445,10 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
 <div id="tab-infratores" class="tab-content">
   <div id="inf-login" style="max-width:380px;margin:48px auto;background:#fff;border:1px solid var(--border);border-radius:12px;padding:30px 28px;box-shadow:var(--shadow)">
     <h3 style="margin:0 0 4px;color:var(--navy);font-size:18px"><i data-lucide="lock" style="width:16px;height:16px;vertical-align:-2px"></i> Acesso Restrito</h3>
-    <p style="margin:0 0 18px;font-size:12px;color:var(--muted)">Esta aba contém dados pessoais protegidos. Autentique-se para visualizar.</p>
-    <label style="font-size:12px;font-weight:600;color:var(--muted)">E-mail</label>
-    <input id="inf-email" type="email" autocomplete="username" style="width:100%;box-sizing:border-box;padding:9px 11px;margin:4px 0 12px;border:1.5px solid var(--border);border-radius:7px;font-size:13px">
-    <label style="font-size:12px;font-weight:600;color:var(--muted)">Senha</label>
-    <input id="inf-pass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')infLogin()" style="width:100%;box-sizing:border-box;padding:9px 11px;margin:4px 0 14px;border:1.5px solid var(--border);border-radius:7px;font-size:13px">
-    <button onclick="infLogin()" style="width:100%;padding:10px;background:var(--navy);color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer">Entrar</button>
+    <p style="margin:0 0 18px;font-size:12px;color:var(--muted)">Esta aba contém dados pessoais protegidos. Informe a senha para desbloquear.</p>
+<label style="font-size:12px;font-weight:600;color:var(--muted)">Senha</label>
+    <input id="inf-pass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')infUnlock()" style="width:100%;box-sizing:border-box;padding:9px 11px;margin:4px 0 14px;border:1.5px solid var(--border);border-radius:7px;font-size:13px">
+    <button onclick="infUnlock()" style="width:100%;padding:10px;background:var(--navy);color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer">Desbloquear</button>
     <div id="inf-login-err" style="color:#C0392B;font-size:12px;margin-top:10px;min-height:14px"></div>
   </div>
   <div id="inf-dash" style="display:none">
@@ -1369,60 +1367,32 @@ function renderProdutoRecuperado(){
   }
 }
 
-// ── INFRATORES (protegido por login Supabase; dados NÃO ficam no repositório) ──
-const INF_SB_URL='https://rfwmklqzlfvllsrkvgob.supabase.co';
-const INF_SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmd21rbHF6bGZ2bGxzcmt2Z29iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzg4NzIsImV4cCI6MjA5NzgxNDg3Mn0.xwJItVzF3jW46BtMQBLSNj3rT64G0dybPZQZ_k-QlTM';
-let _infSb=null,_infSession=null,_infLoaded=false,_infMap=null,_infNet=null;
-function infSb(){ if(_infSb) return _infSb; if(typeof supabase==='undefined') return null; _infSb=supabase.createClient(INF_SB_URL,INF_SB_KEY); return _infSb; }
+// ── INFRATORES (dados criptografados; destrava por SENHA no navegador) ────────
+let _infRows=null,_infMap=null,_infNet=null;
 function _infNorm(s){ return (s==null?'':s).toString().trim().toUpperCase(); }
-async function infOpen(){
-  const c=infSb(); const errEl=document.getElementById('inf-login-err');
-  if(!c){ if(errEl) errEl.textContent='Backend indisponível.'; return; }
-  if(!_infSession){ try{ const {data}=await c.auth.getSession(); _infSession=data.session||null; }catch(e){} }
-  if(_infSession){ document.getElementById('inf-login').style.display='none'; document.getElementById('inf-dash').style.display='block'; infLoad(); }
-  else { document.getElementById('inf-login').style.display='block'; document.getElementById('inf-dash').style.display='none'; }
+function infOpen(){
+  if(_infRows){ document.getElementById('inf-login').style.display='none'; document.getElementById('inf-dash').style.display='block'; setTimeout(()=>{ if(_infMap) _infMap.invalidateSize(); },150); }
+  else { document.getElementById('inf-login').style.display='block'; document.getElementById('inf-dash').style.display='none'; setTimeout(()=>{ const p=document.getElementById('inf-pass'); if(p) p.focus(); },120); }
 }
-async function infLogin(){
-  const c=infSb(); const err=document.getElementById('inf-login-err');
-  if(!c){ err.textContent='Backend indisponível.'; return; }
-  const email=document.getElementById('inf-email').value.trim(), pass=document.getElementById('inf-pass').value;
-  if(!email||!pass){ err.textContent='Informe e-mail e senha.'; return; }
-  err.textContent='Entrando…';
-  const {data,error}=await c.auth.signInWithPassword({email,password:pass});
-  if(error){ err.textContent='Falha: '+error.message; return; }
-  _infSession=data.session; err.textContent=''; document.getElementById('inf-pass').value=''; infOpen();
-}
-async function infLogout(){ const c=infSb(); if(c){ try{ await c.auth.signOut(); }catch(e){} } _infSession=null; _infLoaded=false; infOpen(); }
-async function infLoad(){
-  if(_infLoaded){ setTimeout(()=>{ if(_infMap) _infMap.invalidateSize(); },150); return; }
-  const c=infSb(); if(!c||!_infSession) return;
-  let rows=[];
+async function infUnlock(){
+  const err=document.getElementById('inf-login-err');
+  const pass=document.getElementById('inf-pass').value;
+  if(!pass){ err.textContent='Informe a senha.'; return; }
+  if(typeof INFRATORES_ENC==='undefined'){ err.textContent='Dados cifrados não carregados.'; return; }
+  err.textContent='Descriptografando…';
   try{
-    const resp=await c.from('infratores').select('*',{count:'exact'}).limit(5000);
-    if(resp.error) throw resp.error;
-    rows=resp.data||[];
-    console.log('[infratores] linhas=',rows.length,'count=',resp.count,'colunas=',rows[0]?Object.keys(rows[0]):'(vazio)');
-  }catch(e){
-    console.error(e);
-    document.getElementById('inf-teia').innerHTML='<div style="padding:20px;color:#C0392B"><b>Erro ao consultar:</b> '+(e.message||e)+'</div>';
-    return;
-  }
-  if(rows.length===0){
-    ['inf-cad','inf-preso','inf-cond'].forEach(i=>{const el=document.getElementById(i);if(el)el.textContent='0';});
-    document.getElementById('inf-teia').innerHTML='<div style="padding:20px;color:#C0392B;line-height:1.6">'
-      +'<b>0 registros retornados.</b> Verifique no Supabase:<br>'
-      +'1) O CSV foi importado na tabela <b>infratores</b>? (Table Editor deve mostrar as linhas)<br>'
-      +'2) Existe a policy de <b>SELECT</b> para o papel <b>authenticated</b>? Sem policy, o RLS retorna vazio sem erro.<br>'
-      +'3) A tabela está no schema <b>public</b>?</div>';
-    return;
-  }
-  // normaliza nomes de coluna (minúsculas) e converte coordenadas para número
-  rows=rows.map(r=>{ const o={}; for(const k in r){ o[(''+k).toLowerCase()]=r[k]; }
-    o.la=(o.la!=null&&o.la!=='')?parseFloat(o.la):null; if(isNaN(o.la))o.la=null;
-    o.lo=(o.lo!=null&&o.lo!=='')?parseFloat(o.lo):null; if(isNaN(o.lo))o.lo=null;
-    return o; });
-  _infLoaded=true; infRender(rows);
+    const raw=Uint8Array.from(atob(INFRATORES_ENC), c=>c.charCodeAt(0));
+    const salt=raw.slice(8,16), ct=raw.slice(16);
+    const km=await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveBits']);
+    const bits=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:salt,iterations:200000,hash:'SHA-256'}, km, 384));
+    const key=await crypto.subtle.importKey('raw', bits.slice(0,32), {name:'AES-CBC'}, false, ['decrypt']);
+    const pt=await crypto.subtle.decrypt({name:'AES-CBC',iv:bits.slice(32,48)}, key, ct);
+    _infRows=JSON.parse(new TextDecoder().decode(pt));
+    document.getElementById('inf-pass').value=''; err.textContent='';
+    infOpen(); infRender(_infRows);
+  }catch(e){ console.warn('decrypt',e); err.textContent='Senha incorreta.'; }
 }
+function infLogout(){ _infRows=null; infOpen(); }
 function infRender(rows){
   const byNome={};
   rows.forEach(r=>{ const k=_infNorm(r.nome); if(!k) return; (byNome[k]=byNome[k]||[]).push(r); });
@@ -1470,6 +1440,9 @@ applyFilters();
 </script>
 </body>
 </html>
+
+
+
 
 
 
