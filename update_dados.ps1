@@ -16,6 +16,8 @@ Add-Type -AssemblyName System.Web
 $boletinsPath  = "C:\Users\risco\OneDrive\Núcleo de Inteligência\15 - DASHBOARD\Planilha\Controle de Boletins (2).xlsx"
 $processosPath = "C:\Users\risco\OneDrive\Núcleo de Inteligência\15 - DASHBOARD\Planilha\Controle geral de processos.xlsx"
 $circPath      = "C:\Users\risco\OneDrive\Núcleo de Inteligência\15 - DASHBOARD\Planilha\Indicadores de Circulacao.xlsx"
+$infratorPath  = "C:\Users\risco\OneDrive\Núcleo de Inteligência\15 - DASHBOARD\Planilha\Controle de Infrator.xlsx"
+$infratorCsv   = "C:\Users\risco\OneDrive\Núcleo de Inteligência\15 - DASHBOARD\Planilha\infratores_supabase.csv"
 $outDir        = $PSScriptRoot
 
 # ── COPIA ARQUIVOS (evita lock do Excel) ────────────────────
@@ -356,6 +358,35 @@ try{
 
 $indHtml | Out-File "$outDir\Indicadores_Inteligencia.html" -Encoding utf8
 Log "Indicadores_Inteligencia.html atualizado (COORDS: $($coords.Count), PROCS: $($procsArr.Count), APREENSOES: $($apre.Count))"
+
+# ── INFRATORES — regenera CSV para importacao no Supabase (NAO vai pro repo) ──
+try{
+  if(Test-Path $infratorPath){
+    $tmpInf="$env:TEMP\infrator_update.xlsx"; Copy-Item $infratorPath $tmpInf -Force
+    $xlI=New-Object -ComObject Excel.Application; $xlI.Visible=$false; $xlI.DisplayAlerts=$false
+    $wbI=$xlI.Workbooks.Open($tmpInf,0,$true); $wsI=$wbI.Sheets.Item(1)
+    $nI=$wsI.UsedRange.Rows.Count
+    $dI=$wsI.Range("A1").Resize($nI,40).Value2
+    $outI=New-Object System.Collections.Generic.List[object]
+    for($r=2;$r -le $nI;$r++){
+      $nome="$($dI[$r,2])".Trim(); if(-not $nome){ continue }
+      $la=$null;$lo=$null
+      $coord="$($dI[$r,25])".Trim()
+      if($coord -match '-?\d+\.\d+\s*,\s*-?\d+\.\d+'){
+        $parts=$coord -split '[,\s]+' | Where-Object{$_ -match '^-?\d+\.\d+$'}
+        if($parts.Count -ge 2){ try{ $a=[double]$parts[0];$b=[double]$parts[1]; if($a -gt -35 -and $a -lt 5 -and $b -gt -75 -and $b -lt -30){ $la=$a;$lo=$b } }catch{} }
+      }
+      $dt=''; $rawd=$dI[$r,5]
+      if($rawd -ne $null){ if($rawd -is [double]){ try{ $dt=([DateTime]::FromOADate($rawd)).ToString('dd/MM/yyyy') }catch{ $dt="$rawd" } } else { $dt="$rawd".Trim() } }
+      $outI.Add([pscustomobject]@{
+        nome=$nome; status="$($dI[$r,4])".Trim(); org="$($dI[$r,3])".Trim(); cidade="$($dI[$r,16])".Trim(); trecho="$($dI[$r,18])".Trim(); dt=$dt; la=$la; lo=$lo; mae="$($dI[$r,33])".Trim(); pai="$($dI[$r,34])".Trim(); cpf="$($dI[$r,30])".Trim(); bo="$($dI[$r,6])".Trim()
+      })
+    }
+    $wbI.Close($false); $xlI.Quit(); [System.Runtime.Interopservices.Marshal]::ReleaseComObject($xlI)|Out-Null
+    $outI | Export-Csv -Path $infratorCsv -NoTypeInformation -Encoding UTF8
+    Log "CSV de infratores regenerado: $($outI.Count) registros ($infratorCsv)"
+  } else { Log "Planilha de infratores não encontrada — CSV mantido" }
+}catch{ Log "Falha ao gerar CSV de infratores: $($_.Exception.Message)" }
 
 # ── GIT PUSH ──────────────────────────────────────────────────
 Set-Location $outDir
