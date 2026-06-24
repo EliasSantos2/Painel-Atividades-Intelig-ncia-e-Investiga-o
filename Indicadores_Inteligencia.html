@@ -1396,12 +1396,12 @@ function _cirBar(id, meses, ind){
     else if(proj[m]!=null){ v26[m]=proj[m]; c26[m]='#C0392B'; }
     else { v26[m]=null; c26[m]='#003865'; }
   }
-  const fmtL=v=>{ if(v==null) return ''; const a=Math.abs(v); if(a>=1000) return (v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k'; return (Number.isInteger(v)?v:Number(v).toLocaleString('pt-BR',{maximumFractionDigits:2})); };
+  const fmtL=v=>{ if(v==null) return ''; return Number.isInteger(v)? v.toLocaleString('pt-BR') : Number(v).toLocaleString('pt-BR',{maximumFractionDigits:2}); };
   _cirDestroy(id);
   _cirCharts[id]=new Chart(el,{
     type:'bar',
     data:{labels:meses,datasets:[
-      {label:'2025',data:y25,backgroundColor:'#5B8DB8',borderRadius:2,maxBarThickness:26},
+      {label:'2025',data:y25,backgroundColor:'#009A44',borderRadius:2,maxBarThickness:26},
       {label:String(A),data:v26,backgroundColor:c26,borderRadius:2,maxBarThickness:26}
     ]},
     plugins:[ChartDataLabels],
@@ -1409,7 +1409,7 @@ function _cirBar(id, meses, ind){
       plugins:{
         legend:{display:true,position:'top',labels:{boxWidth:10,font:{size:10},color:'#1a2740'}},
         tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toLocaleString('pt-BR'):'—')}},
-        datalabels:{display:true,anchor:'end',align:'end',rotation:-90,offset:2,clamp:true,font:{size:8,weight:'600'},color:'#3a4a5e',formatter:fmtL}
+        datalabels:{display:true,anchor:'end',align:'end',rotation:0,offset:3,clamp:true,font:{size:9,weight:'600',family:"'Plus Jakarta Sans',sans-serif"},color:'#3a4a5e',formatter:fmtL}
       },
       layout:{padding:{top:20}},
       scales:{x:{grid:{display:false},ticks:{color:'#5a6e8a',font:{size:10}}},y:{grid:{color:'#EBF0F8'},ticks:{color:'#5a6e8a',font:{size:9}},beginAtZero:true}}}
@@ -1436,6 +1436,7 @@ applyFilters();
 </script>
 </body>
 </html>
+
 
 
 
