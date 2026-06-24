@@ -453,10 +453,11 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
   </div>
   <div id="inf-dash" style="display:none">
     <div style="display:flex;justify-content:flex-end;padding:8px 24px 0"><button onclick="infLogout()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer">Sair</button></div>
+    <div id="inf-filtros" style="padding:6px 24px 0"></div>
     <div class="kpis" style="grid-template-columns:repeat(5,1fr)">
       <div class="kpi k3"><i data-lucide="users-round" style="color:var(--navy2);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Infratores Cadastrados</div><div class="kpi-val" id="inf-cad">—</div><div class="kpi-sub">indivíduos distintos</div></div>
-      <div class="kpi k2"><i data-lucide="shield-alert" style="color:var(--red);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Presos</div><div class="kpi-val" id="inf-preso" style="color:var(--red)">—</div><div class="kpi-sub">status PRESO</div></div>
-      <div class="kpi k1"><i data-lucide="footprints" style="color:var(--orange);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Conduzidos</div><div class="kpi-val" id="inf-cond" style="color:var(--orange)">—</div><div class="kpi-sub">status CONDUZIDO</div></div><div class="kpi k4"><i data-lucide="user-search" style="color:var(--green);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Abordados</div><div class="kpi-val" id="inf-abord">—</div><div class="kpi-sub">status ABORDADO</div></div><div class="kpi" style="border-top-color:#8e44ad"><i data-lucide="id-card" style="color:#8e44ad;width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Investigados</div><div class="kpi-val" id="inf-ident" style="color:#8e44ad">—</div><div class="kpi-sub">status IDENTIFICADO</div></div>
+      <div class="kpi k2" style="cursor:pointer" title="Filtrar por PRESO" onclick="infApplyClick('status','PRESO')"><i data-lucide="shield-alert" style="color:var(--red);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Presos</div><div class="kpi-val" id="inf-preso" style="color:var(--red)">—</div><div class="kpi-sub">status PRESO</div></div>
+      <div class="kpi k1" style="cursor:pointer" title="Filtrar por CONDUZIDO" onclick="infApplyClick('status','CONDUZIDO')"><i data-lucide="footprints" style="color:var(--orange);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Conduzidos</div><div class="kpi-val" id="inf-cond" style="color:var(--orange)">—</div><div class="kpi-sub">status CONDUZIDO</div></div><div class="kpi k4" style="cursor:pointer" title="Filtrar por ABORDADO" onclick="infApplyClick('status','ABORDADO')"><i data-lucide="user-search" style="color:var(--green);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Abordados</div><div class="kpi-val" id="inf-abord">—</div><div class="kpi-sub">status ABORDADO</div></div><div class="kpi" style="border-top-color:#8e44ad;cursor:pointer" title="Filtrar por IDENTIFICADO" onclick="infApplyClick('status','IDENTIFICADO')"><i data-lucide="id-card" style="color:#8e44ad;width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Investigados</div><div class="kpi-val" id="inf-ident" style="color:#8e44ad">—</div><div class="kpi-sub">status IDENTIFICADO</div></div>
     </div>
     <div class="cbox" style="margin:0 24px 20px"><div class="cbox-title"><i data-lucide="map-pin"></i>Área de Atuação</div><div id="inf-mapa" style="height:460px;border-radius:8px;overflow:hidden"></div></div>
   <div class="section-header"><h2><i data-lucide="bar-chart-2" style="display:inline;vertical-align:middle;width:16px;height:16px;color:var(--orange)"></i> Análise dos Infratores</h2><div class="sh-line"></div></div>
@@ -1412,7 +1413,7 @@ async function infUnlock(){
     const _obj=JSON.parse(new TextDecoder().decode(pt));
     if(Array.isArray(_obj)){ _infRows=_obj; _infBo={}; } else { _infRows=_obj.infratores||[]; _infBo=_obj.bo||{}; }
     document.getElementById('inf-pass').value=''; err.textContent='';
-    infOpen(); infRender(_infRows);
+    _infFilters={}; infOpen(); infRedraw();
   }catch(e){ console.warn('decrypt',e); err.textContent='Senha incorreta.'; }
 }
 function infLogout(){ _infRows=null; infOpen(); }
@@ -1469,24 +1470,40 @@ function infFichaHtml(r){
   return h;
 }
 const _infCharts={};
-function _infBar(id,pairs,horizontal){ const el=document.getElementById(id); if(!el)return; if(_infCharts[id]){_infCharts[id].destroy();delete _infCharts[id];} _infCharts[id]=new Chart(el,{type:'bar',data:{labels:pairs.map(function(p){return p[0];}),datasets:[{data:pairs.map(function(p){return p[1];}),backgroundColor:'#005CA9',borderRadius:3,maxBarThickness:horizontal?16:34}]},options:{responsive:true,indexAxis:horizontal?'y':'x',plugins:{legend:{display:false}},scales:{x:{grid:{color:'#EBF0F8'},ticks:{color:'#5a6e8a',font:{size:10}}},y:{grid:{display:false},ticks:{color:'#1a2740',font:{size:10}}}}}}); }
+function _infBar(id,pairs,horizontal,field){ const el=document.getElementById(id); if(!el)return; if(_infCharts[id]){_infCharts[id].destroy();delete _infCharts[id];} _infCharts[id]=new Chart(el,{type:'bar',data:{labels:pairs.map(function(p){return p[0];}),datasets:[{data:pairs.map(function(p){return p[1];}),backgroundColor:'#005CA9',borderRadius:3,maxBarThickness:horizontal?16:34}]},options:{responsive:true,onClick:function(e,els){ if(els&&els.length&&field){ infApplyClick(field, pairs[els[0].index][0]); } },indexAxis:horizontal?'y':'x',plugins:{legend:{display:false}},scales:{x:{grid:{color:'#EBF0F8'},ticks:{color:'#5a6e8a',font:{size:10}}},y:{grid:{display:false},ticks:{color:'#1a2740',font:{size:10}}}}}}); }
 function _infCount(rows,key,topN){ const m={}; rows.forEach(function(r){ const v=(r[key]==null?'':String(r[key])).trim(); if(v) m[v]=(m[v]||0)+1; }); let a=Object.entries(m).sort(function(x,y){return y[1]-x[1];}); if(topN) a=a.slice(0,topN); return a; }
 function infChartsRender(rows){
-  _infBar('inf-ch-artigo', _infCount(rows,'artigo',12), true);
-  _infBar('inf-ch-circ', _infCount(rows,'circ',12), true);
-  _infBar('inf-ch-cidade', _infCount(rows,'cidade',12), true);
-  _infBar('inf-ch-trecho', _infCount(rows,'trecho',12), false);
-  _infBar('inf-ch-tipo', _infCount(rows,'tipo',12), true);
-  _infBar('inf-ch-subtipo', _infCount(rows,'subtipo',12), true);
+  _infBar('inf-ch-artigo', _infCount(rows,'artigo',12), true, 'artigo');
+  _infBar('inf-ch-circ', _infCount(rows,'circ',12), true, 'circ');
+  _infBar('inf-ch-cidade', _infCount(rows,'cidade',12), true, 'cidade');
+  _infBar('inf-ch-trecho', _infCount(rows,'trecho',12), false, 'trecho');
+  _infBar('inf-ch-tipo', _infCount(rows,'tipo',12), true, 'tipo');
+  _infBar('inf-ch-subtipo', _infCount(rows,'subtipo',12), true, 'subtipo');
   infRanking(rows);
 }
 function infRanking(rows){
   const m={}; rows.forEach(function(r){ const k=_infNorm(r.nome); if(k){ if(!m[k])m[k]={nome:r.nome,n:0}; m[k].n++; } });
   const rank=Object.keys(m).map(function(k){return m[k];}).sort(function(a,b){return b.n-a.n;}).slice(0,25);
   let h='<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:#888;text-align:left;border-bottom:1px solid var(--border)"><th style="padding:4px 8px 4px 0">#</th><th style="padding:4px 8px 4px 0">Nome</th><th style="padding:4px 0;text-align:right">Aparições</th></tr></thead><tbody>';
-  rank.forEach(function(x,i){ h+='<tr style="border-bottom:1px solid #f0f3f8"><td style="padding:3px 8px 3px 0;color:#888">'+(i+1)+'</td><td style="padding:3px 8px 3px 0">'+infEsc(x.nome)+'</td><td style="padding:3px 0;text-align:right;font-weight:700;color:var(--navy)">'+x.n+'</td></tr>'; });
+  rank.forEach(function(x,i){ h+='<tr style="border-bottom:1px solid #f0f3f8;cursor:pointer" title="Filtrar por este nome" onclick="infApplyClick(&quot;nome&quot;,this.getAttribute(&quot;data-n&quot;))" data-n="'+infEsc(x.nome)+'"><td style="padding:3px 8px 3px 0;color:#888">'+(i+1)+'</td><td style="padding:3px 8px 3px 0">'+infEsc(x.nome)+'</td><td style="padding:3px 0;text-align:right;font-weight:700;color:var(--navy)">'+x.n+'</td></tr>'; });
   h+='</tbody></table>';
   const el=document.getElementById('inf-ranking'); if(el) el.innerHTML=h;
+}
+let _infFilters={};
+function infFilteredRows(){ if(!_infRows) return []; const ks=Object.keys(_infFilters); if(!ks.length) return _infRows; return _infRows.filter(function(r){ return ks.every(function(k){ return (r[k]==null?'':String(r[k])).trim()===_infFilters[k]; }); }); }
+function infApplyClick(field,value){ if(value==null||value==='') return; if(_infFilters[field]===value){ delete _infFilters[field]; } else { _infFilters[field]=value; } infRedraw(); }
+function infRemoveFilter(field){ delete _infFilters[field]; infRedraw(); }
+function infClearFilters(){ _infFilters={}; infRedraw(); }
+function infRedraw(){ if(!_infRows) return; infRender(infFilteredRows()); infChips(); }
+function infChips(){
+  const el=document.getElementById('inf-filtros'); if(!el) return;
+  const ks=Object.keys(_infFilters);
+  if(!ks.length){ el.innerHTML=''; return; }
+  const lbls={artigo:'Artigo',circ:'Circunscrição',cidade:'Cidade',trecho:'Trecho',tipo:'Tipo',subtipo:'Subtipo',status:'Status',nome:'Nome'};
+  let h='<span style="font-size:12px;color:#888;margin-right:6px">Filtros ativos:</span>';
+  ks.forEach(function(k){ h+='<span style="display:inline-block;background:var(--navy);color:#fff;border-radius:14px;padding:3px 10px;margin:2px 6px 2px 0;font-size:12px">'+(lbls[k]||k)+': '+infEsc(_infFilters[k])+' <span style="cursor:pointer;font-weight:700" onclick="infRemoveFilter(&quot;'+k+'&quot;)">&times;</span></span>'; });
+  h+='<button onclick="infClearFilters()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 12px;font-size:12px;cursor:pointer;color:var(--navy)">Limpar tudo</button>';
+  el.innerHTML=h;
 }
 function infEsc(s){ return (s==null?'':String(s)).replace(/[&<>]/g,function(m){return ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m];}); }
 const INF_CAMPOS_OCC=INF_CAMPOS.concat([['coord','Coordenadas']]);
@@ -1521,6 +1538,9 @@ applyFilters();
 </script>
 </body>
 </html>
+
+
+
 
 
 
