@@ -1526,23 +1526,36 @@ function infEsc(s){ return (s==null?'':String(s)).replace(/[&<>]/g,function(m){r
 const INF_CAMPOS_OCC=INF_CAMPOS.concat([['coord','Coordenadas']]);
 const INF_CAMPOS_BOL=[['data','Data'],['hora','Hora'],['classif','Classificação'],['crime','Crime'],['artigo','Artigo'],['natureza','Natureza'],['tipo','Tipo'],['subtipo','Subtipo'],['espec','Especificação'],['circ','Circunscrição'],['cidade','Cidade'],['uf','UF'],['trecho','Trecho'],['sb','SB'],['km','KM'],['comp','Composição'],['empresa','Empresa'],['maquinista','Maquinista'],['autoria','Autoria'],['thp','THP']];
 const INF_CAMPOS_PROC=[['ano','Ano'],['proc','Procedimento'],['num','Número'],['dp','DP'],['vara','Vara'],['andamento','Último Andamento'],['sigilo','Quebra de Sigilo']];
-function infKvTable(campos,obj){ if(!obj) return '<div style="color:#aaa;font-size:11px;padding:4px 0">— sem registro —</div>'; let h='<table style="width:100%;border-collapse:collapse;font-size:11px">'; let any=false; campos.forEach(function(c){ const v=obj[c[0]]; if(v){ any=true; h+='<tr><td style="color:#888;padding:1px 8px 1px 0;white-space:nowrap;vertical-align:top">'+c[1]+'</td><td style="padding:1px 0;color:#1a2740">'+infEsc(v)+'</td></tr>'; } }); h+='</table>'; return any?h:'<div style="color:#aaa;font-size:11px;padding:4px 0">— sem dados —</div>'; }
+function infStatusBadge(s){ const u=(s||'').toUpperCase(); const map={'PRESO':'#C0392B','CONDUZIDO':'#F78344','ABORDADO':'#1a9e57','IDENTIFICADO':'#8e44ad','CADASTRADO':'#005CA9'}; const c=map[u]||'#5a6e8a'; return '<span style="display:inline-block;background:'+c+';color:#fff;border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;letter-spacing:.3px">'+infEsc(s||'—')+'</span>'; }
+function infKvTable(campos,obj){
+  if(!obj) return '<div style="color:#b0b8c4;font-size:11px;padding:8px 2px;font-style:italic">— sem registro —</div>';
+  let h='<table style="width:100%;border-collapse:collapse;font-size:11.5px">'; let any=false; let i=0;
+  campos.forEach(function(c){ const v=obj[c[0]]; if(v){ any=true; const bg=(i++%2===0)?'#ffffff':'#f5f8fc'; h+='<tr style="background:'+bg+'"><td style="color:#7a8699;padding:4px 10px 4px 8px;white-space:nowrap;vertical-align:top;font-weight:600;width:40%">'+c[1]+'</td><td style="padding:4px 8px;color:#1a2740;border-left:1px solid #eef2f7">'+infEsc(v)+'</td></tr>'; } });
+  h+='</table>';
+  return any?h:'<div style="color:#b0b8c4;font-size:11px;padding:8px 2px;font-style:italic">— sem dados —</div>';
+}
 function infBlocoOcorrencia(r,idx){
   const bo=r.bo||''; const cross=(bo&&_infBo[bo])?_infBo[bo]:{};
   const coord=(r.la&&r.lo)?(Number(r.la).toFixed(5)+', '+Number(r.lo).toFixed(5)):'';
   const occ=Object.assign({},r,{coord:coord});
-  let h='<div style="border:1px solid var(--border);border-radius:8px;margin-bottom:14px;overflow:hidden">';
-  h+='<div style="background:#f0f4fa;padding:8px 12px;font-weight:700;color:var(--navy);font-size:13px">Ocorrência'+(idx?(' '+idx):'')+(bo?(' — B.O '+infEsc(bo)):'')+(r.status?(' · '+infEsc(r.status)):'')+'</div>';
-  h+='<div style="padding:10px 12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">';
-  h+='<div><div style="font-size:10px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Controle de Infrator</div>'+infKvTable(INF_CAMPOS_OCC,occ)+'</div>';
-  h+='<div><div style="font-size:10px;font-weight:700;color:var(--navy2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Controle de Boletins</div>'+infKvTable(INF_CAMPOS_BOL,cross.boletim)+'</div>';
-  h+='<div><div style="font-size:10px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Controle Geral de Processos</div>'+infKvTable(INF_CAMPOS_PROC,cross.proc)+'</div>';
+  const col=function(titulo,cor,icon,conteudo){ return '<div style="flex:1;min-width:230px;background:#fbfcfe;border:1px solid #e6ecf4;border-radius:10px;padding:12px 14px">'
+    +'<div style="display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;color:'+cor+';text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;padding-bottom:7px;border-bottom:2px solid '+cor+'33">'+icon+' '+titulo+'</div>'+conteudo+'</div>'; };
+  let h='<div style="border:1px solid #e0e7f0;border-radius:12px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 5px rgba(0,40,80,.06)">';
+  h+='<div style="background:linear-gradient(90deg,#003865,#005CA9);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+    +'<span style="font-weight:700;color:#fff;font-size:13px">Ocorrência'+(idx?(' '+idx):'')+(bo?(' &nbsp;·&nbsp; B.O '+infEsc(bo)):'')+'</span>'+infStatusBadge(r.status)+'</div>';
+  h+='<div style="padding:14px;display:flex;flex-wrap:wrap;gap:14px">';
+  h+=col('Controle de Infrator','#F78344','📋',infKvTable(INF_CAMPOS_OCC,occ));
+  h+=col('Controle de Boletins','#005CA9','📄',infKvTable(INF_CAMPOS_BOL,cross.boletim));
+  h+=col('Controle Geral de Processos','#C0392B','⚖️',infKvTable(INF_CAMPOS_PROC,cross.proc));
   h+='</div></div>';
   return h;
 }
 function infModalShow(title,html){ document.getElementById('inf-modal-title').textContent=title||'Detalhes'; document.getElementById('inf-modal-body').innerHTML=html; document.getElementById('inf-modal').style.display='flex'; }
 function infModalClose(){ document.getElementById('inf-modal').style.display='none'; }
-function infModalPessoa(nomeNorm){ if(!_infRows) return; const recs=_infRows.filter(r=>_infNorm(r.nome)===nomeNorm); if(!recs.length) return; const p=recs[0]; let h='<div style="font-size:12px;color:#555;margin-bottom:12px">Mãe: <b>'+infEsc(p.mae||'—')+'</b> &nbsp;·&nbsp; Pai: <b>'+infEsc(p.pai||'—')+'</b> &nbsp;·&nbsp; Ocorrências: <b>'+recs.length+'</b></div>'; recs.forEach(function(r,i){ h+=infBlocoOcorrencia(r,i+1); }); infModalShow(p.nome,h); }
+function infModalPessoa(nomeNorm){ if(!_infRows) return; const recs=_infRows.filter(r=>_infNorm(r.nome)===nomeNorm); if(!recs.length) return; const p=recs[0];
+  const chip=function(lbl,val){ return '<span style="display:inline-flex;align-items:center;gap:5px;background:#eef3f9;border:1px solid #dce6f2;border-radius:8px;padding:5px 12px;font-size:12px;color:#33465e"><span style="color:#7a8699;font-weight:600">'+lbl+'</span> <b style="color:#1a2740">'+infEsc(val)+'</b></span>'; };
+  let h='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">'+chip('Mãe',p.mae||'—')+chip('Pai',p.pai||'—')+chip('Ocorrências',String(recs.length))+'</div>';
+  recs.forEach(function(r,i){ h+=infBlocoOcorrencia(r,i+1); }); infModalShow(p.nome,h); }
 function infModalOcorrencia(r){ infModalShow(r.nome||'Ocorrência', infBlocoOcorrencia(r,0)); }
 function infShowPessoa(nomeNorm){ infModalPessoa(nomeNorm); }
 function infShowParent(id){ if(!_infRows) return; const ehMae=id.charAt(0)==='m'; const nome=id.slice(2); const tipo=ehMae?'Mãe':'Pai'; const filhos=[]; const seen={}; _infRows.forEach(function(r){ const par=_infNorm(ehMae?r.mae:r.pai); if(par===nome){ const k=_infNorm(r.nome); if(k&&!seen[k]){ seen[k]=1; filhos.push(r.nome); } } }); let h='<div style="font-size:12px;color:#666">'+filhos.length+' infrator(es) vinculado(s):</div><ul style="margin:8px 0 0;padding-left:18px;font-size:13px">'+filhos.map(function(n){return '<li>'+infEsc(n)+'</li>';}).join('')+'</ul>'; infModalShow(tipo+': '+nome, h); }
