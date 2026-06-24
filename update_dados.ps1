@@ -306,42 +306,52 @@ $cot=[ordered]@{
 $cotJson=$cot | ConvertTo-Json -Compress -Depth 4
 $indHtml = [regex]::Replace($indHtml, 'const COTACOES = \{.*?\};', "const COTACOES = $cotJson;", [System.Text.RegularExpressions.RegexOptions]::Singleline)
 
-# ── INDICADORES DE CIRCULAÇÃO ──────────────────────────────────────────────────
+# ── INDICADORES DE CIRCULAÇÃO (aba "MES A MES DASH" do acompanhamento de vandalismo) ──
+# Fonte: pasta "Indicadores de Segurança Baixada" — pega o arquivo do ano mais recente.
 try{
-  if(Test-Path $circPath){
-    $tmpCirc="$env:TEMP\circ_update.xlsx"; Copy-Item $circPath $tmpCirc -Force
+  $circDir = "C:\Users\risco\OneDrive\Núcleo de Inteligência\15 - DASHBOARD\Planilha\Indicadores de Segurança Baixada"
+  $circFile = $null
+  if(Test-Path $circDir){
+    $circFile = Get-ChildItem -Path $circDir -Recurse -Include *.xlsm,*.xlsx -ErrorAction SilentlyContinue |
+      Where-Object{ $_.Name -match 'ACOMPANHAMENTO' -and $_.Name -match '20\d\d' } |
+      Sort-Object { if($_.Name -match '(20\d\d)'){[int]$matches[1]}else{0} } -Descending |
+      Select-Object -First 1 -ExpandProperty FullName
+  }
+  if($circFile){
+    $tmpCirc="$env:TEMP\circ_update.xlsm"; Copy-Item $circFile $tmpCirc -Force
     $xlC=New-Object -ComObject Excel.Application; $xlC.Visible=$false; $xlC.DisplayAlerts=$false
-    $wbC=$xlC.Workbooks.Open($tmpCirc); $wsC=$wbC.Sheets.Item(1)
-    $nC=$wsC.UsedRange.Rows.Count
-    $dC=$wsC.Range("A1").Resize($nC,6).Value2
-    $mesIdx=@{ 'JAN'=0;'FEV'=1;'MAR'=2;'ABR'=3;'MAI'=4;'JUN'=5;'JUL'=6;'AGO'=7;'SET'=8;'OUT'=9;'NOV'=10;'DEZ'=11 }
-    $mapA=@{ 'THP MÊS'='thp';'VANDALISMO'='vandalismo';'CIRCULAÇÃO'='circulacao';'TAXA DE SUCESSO'='sucesso';'ABERTURA'='abertura';'DESCARGA DE VAGÕES'='descarga' }
-    $keysC=@('thp','vandalismo','circulacao','sucesso','abertura','descarga','taxaabert')
-    $indC=@{}; foreach($k in $keysC){ $indC[$k]=@{ anos=@{} } }
-    $anosSet=@{}
-    function EnsureC($k,$ano){ if(-not $indC[$k].anos.ContainsKey("$ano")){ $indC[$k].anos["$ano"]=@($null)*12 } }
-    for($r=2;$r -le $nC;$r++){
-      $ano="$($dC[$r,1])".Trim(); $mesN="$($dC[$r,2])".Trim().ToUpper(); $at="$($dC[$r,3])".Trim().ToUpper(); $q=$dC[$r,4]
-      if(-not $ano -or -not $mesN -or -not $at){ continue }
-      $m3=if($mesN.Length -ge 3){$mesN.Substring(0,3)}else{$mesN}
-      if(-not $mesIdx.ContainsKey($m3)){ continue }
-      if(-not $mapA.ContainsKey($at)){ continue }
-      $k=$mapA[$at]; $anosSet[$ano]=1; EnsureC $k $ano
-      $val=$null; if($q -ne $null){ try{ $val=[double]$q }catch{ $val=$null } }
-      $indC[$k].anos["$ano"][$mesIdx[$m3]]=$val
-    }
-    foreach($ano in $anosSet.Keys){
-      EnsureC 'taxaabert' $ano; EnsureC 'abertura' $ano; EnsureC 'descarga' $ano
-      for($m=0;$m -lt 12;$m++){ $a=$indC['abertura'].anos["$ano"][$m]; $de=$indC['descarga'].anos["$ano"][$m]
-        if($a -ne $null -and $de -ne $null -and $de -ne 0){ $indC['taxaabert'].anos["$ano"][$m]=[math]::Round(($a/$de)*100,3) } }
-    }
-    $anoAtualC=($anosSet.Keys | ForEach-Object{[int]$_} | Measure-Object -Maximum).Maximum
-    $objC=[ordered]@{ anoAtual=$anoAtualC; meses=@('Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'); ind=$indC }
-    $circJson=$objC | ConvertTo-Json -Depth 6 -Compress
+    $wbC=$xlC.Workbooks.Open($tmpCirc,0,$true)   # ReadOnly
+    $wsC=$null; foreach($s in $wbC.Sheets){ if($s.Name -eq 'MES A MES DASH'){ $wsC=$s; break } }
+    if($wsC -ne $null){
+      $nC=$wsC.UsedRange.Rows.Count
+      $dC=$wsC.Range("A1").Resize($nC,16).Value2
+      $mesIdx=@{ 'JAN'=0;'FEV'=1;'MAR'=2;'ABR'=3;'MAI'=4;'JUN'=5;'JUL'=6;'AGO'=7;'SET'=8;'OUT'=9;'NOV'=10;'DEZ'=11 }
+      $keysC=@('thp','vandalismo','circulacao','sucesso','abertura','descarga','taxaabert')
+      $indC=@{}; foreach($k in $keysC){ $indC[$k]=@{ anos=@{} } }
+      $anosSet=@{}
+      function EnsureC($k,$ano){ if(-not $indC[$k].anos.ContainsKey("$ano")){ $indC[$k].anos["$ano"]=@($null)*12 } }
+      function NumC($v){ if($v -eq $null){return $null}; $s="$v".Trim(); if($s -eq '' -or $s -eq '-'){return $null}; try{ return [double]$v }catch{ return $null } }
+      for($r=2;$r -le $nC;$r++){
+        $ano="$($dC[$r,1])".Trim(); $mes="$($dC[$r,2])".Trim().ToUpper()
+        if($ano -notmatch '^20\d\d$' -or [int]$ano -lt 2023 -or -not $mesIdx.ContainsKey($mes)){ continue }
+        $suc=NumC $dC[$r,5]; if($suc -eq $null){ continue }   # mês sem dado real -> projeção
+        $mi=$mesIdx[$mes]; $anosSet[$ano]=1; foreach($k in $keysC){ EnsureC $k $ano }
+        $indC['circulacao'].anos["$ano"][$mi]=NumC $dC[$r,3]
+        $indC['vandalismo'].anos["$ano"][$mi]=NumC $dC[$r,4]
+        $indC['sucesso'].anos["$ano"][$mi]=[math]::Round($suc*100,2)
+        $thpv=NumC $dC[$r,10]; $indC['thp'].anos["$ano"][$mi]=$(if($thpv -ne $null){[math]::Round($thpv,2)}else{$null})
+        $indC['descarga'].anos["$ano"][$mi]=NumC $dC[$r,12]
+        $indC['abertura'].anos["$ano"][$mi]=NumC $dC[$r,14]
+        $tav=NumC $dC[$r,15]; $indC['taxaabert'].anos["$ano"][$mi]=$(if($tav -ne $null){[math]::Round($tav*100,3)}else{$null})
+      }
+      $anoAtualC=($anosSet.Keys | ForEach-Object{[int]$_} | Measure-Object -Maximum).Maximum
+      $objC=[ordered]@{ anoAtual=$anoAtualC; meses=@('Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'); ind=$indC }
+      $circJson=$objC | ConvertTo-Json -Depth 6 -Compress
+      $indHtml = [regex]::Replace($indHtml, 'const CIRCULACAO = \{.*?\};', "const CIRCULACAO = $circJson;", [System.Text.RegularExpressions.RegexOptions]::Singleline)
+      Log "Circulação atualizada de '$([System.IO.Path]::GetFileName($circFile))' (ano atual: $anoAtualC)"
+    } else { Log "Aba 'MES A MES DASH' não encontrada — circulação mantida" }
     $wbC.Close($false); $xlC.Quit(); [System.Runtime.Interopservices.Marshal]::ReleaseComObject($xlC)|Out-Null
-    $indHtml = [regex]::Replace($indHtml, 'const CIRCULACAO = \{.*?\};', "const CIRCULACAO = $circJson;", [System.Text.RegularExpressions.RegexOptions]::Singleline)
-    Log "Circulação atualizada (ano atual: $anoAtualC)"
-  } else { Log "Planilha de circulação não encontrada — mantido o conteúdo atual" }
+  } else { Log "Arquivo de circulação não encontrado — circulação mantida" }
 }catch{ Log "Falha ao processar circulação: $($_.Exception.Message)" }
 
 $indHtml | Out-File "$outDir\Indicadores_Inteligencia.html" -Encoding utf8
