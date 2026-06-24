@@ -464,8 +464,7 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
     <div class="cbox"><div class="cbox-title"><i data-lucide="scroll"></i>Por Artigo</div><canvas id="inf-ch-artigo" style="max-height:240px"></canvas></div>
     <div class="cbox"><div class="cbox-title"><i data-lucide="map"></i>Por Circunscrição</div><canvas id="inf-ch-circ" style="max-height:240px"></canvas></div>
     <div class="cbox"><div class="cbox-title"><i data-lucide="building-2"></i>Por Cidade</div><canvas id="inf-ch-cidade" style="max-height:240px"></canvas></div>
-    <div class="cbox"><div class="cbox-title"><i data-lucide="route"></i>Por Trecho</div><canvas id="inf-ch-trecho" style="max-height:240px"></canvas></div>
-    <div class="cbox"><div class="cbox-title"><i data-lucide="layers"></i>Por Natureza</div><canvas id="inf-ch-natureza" style="max-height:240px"></canvas></div>
+    <div class="cbox" style="grid-column:span 2"><div class="cbox-title"><i data-lucide="route"></i>Por Trecho</div><canvas id="inf-ch-trecho" style="max-height:240px"></canvas></div>
     <div class="cbox"><div class="cbox-title"><i data-lucide="list-tree"></i>Por Tipo</div><canvas id="inf-ch-tipo" style="max-height:240px"></canvas></div>
   </div>
   <div class="bgrid" style="grid-template-columns:1fr 1fr">
@@ -1477,7 +1476,6 @@ function infChartsRender(rows){
   _infBar('inf-ch-circ', _infCount(rows,'circ',12), true);
   _infBar('inf-ch-cidade', _infCount(rows,'cidade',12), true);
   _infBar('inf-ch-trecho', _infCount(rows,'trecho',12), false);
-  _infBar('inf-ch-natureza', _infCount(rows,'natureza',12), true);
   _infBar('inf-ch-tipo', _infCount(rows,'tipo',12), true);
   _infBar('inf-ch-subtipo', _infCount(rows,'subtipo',12), true);
   infRanking(rows);
@@ -1523,6 +1521,7 @@ applyFilters();
 </script>
 </body>
 </html>
+
 
 
 
