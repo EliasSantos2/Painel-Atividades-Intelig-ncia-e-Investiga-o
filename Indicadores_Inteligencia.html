@@ -453,12 +453,25 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
   </div>
   <div id="inf-dash" style="display:none">
     <div style="display:flex;justify-content:flex-end;padding:8px 24px 0"><button onclick="infLogout()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer">Sair</button></div>
-    <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+    <div class="kpis" style="grid-template-columns:repeat(5,1fr)">
       <div class="kpi k3"><i data-lucide="users-round" style="color:var(--navy2);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Infratores Cadastrados</div><div class="kpi-val" id="inf-cad">—</div><div class="kpi-sub">indivíduos distintos</div></div>
       <div class="kpi k2"><i data-lucide="shield-alert" style="color:var(--red);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Presos</div><div class="kpi-val" id="inf-preso" style="color:var(--red)">—</div><div class="kpi-sub">status PRESO</div></div>
-      <div class="kpi k1"><i data-lucide="footprints" style="color:var(--orange);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Conduzidos</div><div class="kpi-val" id="inf-cond" style="color:var(--orange)">—</div><div class="kpi-sub">status CONDUZIDO</div></div>
+      <div class="kpi k1"><i data-lucide="footprints" style="color:var(--orange);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Conduzidos</div><div class="kpi-val" id="inf-cond" style="color:var(--orange)">—</div><div class="kpi-sub">status CONDUZIDO</div></div><div class="kpi k4"><i data-lucide="user-search" style="color:var(--green);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Abordados</div><div class="kpi-val" id="inf-abord">—</div><div class="kpi-sub">status ABORDADO</div></div><div class="kpi" style="border-top-color:#8e44ad"><i data-lucide="id-card" style="color:#8e44ad;width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Identificados</div><div class="kpi-val" id="inf-ident" style="color:#8e44ad">—</div><div class="kpi-sub">status IDENTIFICADO</div></div>
     </div>
     <div class="cbox" style="margin:0 24px 20px"><div class="cbox-title"><i data-lucide="map-pin"></i>Área de Atuação</div><div id="inf-mapa" style="height:460px;border-radius:8px;overflow:hidden"></div></div>
+  <div class="section-header"><h2><i data-lucide="bar-chart-2" style="display:inline;vertical-align:middle;width:16px;height:16px;color:var(--orange)"></i> Análise dos Infratores</h2><div class="sh-line"></div></div>
+  <div class="bgrid" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="cbox"><div class="cbox-title"><i data-lucide="scroll"></i>Por Artigo</div><canvas id="inf-ch-artigo" style="max-height:240px"></canvas></div>
+    <div class="cbox"><div class="cbox-title"><i data-lucide="map"></i>Por Circunscrição</div><canvas id="inf-ch-circ" style="max-height:240px"></canvas></div>
+    <div class="cbox"><div class="cbox-title"><i data-lucide="building-2"></i>Por Cidade</div><canvas id="inf-ch-cidade" style="max-height:240px"></canvas></div>
+    <div class="cbox"><div class="cbox-title"><i data-lucide="route"></i>Por Trecho</div><canvas id="inf-ch-trecho" style="max-height:240px"></canvas></div>
+    <div class="cbox"><div class="cbox-title"><i data-lucide="layers"></i>Por Natureza</div><canvas id="inf-ch-natureza" style="max-height:240px"></canvas></div>
+    <div class="cbox"><div class="cbox-title"><i data-lucide="list-tree"></i>Por Tipo</div><canvas id="inf-ch-tipo" style="max-height:240px"></canvas></div>
+  </div>
+  <div class="bgrid" style="grid-template-columns:1fr 1fr">
+    <div class="cbox"><div class="cbox-title"><i data-lucide="list"></i>Por Subtipo</div><canvas id="inf-ch-subtipo" style="max-height:280px"></canvas></div>
+    <div class="cbox"><div class="cbox-title"><i data-lucide="trophy"></i>Ranking por Aparições (nome mais recorrente)</div><div id="inf-ranking" style="max-height:300px;overflow:auto"></div></div>
+  </div>
     <div class="cbox" style="margin:0 24px 24px"><div class="cbox-title"><i data-lucide="share-2"></i>Teia de Vínculos de Parentesco (mesma mãe ou mesmo pai)</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Mostra apenas grupos com 2+ infratores que compartilham um genitor. <span style="color:var(--navy2)">●</span> Infrator &nbsp; <span style="color:#C0392B">●</span> Mãe &nbsp; <span style="color:var(--orange)">●</span> Pai</div>
       <div id="inf-teia" style="height:560px;border:1px solid var(--border);border-radius:8px"></div>
@@ -1413,6 +1426,9 @@ function infRender(rows){
   document.getElementById('inf-cad').textContent=nomes.length.toLocaleString('pt-BR');
   document.getElementById('inf-preso').textContent=presos.toLocaleString('pt-BR');
   document.getElementById('inf-cond').textContent=cond.toLocaleString('pt-BR');
+  const abord=nomes.filter(function(k){return byNome[k].some(function(r){return _infNorm(r.status)==='ABORDADO';});}).length;
+  const ident=nomes.filter(function(k){return byNome[k].some(function(r){return _infNorm(r.status)==='IDENTIFICADO';});}).length;
+  { const _ea=document.getElementById('inf-abord'); if(_ea)_ea.textContent=abord.toLocaleString('pt-BR'); const _ei=document.getElementById('inf-ident'); if(_ei)_ei.textContent=ident.toLocaleString('pt-BR'); }
   const pts=rows.filter(r=>r.la&&r.lo);
   if(!_infMap){ _infMap=L.map('inf-mapa').setView([-23.9,-46.4],7); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:19}).addTo(_infMap); _infMap._lay=null; }
   if(_infMap._lay) _infMap.removeLayer(_infMap._lay);
@@ -1425,6 +1441,7 @@ function infRender(rows){
   try{ if(pts.length) _infMap.fitBounds(pts.map(r=>[r.la,r.lo]),{padding:[30,30],maxZoom:10}); }catch(e){}
   setTimeout(()=>{ if(_infMap) _infMap.invalidateSize(); },200);
   infTeia(rows);
+  infChartsRender(rows);
 }
 function infTeia(rows){
   const container=document.getElementById('inf-teia');
@@ -1451,6 +1468,27 @@ function infFichaHtml(r){
   if(coord) h+='<tr><td style="color:#888;padding:1px 8px 1px 0">Coordenadas</td><td style="padding:1px 0;color:#1a2740">'+coord+'</td></tr>';
   h+='</table></div>';
   return h;
+}
+const _infCharts={};
+function _infBar(id,pairs,horizontal){ const el=document.getElementById(id); if(!el)return; if(_infCharts[id]){_infCharts[id].destroy();delete _infCharts[id];} _infCharts[id]=new Chart(el,{type:'bar',data:{labels:pairs.map(function(p){return p[0];}),datasets:[{data:pairs.map(function(p){return p[1];}),backgroundColor:'#005CA9',borderRadius:3,maxBarThickness:horizontal?16:34}]},options:{responsive:true,indexAxis:horizontal?'y':'x',plugins:{legend:{display:false}},scales:{x:{grid:{color:'#EBF0F8'},ticks:{color:'#5a6e8a',font:{size:10}}},y:{grid:{display:false},ticks:{color:'#1a2740',font:{size:10}}}}}}); }
+function _infCount(rows,key,topN){ const m={}; rows.forEach(function(r){ const v=(r[key]==null?'':String(r[key])).trim(); if(v) m[v]=(m[v]||0)+1; }); let a=Object.entries(m).sort(function(x,y){return y[1]-x[1];}); if(topN) a=a.slice(0,topN); return a; }
+function infChartsRender(rows){
+  _infBar('inf-ch-artigo', _infCount(rows,'artigo',12), true);
+  _infBar('inf-ch-circ', _infCount(rows,'circ',12), true);
+  _infBar('inf-ch-cidade', _infCount(rows,'cidade',12), true);
+  _infBar('inf-ch-trecho', _infCount(rows,'trecho',12), false);
+  _infBar('inf-ch-natureza', _infCount(rows,'natureza',12), true);
+  _infBar('inf-ch-tipo', _infCount(rows,'tipo',12), true);
+  _infBar('inf-ch-subtipo', _infCount(rows,'subtipo',12), true);
+  infRanking(rows);
+}
+function infRanking(rows){
+  const m={}; rows.forEach(function(r){ const k=_infNorm(r.nome); if(k){ if(!m[k])m[k]={nome:r.nome,n:0}; m[k].n++; } });
+  const rank=Object.keys(m).map(function(k){return m[k];}).sort(function(a,b){return b.n-a.n;}).slice(0,25);
+  let h='<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:#888;text-align:left;border-bottom:1px solid var(--border)"><th style="padding:4px 8px 4px 0">#</th><th style="padding:4px 8px 4px 0">Nome</th><th style="padding:4px 0;text-align:right">Aparições</th></tr></thead><tbody>';
+  rank.forEach(function(x,i){ h+='<tr style="border-bottom:1px solid #f0f3f8"><td style="padding:3px 8px 3px 0;color:#888">'+(i+1)+'</td><td style="padding:3px 8px 3px 0">'+infEsc(x.nome)+'</td><td style="padding:3px 0;text-align:right;font-weight:700;color:var(--navy)">'+x.n+'</td></tr>'; });
+  h+='</tbody></table>';
+  const el=document.getElementById('inf-ranking'); if(el) el.innerHTML=h;
 }
 function infEsc(s){ return (s==null?'':String(s)).replace(/[&<>]/g,function(m){return ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m];}); }
 const INF_CAMPOS_OCC=INF_CAMPOS.concat([['coord','Coordenadas']]);
@@ -1485,6 +1523,8 @@ applyFilters();
 </script>
 </body>
 </html>
+
+
 
 
 
