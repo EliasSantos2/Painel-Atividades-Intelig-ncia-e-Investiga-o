@@ -1409,9 +1409,7 @@ function infRender(rows){
   _infMap._lay=L.layerGroup();
   pts.forEach(r=>{
     const st=_infNorm(r.status); const cor= st==='PRESO'?'#C0392B':(st==='CONDUZIDO'?'#F78344':'#005CA9');
-    const _er=function(l,v){ return v?('<tr><td style="color:#888;padding:1px 8px 1px 0;white-space:nowrap;vertical-align:top">'+l+'</td><td style="padding:1px 0;color:#1a2740">'+infEsc(v)+'</td></tr>'):''; };
-    const _coord=(r.la&&r.lo)?(Number(r.la).toFixed(5)+', '+Number(r.lo).toFixed(5)):'';
-    const pop='<div style="font-family:Arial;font-size:12px;min-width:220px;max-width:300px"><div style="font-weight:700;color:#003865;margin-bottom:5px">'+infEsc(r.nome||'—')+'</div><table style="border-collapse:collapse">'+_er('Status',r.status)+_er('Organização',r.org)+_er('Cidade',r.cidade)+_er('Trecho',r.trecho)+_er('Mãe',r.mae)+_er('Pai',r.pai)+_er('Coordenadas',_coord)+'</table></div>';
+    const pop=infFichaHtml(r);
     L.circleMarker([r.la,r.lo],{radius:6,color:'#fff',weight:1,fillColor:cor,fillOpacity:0.85}).bindPopup(pop).addTo(_infMap._lay);
   });
   _infMap._lay.addTo(_infMap);
@@ -1436,6 +1434,15 @@ function infTeia(rows){
   _infNet.on('click',function(params){ if(params.nodes&&params.nodes.length){ const id=params.nodes[0]; if(id.slice(0,2)==='i:') infShowPessoa(id.slice(2)); else if(id.slice(0,2)==='m:'||id.slice(0,2)==='p:') infShowParent(id); } });
 }
 
+const INF_CAMPOS=[['sic','Cadastro SIC'],['org','Organização'],['status','Status'],['dt','Data'],['hora','Hora'],['bo','B.O'],['rastreio','Rastreio'],['classif','Classificação'],['crime','Crime'],['artigo','Artigo'],['natureza','Natureza'],['tipo','Tipo'],['subtipo','Subtipo'],['espec','Especificação'],['circ','Circunscrição'],['cidade','Cidade'],['uf','UF'],['trecho','Trecho'],['sb','SB'],['km','KM'],['comp','Composição'],['empresa','Empresa'],['cpf','CPF'],['ident','Identidade'],['mae','Nome da Mãe'],['pai','Nome do Pai'],['endereco','Endereço']];
+function infFichaHtml(r){
+  const coord=(r.la&&r.lo)?(Number(r.la).toFixed(5)+', '+Number(r.lo).toFixed(5)):'';
+  let h='<div style="font-family:Arial;font-size:12px;min-width:240px;max-width:340px;max-height:340px;overflow-y:auto"><div style="font-weight:700;color:#003865;margin-bottom:5px;position:sticky;top:0;background:#fff;padding-bottom:2px">'+infEsc(r.nome||'—')+'</div><table style="border-collapse:collapse">';
+  INF_CAMPOS.forEach(function(c){ const v=r[c[0]]; if(v) h+='<tr><td style="color:#888;padding:1px 8px 1px 0;white-space:nowrap;vertical-align:top">'+c[1]+'</td><td style="padding:1px 0;color:#1a2740">'+infEsc(v)+'</td></tr>'; });
+  if(coord) h+='<tr><td style="color:#888;padding:1px 8px 1px 0">Coordenadas</td><td style="padding:1px 0;color:#1a2740">'+coord+'</td></tr>';
+  h+='</table></div>';
+  return h;
+}
 function infEsc(s){ return (s==null?'':String(s)).replace(/[&<>]/g,function(m){return ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m];}); }
 function infShowPessoa(nomeNorm){
   if(!_infRows) return;
@@ -1473,6 +1480,7 @@ applyFilters();
 </script>
 </body>
 </html>
+
 
 
 
