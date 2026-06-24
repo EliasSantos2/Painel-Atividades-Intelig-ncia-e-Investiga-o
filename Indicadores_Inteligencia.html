@@ -1397,8 +1397,30 @@ async function infLoad(){
   if(_infLoaded){ setTimeout(()=>{ if(_infMap) _infMap.invalidateSize(); },150); return; }
   const c=infSb(); if(!c||!_infSession) return;
   let rows=[];
-  try{ const {data,error}=await c.from('infratores').select('*').limit(5000); if(error) throw error; rows=data||[]; }
-  catch(e){ console.error(e); document.getElementById('inf-teia').innerHTML='<div style="padding:20px;color:#C0392B">Erro ao carregar dados: '+(e.message||'')+'</div>'; return; }
+  try{
+    const resp=await c.from('infratores').select('*',{count:'exact'}).limit(5000);
+    if(resp.error) throw resp.error;
+    rows=resp.data||[];
+    console.log('[infratores] linhas=',rows.length,'count=',resp.count,'colunas=',rows[0]?Object.keys(rows[0]):'(vazio)');
+  }catch(e){
+    console.error(e);
+    document.getElementById('inf-teia').innerHTML='<div style="padding:20px;color:#C0392B"><b>Erro ao consultar:</b> '+(e.message||e)+'</div>';
+    return;
+  }
+  if(rows.length===0){
+    ['inf-cad','inf-preso','inf-cond'].forEach(i=>{const el=document.getElementById(i);if(el)el.textContent='0';});
+    document.getElementById('inf-teia').innerHTML='<div style="padding:20px;color:#C0392B;line-height:1.6">'
+      +'<b>0 registros retornados.</b> Verifique no Supabase:<br>'
+      +'1) O CSV foi importado na tabela <b>infratores</b>? (Table Editor deve mostrar as linhas)<br>'
+      +'2) Existe a policy de <b>SELECT</b> para o papel <b>authenticated</b>? Sem policy, o RLS retorna vazio sem erro.<br>'
+      +'3) A tabela está no schema <b>public</b>?</div>';
+    return;
+  }
+  // normaliza nomes de coluna (minúsculas) e converte coordenadas para número
+  rows=rows.map(r=>{ const o={}; for(const k in r){ o[(''+k).toLowerCase()]=r[k]; }
+    o.la=(o.la!=null&&o.la!=='')?parseFloat(o.la):null; if(isNaN(o.la))o.la=null;
+    o.lo=(o.lo!=null&&o.lo!=='')?parseFloat(o.lo):null; if(isNaN(o.lo))o.lo=null;
+    return o; });
   _infLoaded=true; infRender(rows);
 }
 function infRender(rows){
@@ -1448,6 +1470,7 @@ applyFilters();
 </script>
 </body>
 </html>
+
 
 
 
