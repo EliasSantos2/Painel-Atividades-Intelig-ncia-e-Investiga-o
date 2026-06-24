@@ -428,6 +428,7 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
     <div class="kpi" style="border-top-color:#1a6999"><i data-lucide="fuel" style="color:#1a6999;width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Combustível Recuperado</div><div class="kpi-val" id="pr-comb">—</div><div class="kpi-sub">litros (registros de COMBUSTÍVEL)</div></div>
   </div>
   <div id="pr-cotacoes" style="margin:0 24px 4px;font-size:12px;color:var(--muted)"></div>
+  <div id="pr-filtros" style="padding:2px 24px 6px"></div>
   <div class="section-header">
     <h2><i data-lucide="package-check" style="display:inline;vertical-align:middle;width:16px;height:16px;color:var(--orange)"></i> Produto Recuperado · Apreensões</h2>
     <div class="sh-line"></div>
@@ -607,6 +608,7 @@ const charts = {};
 
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
+function setFiltro(id,val){ const el=document.getElementById(id); if(!el) return; const v=String(val); el.value=(el.value===v)?'':v; applyFilters(); }
 function buildCharts(data) {
   const total = data.length;
   const crim  = data.filter(r=>r.cl=='C').length;
@@ -722,6 +724,15 @@ function buildCharts(data) {
     },
     options:{ ...opts, plugins:{ legend:{ position:'bottom', labels:{ color:'#1a2740', font:{size:11} } } } }
   });
+  // interatividade: clicar numa barra define o filtro global (sincroniza Painel/Mapa/Desdobramentos)
+  if(charts['class']) charts['class'].options.onClick=function(e,el){ if(el.length) setFiltro('f-cl', el[0].index===0?'C':'N'); };
+  if(charts['artigo']) charts['artigo'].options.onClick=function(e,el){ if(el.length) setFiltro('f-ar', artigos[el[0].index][0]); };
+  if(charts['mes']) charts['mes'].options.onClick=function(e,el){ if(el.length) setFiltro('f-mes', el[0].index+1); };
+  if(charts['tipo']) charts['tipo'].options.onClick=function(e,el){ if(el.length) setFiltro('f-tp', tipos[el[0].index][0]); };
+  if(charts['subtipo']) charts['subtipo'].options.onClick=function(e,el){ if(el.length) setFiltro('f-sb', subs[el[0].index][0]); };
+  if(charts['circ']) charts['circ'].options.onClick=function(e,el){ if(el.length) setFiltro('f-ci', circs[el[0].index][0]); };
+  if(charts['aut']) charts['aut'].options.onClick=function(e,el){ if(el.length) setFiltro('f-au', el[0].index===0?'D':'C'); };
+  if(charts['emp']) charts['emp'].options.onClick=function(e,el){ if(el.length) setFiltro('f-emp', emps[el[0].index][0]); };
 }
 
 // ── DEINTER — fronteiras municipais reais (geodata-br + decretos PCSP) ──────
@@ -1313,13 +1324,19 @@ function switchTab(name) {
 const _prCharts={};
 function _prNum(v){ const n=parseFloat(String(v==null?'':v).replace(/[^\d.,-]/g,'').replace(',','.')); return isNaN(n)?0:n; }
 function _prDestroy(id){ if(_prCharts[id]){ _prCharts[id].destroy(); delete _prCharts[id]; } }
-function _prBar(id,labels,values,horizontal){
+let _prFilters={};
+function prFilteredA(){ if(typeof APREENSOES==='undefined') return []; const ks=Object.keys(_prFilters); if(!ks.length) return APREENSOES; return APREENSOES.filter(function(r){ return ks.every(function(k){ return (r[k]==null?'':String(r[k])).trim()===_prFilters[k]; }); }); }
+function prApply(field,value){ if(value==null||value==='') return; if(_prFilters[field]===value) delete _prFilters[field]; else _prFilters[field]=value; renderProdutoRecuperado(); }
+function prRemove(field){ delete _prFilters[field]; renderProdutoRecuperado(); }
+function prClear(){ _prFilters={}; renderProdutoRecuperado(); }
+function prChips(){ const el=document.getElementById('pr-filtros'); if(!el) return; const ks=Object.keys(_prFilters); if(!ks.length){ el.innerHTML=''; return; } const lbls={sub:'Tipo de Produto',tre:'Trecho'}; let h='<span style="font-size:12px;color:#888;margin-right:6px">Filtros ativos:</span>'; ks.forEach(function(k){ h+='<span style="display:inline-block;background:var(--navy);color:#fff;border-radius:14px;padding:3px 10px;margin:2px 6px 2px 0;font-size:12px">'+(lbls[k]||k)+': '+_prFilters[k]+' <span style="cursor:pointer;font-weight:700" onclick="prRemove(&quot;'+k+'&quot;)">&times;</span></span>'; }); h+='<button onclick="prClear()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 12px;font-size:12px;cursor:pointer;color:var(--navy)">Limpar tudo</button>'; el.innerHTML=h; }
+function _prBar(id,labels,values,horizontal,field){
   const el=document.getElementById(id); if(!el) return;
   _prDestroy(id);
   _prCharts[id]=new Chart(el,{
     type:'bar',
     data:{labels,datasets:[{data:values,backgroundColor:'#005CA9',barThickness:horizontal?16:undefined,maxBarThickness:34,borderRadius:3}]},
-    options:{responsive:true, indexAxis:horizontal?'y':'x', plugins:{legend:{display:false}},
+    options:{responsive:true, onClick:function(e,els){ if(els&&els.length&&field){ prApply(field, labels[els[0].index]); } }, indexAxis:horizontal?'y':'x', plugins:{legend:{display:false}},
       scales:{x:{grid:{color:'#EBF0F8'},ticks:{color:'#5a6e8a',font:{size:11}}},y:{grid:{display:false},ticks:{color:'#1a2740',font:{size:11}}}}}
   });
 }
@@ -1329,7 +1346,7 @@ function renderProdutoRecuperado(){
     ['pr-total','pr-valor','pr-graos','pr-comb'].forEach(i=>{const e=document.getElementById(i);if(e)e.textContent='0';});
     return;
   }
-  const A=APREENSOES;
+  const A=prFilteredA(); prChips();
   // KPIs
   const graos=A.filter(r=>/GR[ÃA]OS|CARGA/i.test(r.sub||'')).reduce((s,r)=>s+_prNum(r.qtd),0);
   const comb =A.filter(r=>/COMBUST/i.test(r.sub||'')).reduce((s,r)=>s+_prNum(r.qtd),0);
@@ -1357,10 +1374,10 @@ function renderProdutoRecuperado(){
   const grp=(keyFn,sum)=>{const m={};A.forEach(r=>{const k=(keyFn(r)||'').trim();if(!k)return;m[k]=(m[k]||0)+(sum?_prNum(r.qtd):1);});return Object.entries(m).sort((a,b)=>b[1]-a[1]);};
   const tipoQ=grp(r=>r.sub,false), tipoS=grp(r=>r.sub,true);
   const treQ =grp(r=>r.tre,false), treS =grp(r=>r.tre,true);
-  _prBar('pr-ch-tipo-qtde', tipoQ.map(x=>x[0]), tipoQ.map(x=>x[1]), true);
-  _prBar('pr-ch-tipo-soma', tipoS.map(x=>x[0]), tipoS.map(x=>x[1]), true);
-  _prBar('pr-ch-trecho-qtde', treQ.map(x=>x[0]), treQ.map(x=>x[1]), false);
-  _prBar('pr-ch-trecho-soma', treS.map(x=>x[0]), treS.map(x=>x[1]), false);
+  _prBar('pr-ch-tipo-qtde', tipoQ.map(x=>x[0]), tipoQ.map(x=>x[1]), true, 'sub');
+  _prBar('pr-ch-tipo-soma', tipoS.map(x=>x[0]), tipoS.map(x=>x[1]), true, 'sub');
+  _prBar('pr-ch-trecho-qtde', treQ.map(x=>x[0]), treQ.map(x=>x[1]), false, 'tre');
+  _prBar('pr-ch-trecho-soma', treS.map(x=>x[0]), treS.map(x=>x[1]), false, 'tre');
   // Mapa de bolhas — uma bolha por coordenada de apreensão
   const corProd={soja:'#1a6999',milho:'#F78344',farelo:'#005CA9',diesel:'#003865',gasolina:'#C0392B',etanol:'#007ACC'};
   const apPts=A.filter(r=>r.la&&r.lo);
@@ -1538,6 +1555,8 @@ applyFilters();
 </script>
 </body>
 </html>
+
+
 
 
 
