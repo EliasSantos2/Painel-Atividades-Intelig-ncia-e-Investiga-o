@@ -226,7 +226,7 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
       <div class="card">
         <div class="card-header"><h2>▶ Status por Operação</h2></div>
         <table><thead><tr>
-          <th>Operação</th><th>Local / Empresa</th><th>Fase</th>
+          <th>Operação</th><th>Local / Empresa</th><th>Localidade</th>
           <th>Status</th><th>Conclusão</th><th>Pend.</th><th>Próximo Marco</th>
         </tr></thead><tbody id="dash-ops-body"></tbody></table>
       </div>
@@ -262,7 +262,7 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
   </div>
   <div class="card">
     <table><thead><tr>
-      <th>#</th><th>Operação</th><th>Local</th><th>Fase</th>
+      <th>#</th><th>Operação</th><th>Local</th><th>Localidade</th>
       <th>Status</th><th>% Conc.</th><th>Pend.</th><th>Próximo Marco</th><th>RELINT</th><th></th>
     </tr></thead><tbody id="ops-table-body"></tbody></table>
   </div>
@@ -313,12 +313,11 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
   <div class="modal-body"><div class="form-grid">
     <div class="form-group"><label>Nome da Operação *</label><input id="op-nome" placeholder="Ex: Ponto Cego"></div>
     <div class="form-group"><label>Local / Empresa *</label><input id="op-local" placeholder="Ex: Rondonópolis/MT – TRO"></div>
-    <div class="form-group"><label>Fase Atual</label><input id="op-fase" placeholder="Ex: 2ª fase em andamento"></div>
+    <div class="form-group"><label>Localidade (Município - UF)</label><input id="op-localidade" list="municipios-list" placeholder="Digite o município…" autocomplete="off"><datalist id="municipios-list"></datalist></div>
     <div class="form-group"><label>Status</label>
-      <select id="op-status"><option>Em andamento</option><option>Fase inicial</option><option>Planejamento</option><option>Concluído</option><option>Encerrado</option></select>
+      <select id="op-status"><option>Em andamento</option><option>Fase inicial</option><option>Planejamento</option><option>Concluído</option></select>
     </div>
     <div class="form-group full"><label>Próximo Marco</label><input id="op-marco" placeholder="Ex: Parecer do GAECO e execução das medidas operacionais"></div>
-    <div class="form-group full"><label>Ponto Cego / Obstáculo</label><input id="op-pontocego" placeholder="Ex: Aguardando manifestação do órgão"></div>
     <div class="form-group full"><label>Objetivo da Operação</label><textarea id="op-objetivo" placeholder="Descreva o objetivo principal…"></textarea></div>
     <div class="form-group full"><label>Principais Entregas Realizadas</label><textarea id="op-entregas" placeholder="Liste as entregas já concluídas…"></textarea></div>
     <div class="form-group full">
@@ -503,7 +502,7 @@ function renderDashboard(){
   `;
   document.getElementById('dash-ops-body').innerHTML=ops.map(op=>{const s=getOpStats(op.id);return`<tr>
     <td><strong>${op.nome}</strong></td><td style="color:var(--text2);font-size:12px">${op.local}</td>
-    <td style="font-size:12px;color:var(--text2)">${op.fase}</td><td>${statusBadge(op.status)}</td>
+    <td style="font-size:12px;color:var(--text2)">${op.localidade||'—'}</td><td>${statusBadge(op.status)}</td>
     <td style="min-width:120px">${progressBar(s.pct)}</td>
     <td><span class="badge ${s.pend?'badge-orange':'badge-green'}">${s.pend}</span></td>
     <td style="font-size:12px;color:var(--text2);max-width:180px;white-space:normal">${op.marco||'—'}</td>
@@ -545,7 +544,7 @@ function renderOps(){
   tbody.innerHTML=ops.map((op,i)=>{const s=getOpStats(op.id);return`<tr>
     <td style="color:var(--text2)">${i+1}</td><td><strong>${op.nome}</strong></td>
     <td style="color:var(--text2);font-size:12px">${op.local}</td>
-    <td style="font-size:12px;color:var(--text2)">${op.fase}</td>
+    <td style="font-size:12px;color:var(--text2)">${op.localidade||'—'}</td>
     <td>${statusBadge(op.status)}</td><td style="min-width:120px">${progressBar(s.pct)}</td>
     <td><span class="badge ${s.pend?'badge-orange':'badge-green'}">${s.pend}</span></td>
     <td style="font-size:12px;color:var(--text2);max-width:140px;white-space:normal">${op.marco||'—'}</td>
@@ -725,13 +724,13 @@ function openOpModal(id){
   document.getElementById('op-modal-title').textContent=id?'Editar Operação':'Nova Operação';
   if(id){const op=getOp(id);
     document.getElementById('op-nome').value=op.nome;document.getElementById('op-local').value=op.local;
-    document.getElementById('op-fase').value=op.fase;document.getElementById('op-status').value=op.status;
-    document.getElementById('op-marco').value=op.marco||'';document.getElementById('op-pontocego').value=op.pontocego||'';
+    document.getElementById('op-localidade').value=op.localidade||'';document.getElementById('op-status').value=op.status;
+    document.getElementById('op-marco').value=op.marco||'';
     document.getElementById('op-objetivo').value=op.objetivo||'';document.getElementById('op-entregas').value=op.entregas||'';
     document.getElementById('op-relint-url').value=(op.relint&&op.relint.url)||'';
     document.getElementById('op-relint-name').value=(op.relint&&op.relint.name)||'';
   }else{
-    ['op-nome','op-local','op-fase','op-marco','op-pontocego','op-objetivo','op-entregas','op-relint-url','op-relint-name'].forEach(x=>document.getElementById(x).value='');
+    ['op-nome','op-local','op-localidade','op-marco','op-objetivo','op-entregas','op-relint-url','op-relint-name'].forEach(x=>document.getElementById(x).value='');
     document.getElementById('op-status').value='Em andamento';
   }
   document.getElementById('op-modal').classList.add('open');
@@ -740,7 +739,7 @@ function saveOp(){
   const nome=document.getElementById('op-nome').value.trim();
   const local=document.getElementById('op-local').value.trim();
   if(!nome||!local){toast('Preencha os campos obrigatórios','error');return;}
-  const data={nome,local,fase:document.getElementById('op-fase').value.trim(),status:document.getElementById('op-status').value,marco:document.getElementById('op-marco').value.trim(),pontocego:document.getElementById('op-pontocego').value.trim(),objetivo:document.getElementById('op-objetivo').value.trim(),entregas:document.getElementById('op-entregas').value.trim()};
+  const data={nome,local,localidade:document.getElementById('op-localidade').value.trim(),status:document.getElementById('op-status').value,marco:document.getElementById('op-marco').value.trim(),objetivo:document.getElementById('op-objetivo').value.trim(),entregas:document.getElementById('op-entregas').value.trim()};
   const relUrl=document.getElementById('op-relint-url').value.trim();
   const relName=document.getElementById('op-relint-name').value.trim();
   let target;
@@ -917,8 +916,24 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
 
+function popularMunicipios(){
+  var dl=document.getElementById('municipios-list'); if(!dl || dl.options.length) return;
+  fetch('https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome')
+    .then(function(r){ return r.json(); })
+    .then(function(arr){
+      var frag=document.createDocumentFragment();
+      arr.forEach(function(m){
+        var uf=''; try{ uf=m.microrregiao.mesorregiao.UF.sigla; }catch(e){}
+        if(!uf){ try{ uf=m['regiao-imediata']['regiao-intermediaria'].UF.sigla; }catch(e){} }
+        var o=document.createElement('option'); o.value=m.nome+(uf?(' - '+uf):''); frag.appendChild(o);
+      });
+      dl.appendChild(frag);
+    })
+    .catch(function(e){ console.warn('IBGE municipios falhou',e); });
+}
 updateOpSelects();
 renderDashboard();
+popularMunicipios();
 initAuth();
 </script>
 
