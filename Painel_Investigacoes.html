@@ -628,7 +628,7 @@ async function loadShared(){
     if(data && data.data){ db=data.data; _sharedRev=data.updated_at; }
     else { await c.from(SHARE_TABLE).upsert({id:1,data:db,updated_at:new Date().toISOString()}); }
     return true;
-  }catch(e){ console.warn('loadShared',e); toast('Dados compartilhados indisponíveis (crie a tabela painel_inv no Supabase). Usando cópia local.','error'); return false; }
+  }catch(e){ console.warn('loadShared: tabela painel_inv ausente ou sem permissao — usando copia local',e); return false; }
 }
 async function pushShared(){
   const c=sb(); if(!c||!_session) return;
@@ -1248,6 +1248,7 @@ loadConfig();
 </script>
 </body>
 </html>
+
 
 
 
