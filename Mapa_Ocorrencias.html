@@ -524,7 +524,7 @@ apply();
   function showBanner(){
     if(banner) return;
     banner=document.createElement('div');
-    banner.innerHTML='&#128260; Nova versão disponível. <button style="margin-left:10px;background:#fff;color:#003865;border:none;border-radius:5px;padding:3px 14px;font-weight:700;cursor:pointer">Atualizar agora</button>';
+    banner.innerHTML='&#128260; Nova versão disponível — atualizando&hellip; <button style="margin-left:10px;background:#fff;color:#003865;border:none;border-radius:5px;padding:3px 14px;font-weight:700;cursor:pointer">Atualizar agora</button>';
     banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:999999;background:#003865;color:#fff;font-family:Arial,sans-serif;font-size:13px;text-align:center;padding:9px 12px;box-shadow:0 2px 12px rgba(0,0,0,.35)';
     banner.querySelector('button').onclick=function(){ location.reload(); };
     document.body.appendChild(banner);
@@ -533,7 +533,7 @@ apply();
     fetch(me+'?_v='+Date.now(),{method:'HEAD',cache:'no-store'}).then(function(r){
       var tag=r.headers.get('etag')||r.headers.get('last-modified'); if(!tag) return;
       if(cur===null){ cur=tag; return; }
-      if(tag!==cur){ pending=true; showBanner(); }
+      if(tag!==cur && !pending){ pending=true; showBanner(); setTimeout(function(){ location.reload(); }, 3000); }
     }).catch(function(){});
   }
   setTimeout(check,3000);
@@ -543,6 +543,7 @@ apply();
 </script>
 </body>
 </html>
+
 
 
 
