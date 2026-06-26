@@ -155,6 +155,36 @@
   .wa-btn{display:inline-flex;align-items:center;gap:4px;background:#e6f4ec;color:#1d6e3a;border:1px solid #b4e0c4;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .15s;}
   .wa-btn:hover{background:#25d366;color:#fff;border-color:#25d366;}
 
+  /* ── SUB-ABAS AGENDA ── */
+  .ag-subnav{display:flex;gap:4px;margin-bottom:20px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:4px;}
+  .ag-sub-btn{background:none;border:none;padding:8px 16px;font-size:12.5px;font-weight:600;color:var(--text2);cursor:pointer;border-radius:6px;transition:all .18s;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+  .ag-sub-btn:hover{background:var(--navy-light);color:var(--navy);}
+  .ag-sub-btn.active{background:var(--navy);color:#fff;}
+  .ag-week-nav{display:flex;gap:4px;align-items:center;}
+
+  /* ── GRADE SEMANAL ── */
+  .ag-week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:4px;}
+  .ag-week-day{background:var(--bg2);border:1px solid var(--border);border-radius:8px;min-height:140px;overflow:hidden;}
+  .ag-week-day.today{border-color:var(--orange);box-shadow:0 0 0 2px rgba(247,131,68,.18);}
+  .ag-week-day.weekend{background:var(--bg3);}
+  .ag-week-day-hdr{padding:8px 10px 6px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .ag-week-dow{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+  .ag-week-num{font-size:18px;font-weight:800;color:var(--navy);}
+  .ag-week-day.today .ag-week-num{background:var(--orange);color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .ag-week-day-body{padding:6px 6px 8px;}
+  .ag-task-chip{display:flex;align-items:flex-start;gap:4px;padding:4px 6px;border-radius:5px;margin-bottom:3px;cursor:pointer;transition:opacity .12s;font-size:10.5px;font-weight:600;line-height:1.3;}
+  .ag-task-chip:hover{opacity:.8;}
+  .ag-tc-alta{background:#fdeaea;color:#9b1c1c;border-left:2px solid var(--red);}
+  .ag-tc-media{background:#fef8e7;color:#92600a;border-left:2px solid var(--yellow);}
+  .ag-tc-baixa{background:#e6f4ec;color:#1d6e3a;border-left:2px solid var(--green);}
+  .ag-tc-concluido{background:#f1f4f9;color:#6b7280;border-left:2px solid #9ca3af;text-decoration:line-through;opacity:.7;}
+
+  /* ── STRIP OPERAÇÕES ── */
+  .ag-op-strip{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .ag-op-pill{display:flex;align-items:center;gap:6px;background:var(--navy);color:#fff;border-radius:20px;padding:5px 12px 5px 8px;font-size:11.5px;font-weight:600;}
+  .ag-op-pill-dot{width:8px;height:8px;border-radius:50%;background:var(--orange);flex-shrink:0;}
+  .ag-op-strip-label{font-size:10.5px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;align-self:center;white-space:nowrap;}
+
   /* ── CALENDÁRIO DE AGENDA ── */
   .ag-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
   .ag-cal-nav h3{font-size:15px;font-weight:800;color:var(--navy);text-transform:capitalize;}
@@ -361,35 +391,63 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
 
 <!-- AGENDA -->
 <div id="tab-agenda" class="tab-panel">
-  <div class="actions-row" style="margin-bottom:18px">
-    <button class="btn btn-primary" onclick="openAgendaModal()">+ Novo Compromisso</button>
-    <select class="filter-sel" id="agenda-filter-month" onchange="renderAgenda()" style="display:none"></select>
-    <div style="margin-left:auto" class="ag-view-toggle">
-      <button id="ag-btn-cal" class="active" onclick="_agSetView('cal')"><i data-lucide="calendar" style="width:13px;height:13px;vertical-align:-2px"></i> Calendário</button>
-      <button id="ag-btn-list" onclick="_agSetView('list')"><i data-lucide="list" style="width:13px;height:13px;vertical-align:-2px"></i> Lista</button>
-    </div>
+  <!-- Sub-nav -->
+  <div class="ag-subnav">
+    <button id="ag-sub-rel" class="ag-sub-btn active" onclick="_agSubTab('rel')">
+      <i data-lucide="file-text" style="width:14px;height:14px;vertical-align:-2px"></i> Agenda de Apresentação de Relatórios
+    </button>
+    <button id="ag-sub-op" class="ag-sub-btn" onclick="_agSubTab('op')">
+      <i data-lucide="layout-list" style="width:14px;height:14px;vertical-align:-2px"></i> Agenda Operacional da Semana
+    </button>
   </div>
-  <!-- Calendário -->
-  <div id="ag-cal-wrap">
-    <div class="ag-cal-nav">
-      <div class="ag-cal-nav-btns">
-        <button class="btn btn-ghost btn-sm" onclick="_agCalPrev()"><i data-lucide="chevron-left" style="width:14px;height:14px;vertical-align:-2px"></i></button>
-        <button class="btn btn-ghost btn-sm" onclick="_agCalToday()">Hoje</button>
-        <button class="btn btn-ghost btn-sm" onclick="_agCalNext()"><i data-lucide="chevron-right" style="width:14px;height:14px;vertical-align:-2px"></i></button>
+
+  <!-- ── PAINEL: RELATÓRIOS ── -->
+  <div id="ag-pane-rel">
+    <div class="actions-row" style="margin-bottom:18px">
+      <button class="btn btn-primary" onclick="openAgendaModal()">+ Novo Compromisso</button>
+      <div style="margin-left:auto" class="ag-view-toggle">
+        <button id="ag-btn-cal" class="active" onclick="_agSetView('cal')"><i data-lucide="calendar" style="width:13px;height:13px;vertical-align:-2px"></i> Calendário</button>
+        <button id="ag-btn-list" onclick="_agSetView('list')"><i data-lucide="list" style="width:13px;height:13px;vertical-align:-2px"></i> Lista</button>
       </div>
-      <h3 id="ag-cal-title"></h3>
-      <div style="width:120px"></div>
     </div>
-    <div class="ag-cal-grid" id="ag-cal-grid"></div>
+    <!-- Calendário mensal -->
+    <div id="ag-cal-wrap">
+      <div class="ag-cal-nav">
+        <div class="ag-cal-nav-btns">
+          <button class="btn btn-ghost btn-sm" onclick="_agCalPrev()"><i data-lucide="chevron-left" style="width:14px;height:14px;vertical-align:-2px"></i></button>
+          <button class="btn btn-ghost btn-sm" onclick="_agCalToday()">Hoje</button>
+          <button class="btn btn-ghost btn-sm" onclick="_agCalNext()"><i data-lucide="chevron-right" style="width:14px;height:14px;vertical-align:-2px"></i></button>
+        </div>
+        <h3 id="ag-cal-title"></h3>
+        <div style="width:120px"></div>
+      </div>
+      <div class="ag-cal-grid" id="ag-cal-grid"></div>
+    </div>
+    <!-- Lista -->
+    <div id="ag-list-wrap" style="display:none">
+      <div class="card">
+        <table><thead><tr>
+          <th>Data</th><th>Título</th><th>Operação</th><th>Responsável</th>
+          <th>Tipo</th><th>Status</th><th>Observações</th><th></th>
+        </tr></thead><tbody id="agenda-table-body"></tbody></table>
+      </div>
+    </div>
   </div>
-  <!-- Lista -->
-  <div id="ag-list-wrap" style="display:none">
-    <div class="card">
-      <table><thead><tr>
-        <th>Data</th><th>Título</th><th>Operação</th><th>Responsável</th>
-        <th>Tipo</th><th>Status</th><th>Observações</th><th></th>
-      </tr></thead><tbody id="agenda-table-body"></tbody></table>
+
+  <!-- ── PAINEL: OPERACIONAL ── -->
+  <div id="ag-pane-op" style="display:none">
+    <div class="actions-row" style="margin-bottom:18px">
+      <div class="ag-week-nav">
+        <button class="btn btn-ghost btn-sm" onclick="_opCalPrev()"><i data-lucide="chevron-left" style="width:14px;height:14px;vertical-align:-2px"></i></button>
+        <button class="btn btn-ghost btn-sm" onclick="_opCalToday()">Esta semana</button>
+        <button class="btn btn-ghost btn-sm" onclick="_opCalNext()"><i data-lucide="chevron-right" style="width:14px;height:14px;vertical-align:-2px"></i></button>
+      </div>
+      <h3 id="ag-week-title" style="font-size:14px;font-weight:700;color:var(--navy);margin-left:8px"></h3>
     </div>
+    <!-- Operações em andamento -->
+    <div id="ag-op-strip"></div>
+    <!-- Grade semanal -->
+    <div class="ag-week-grid" id="ag-week-grid"></div>
   </div>
 </div>
 
@@ -1096,6 +1154,74 @@ function _agChips(items,today,dt){
   }).join('');
   if(items.length>MAX)html+=`<span class="ag-more">+${items.length-MAX} mais</span>`;
   return html;
+}
+// ── AGENDA OPERACIONAL SEMANAL ──
+let _agSubPane='rel';
+let _opCalRef=_getMondayOf(new Date());
+function _getMondayOf(d){const dt=new Date(d);dt.setHours(0,0,0,0);const day=dt.getDay();const diff=day===0?-6:1-day;dt.setDate(dt.getDate()+diff);return dt;}
+function _agSubTab(pane){
+  _agSubPane=pane;
+  document.getElementById('ag-sub-rel').className='ag-sub-btn'+(pane==='rel'?' active':'');
+  document.getElementById('ag-sub-op').className='ag-sub-btn'+(pane==='op'?' active':'');
+  document.getElementById('ag-pane-rel').style.display=pane==='rel'?'':'none';
+  document.getElementById('ag-pane-op').style.display=pane==='op'?'':'none';
+  if(pane==='op')renderOpCal();else renderAgenda();
+  _lcIcons();
+}
+function _opCalPrev(){_opCalRef=new Date(_opCalRef);_opCalRef.setDate(_opCalRef.getDate()-7);renderOpCal();}
+function _opCalNext(){_opCalRef=new Date(_opCalRef);_opCalRef.setDate(_opCalRef.getDate()+7);renderOpCal();}
+function _opCalToday(){_opCalRef=_getMondayOf(new Date());renderOpCal();}
+function renderOpCal(){
+  const today=new Date().toISOString().split('T')[0];
+  const mon=new Date(_opCalRef);
+  const days=[];
+  for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);days.push(d);}
+  const weekStart=days[0].toISOString().split('T')[0];
+  const weekEnd=days[6].toISOString().split('T')[0];
+  // Título da semana
+  const fmt=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+  const titleEl=document.getElementById('ag-week-title');
+  if(titleEl)titleEl.textContent=fmt(days[0])+' – '+fmt(days[6])+' · '+days[0].getFullYear();
+  // Strip de operações em andamento
+  const opsAtivas=db.operacoes.filter(o=>o.status==='Em andamento'||o.status==='Fase inicial'||o.status==='Planejamento');
+  const strip=document.getElementById('ag-op-strip');
+  if(strip){
+    if(opsAtivas.length){
+      strip.innerHTML=`<span class="ag-op-strip-label">${ic('zap',11)} Em andamento:</span>`+
+        opsAtivas.map(o=>`<span class="ag-op-pill"><span class="ag-op-pill-dot"></span>${o.nome}</span>`).join('');
+    } else {strip.innerHTML='';}
+  }
+  // Map tarefas por prazo
+  const DOW=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const byDate={};
+  db.tarefas.forEach(t=>{if(t.prazo)(byDate[t.prazo]=byDate[t.prazo]||[]).push(t);});
+  const grid=document.getElementById('ag-week-grid');
+  if(!grid)return;
+  grid.innerHTML=days.map(d=>{
+    const dt=d.toISOString().split('T')[0];
+    const isToday=dt===today;
+    const isWE=d.getDay()===0||d.getDay()===6;
+    const tasks=byDate[dt]||[];
+    const chips=tasks.map(t=>{
+      const done=t.status==='Concluído';
+      const over=t.prazo<today&&t.status!=='Concluído';
+      const cls=done?'ag-tc-concluido':over?'ag-tc-alta':t.prioridade==='Alta'?'ag-tc-alta':t.prioridade==='Média'?'ag-tc-media':'ag-tc-baixa';
+      const opName=getOpName(t.opId);
+      return`<div class="ag-task-chip ${cls}" onclick="showTab('tarefas')" title="${t.nome} — ${opName}">
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.nome}</span>
+      </div>
+      <div style="font-size:9.5px;color:var(--text3);padding:0 6px 3px;margin-top:-2px">${opName}</div>`;
+    }).join('');
+    const empty=!tasks.length?`<div style="padding:10px 8px;font-size:10px;color:var(--text3);text-align:center">—</div>`:'';
+    return`<div class="ag-week-day${isToday?' today':''}${isWE?' weekend':''}">
+      <div class="ag-week-day-hdr">
+        <span class="ag-week-dow">${DOW[d.getDay()]}</span>
+        <span class="ag-week-num">${d.getDate()}</span>
+      </div>
+      <div class="ag-week-day-body">${chips||empty}</div>
+    </div>`;
+  }).join('');
+  _lcIcons();
 }
 function openAgendaModal(id){
   editingAgId=id||null;updateOpSelects();
