@@ -1221,9 +1221,8 @@ function renderOpCal(){
         chainStart=op.inicio||today;
       } else {
         const prevEnd=chainedOps[idx-1].chainEnd;
-        const dayAfter=addDays(prevEnd,1);
-        // usa o maior: dia após anterior OU inicio próprio
-        chainStart=(op.inicio&&op.inicio>dayAfter)?op.inicio:dayAfter;
+        // data limite da anterior = início da próxima
+        chainStart=(op.inicio&&op.inicio>prevEnd)?op.inicio:prevEnd;
       }
       const chainEnd=op.previsao||addDays(chainStart,dur-1);
       chainedOps.push({...op,chainStart,chainEnd});
