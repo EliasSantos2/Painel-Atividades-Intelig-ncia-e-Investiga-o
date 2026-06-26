@@ -9,6 +9,7 @@
 <title>Painel de Investigações — Rumo Logística</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
   :root {
     --navy:#003865;--navy2:#00284a;--navy-light:#e8f0f8;
@@ -249,11 +250,11 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
 <div class="accent-bar"></div>
 
 <nav>
-  <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;font-weight:600;padding:14px 16px;text-decoration:none;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .2s;" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--text2)'">← Início</a>
-  <button class="active" onclick="switchTab('dashboard',this)">📊 Painel</button>
-  <button onclick="switchTab('operacoes',this)">📋 Operações</button>
-  <button onclick="switchTab('tarefas',this)">✅ Tarefas</button>
-  <button onclick="switchTab('agenda',this)">📅 Agenda</button>
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;font-weight:600;padding:14px 16px;text-decoration:none;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .2s;" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--text2)'"><i data-lucide="arrow-left" style="width:14px;height:14px"></i> Início</a>
+  <button class="active" onclick="switchTab('dashboard',this)"><i data-lucide="bar-chart-2" style="width:14px;height:14px"></i> Painel</button>
+  <button onclick="switchTab('operacoes',this)"><i data-lucide="clipboard-list" style="width:14px;height:14px"></i> Operações</button>
+  <button onclick="switchTab('tarefas',this)"><i data-lucide="check-square" style="width:14px;height:14px"></i> Tarefas</button>
+  <button onclick="switchTab('agenda',this)"><i data-lucide="calendar" style="width:14px;height:14px"></i> Agenda</button>
 </nav>
 
 <main>
@@ -264,7 +265,7 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
   <div style="display:grid;grid-template-columns:2fr 1fr;gap:18px;align-items:start">
     <div>
       <div class="card">
-        <div class="card-header"><h2>▶ Status por Operação</h2></div>
+        <div class="card-header"><h2>Status por Operação</h2></div>
         <table><thead><tr>
           <th>Operação</th><th>Empresa</th><th>Localidade</th>
           <th>Status</th><th>Conclusão</th><th>Pend.</th><th>Próximo Marco</th>
@@ -273,18 +274,18 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
     </div>
     <div>
       <div class="card">
-        <div class="card-header"><h2>▶ Indicadores</h2></div>
+        <div class="card-header"><h2>Indicadores</h2></div>
         <div style="padding:16px" id="indicadores"></div>
       </div>
       <div class="card">
         <div class="card-header">
-          <h2>▶ Prioridades para o Próximo Ciclo</h2>
-          <button class="btn btn-ghost btn-sm" onclick="openPriorModal()">✏️ Editar</button>
+          <h2>Prioridades para o Próximo Ciclo</h2>
+          <button class="btn btn-ghost btn-sm" onclick="openPriorModal()"><i data-lucide="pencil" style="width:13px;height:13px"></i> Editar</button>
         </div>
         <div style="padding:16px"><ul class="priority-list" id="priority-list"></ul></div>
       </div>
       <div class="card">
-        <div class="card-header"><h2>▶ Alta Prioridade Pendentes</h2></div>
+        <div class="card-header"><h2>Alta Prioridade Pendentes</h2></div>
         <table><thead><tr><th>Tarefa</th><th>Operação</th><th>Responsável</th><th>WhatsApp</th><th>Prazo</th></tr></thead>
         <tbody id="high-prio-body"></tbody></table>
       </div>
@@ -389,7 +390,7 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
     <div class="form-group"><label>Operação *</label><select id="task-op"></select></div>
     <div class="form-group"><label>Responsável</label><input id="task-resp" placeholder="Ex: Gabriel / Deligi"></div>
     <div class="form-group full">
-      <label>📱 WhatsApp do Responsável</label>
+      <label><i data-lucide="smartphone" style="width:12px;height:12px;vertical-align:middle"></i> WhatsApp do Responsável</label>
       <input id="task-wa" placeholder="DDD + número, sem espaços. Ex: 11987654321" oninput="previewWA(this.value)">
       <div class="wa-preview" id="wa-preview"></div>
       <div class="wa-note">Ao salvar com WhatsApp, o botão "Salvar e Notificar" envia a mensagem automaticamente via WhatsApp Web.</div>
@@ -406,7 +407,7 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
   <div class="modal-footer">
     <button class="btn btn-ghost" onclick="closeModal('task-modal')">Cancelar</button>
     <button class="btn btn-primary" onclick="saveTask(false)">Salvar</button>
-    <button class="btn btn-whatsapp" id="btn-save-notify" onclick="saveTask(true)" style="display:none">💬 Salvar e Notificar</button>
+    <button class="btn btn-whatsapp" id="btn-save-notify" onclick="saveTask(true)" style="display:none"><i data-lucide="message-circle" style="width:13px;height:13px"></i> Salvar e Notificar</button>
   </div>
 </div>
 </div>
@@ -460,6 +461,8 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
 <script>
 const SK='painel_inv_v3';
 function loadData(){try{const r=localStorage.getItem(SK);if(r)return JSON.parse(r);}catch(e){}return getDefaultData();}
+function ic(name,size=14,cls=''){return`<i data-lucide="${name}" style="width:${size}px;height:${size}px;vertical-align:middle;display:inline-block" class="${cls}"></i>`;}
+function _lcIcons(){if(typeof lucide!=='undefined')lucide.createIcons();}
 function saveData(){localStorage.setItem(SK,JSON.stringify(db));var lu=document.getElementById('last-updated');if(lu)lu.textContent='Salvo: '+new Date().toLocaleString('pt-BR');if(typeof pushShared==='function')pushShared();}
 function getDefaultData(){return{
   operacoes:[
@@ -526,7 +529,7 @@ function buildWALink(phone,taskName,opName,prio,prazo,resp){
 function waButton(phone,task){
   if(!phone)return'<span style="color:#cbd5e1;font-size:11px">—</span>';
   const link=buildWALink(phone,task.nome,getOpName(task.opId),task.prioridade,task.prazo,task.responsavel);
-  return`<a class="wa-btn" href="${link}" target="_blank">💬 WhatsApp</a>`;
+  return`<a class="wa-btn" href="${link}" target="_blank">${ic('message-circle',11)} WhatsApp</a>`;
 }
 function toast(msg,type='success'){const el=document.getElementById('toast');el.textContent=msg;el.className=`show ${type}`;setTimeout(()=>el.className='',2400);}
 
@@ -582,7 +585,7 @@ function renderDashboard(){
   ].map(([l,v])=>`<div class="ind-row"><span class="ind-label">${l}</span><span class="ind-val">${v}</span></div>`).join('');
   const hp=ts.filter(t=>t.prioridade==='Alta'&&t.status!=='Concluído').slice(0,8);
   document.getElementById('high-prio-body').innerHTML=hp.length===0
-    ?`<tr><td colspan="5" class="empty" style="padding:20px">🎉 Nenhuma tarefa de alta prioridade pendente</td></tr>`
+    ?`<tr><td colspan="5" class="empty" style="padding:20px">${ic('check-circle',16)} Nenhuma tarefa de alta prioridade pendente</td></tr>`
     :hp.map(t=>`<tr>
       <td style="font-size:12px;max-width:200px;white-space:normal">${t.nome}</td>
       <td><span class="badge badge-navy" style="font-size:11px">${getOpName(t.opId)}</span></td>
@@ -591,6 +594,7 @@ function renderDashboard(){
       <td style="font-size:12px;color:var(--text2)">${formatDate(t.prazo)}</td>
     </tr>`).join('');
   document.getElementById('last-updated').textContent='Salvo: '+new Date().toLocaleString('pt-BR');
+  _lcIcons();
 }
 
 function filterOps(v){
@@ -632,7 +636,7 @@ function renderOps(){
   const _opOrd={'Em andamento':0,'Fase inicial':1,'Planejamento':2,'Encerrado':3,'Concluído':4};
   ops=ops.slice().sort((a,b)=>(_opOrd[a.status]??2)-(_opOrd[b.status]??2));
   const tbody=document.getElementById('ops-table-body');
-  if(!ops.length){tbody.innerHTML=`<tr><td colspan="10" class="empty"><div class="empty-icon">🔍</div>Nenhuma operação encontrada</td></tr>`;return;}
+  if(!ops.length){tbody.innerHTML=`<tr><td colspan="10" class="empty"><div class="empty-icon">${ic('search',36)}</div>Nenhuma operação encontrada</td></tr>`;_lcIcons();return;}
   tbody.innerHTML=ops.map((op,i)=>{const s=getOpStats(op.id);return`<tr>
     <td style="color:var(--text2)">${i+1}</td><td><strong>${op.nome}</strong></td>
     <td style="color:var(--text2);font-size:12px">${op.local}</td>
@@ -642,10 +646,11 @@ function renderOps(){
     <td style="font-size:12px;color:var(--text2);max-width:140px;white-space:normal">${op.marco||'—'}</td>
     <td style="max-width:160px">${relintCell(op)}</td>
     <td><div style="display:flex;gap:4px">
-      <button class="btn btn-ghost btn-sm btn-icon" onclick="openOpModal(${op.id})">✏️</button>
-      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteOp(${op.id})">🗑️</button>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="openOpModal(${op.id})">${ic('pencil',13)}</button>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteOp(${op.id})">${ic('trash-2',13)}</button>
     </div></td>
   </tr>`;}).join('');
+  _lcIcons();
 }
 
 // ─── SUPABASE — armazenamento PRIVADO + autenticação ────────────────────────
@@ -767,9 +772,10 @@ function uploadLocal(){
 // Célula da coluna RELINT
 function relintCell(op){
   const has=op.relint&&(op.relint.path||op.relint.url);
-  const ver=has?`<button class="badge badge-green" title="${op.relint.name||'RELINT'}" style="border:none;cursor:pointer" onclick="viewRelint(${op.id})">📎 Ver RELINT</button>`:'<span style="color:var(--text2);font-size:12px">—</span>';
-  const btn=`<button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="triggerUpload(${op.id})">${has?'Substituir':'⬆️ Anexar RELINT'}</button>`;
-  const rem=has?`<button class="btn btn-ghost btn-sm btn-icon" style="margin-top:6px" title="Remover" onclick="removeRelintLink(${op.id})">✖</button>`:'';
+  const ver=has?`<button class="badge badge-green" title="${op.relint.name||'RELINT'}" style="border:none;cursor:pointer" onclick="viewRelint(${op.id})">${ic('paperclip',11)} Ver RELINT</button>`:'<span style="color:var(--text2);font-size:12px">—</span>';
+  const btn=`<button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="triggerUpload(${op.id})">${has?ic('refresh-cw',12)+' Substituir':ic('upload',12)+' Anexar RELINT'}</button>`;
+  const rem=has?`<button class="btn btn-ghost btn-sm btn-icon" style="margin-top:6px" title="Remover" onclick="removeRelintLink(${op.id})">${ic('x',12)}</button>`:'';
+
   return `<div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px">${ver}<div style="display:flex;gap:4px">${btn}${rem}</div></div>`;
 }
 function triggerUpload(id){
@@ -894,7 +900,7 @@ function renderTasks(){
   const _tsOrd={'Em andamento':0,'Pendente':1,'Concluído':2};
   ts=ts.slice().sort((a,b)=>(_tsOrd[a.status]??1)-(_tsOrd[b.status]??1));
   const tbody=document.getElementById('tasks-table-body');
-  if(!ts.length){tbody.innerHTML=`<tr><td colspan="9" class="empty"><div class="empty-icon">✅</div>Nenhuma tarefa encontrada</td></tr>`;return;}
+  if(!ts.length){tbody.innerHTML=`<tr><td colspan="9" class="empty"><div class="empty-icon">${ic('check-square',36)}</div>Nenhuma tarefa encontrada</td></tr>`;_lcIcons();return;}
   tbody.innerHTML=ts.map(t=>{const done=t.status==='Concluído';return`<tr style="${done?'opacity:.55':''}">
     <td><input type="checkbox" ${done?'checked':''} onchange="toggleTask(${t.id},this.checked)" style="cursor:pointer;width:16px;height:16px;accent-color:var(--navy)"></td>
     <td style="max-width:240px;white-space:normal;${done?'text-decoration:line-through;':''}">${t.nome}</td>
@@ -909,10 +915,11 @@ function renderTasks(){
     <td style="font-size:12px;color:var(--text2)">${formatDate(t.prazo)}</td>
     <td>${waButton(t.whatsapp,t)}</td>
     <td><div style="display:flex;gap:4px">
-      <button class="btn btn-ghost btn-sm btn-icon" onclick="openTaskModal(${t.id})">✏️</button>
-      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteTask(${t.id})">🗑️</button>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="openTaskModal(${t.id})">${ic('pencil',13)}</button>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteTask(${t.id})">${ic('trash-2',13)}</button>
     </div></td>
   </tr>`;}).join('');
+  _lcIcons();
 }
 function toggleTask(id,checked){const t=db.tarefas.find(t=>t.id===id);if(t){t.status=checked?'Concluído':'Pendente';saveData();renderTasks();renderDashboard();}}
 function changeTaskStatus(id,val){const t=db.tarefas.find(t=>t.id===id);if(t){t.status=val;saveData();renderDashboard();renderTasks();}}
@@ -975,7 +982,7 @@ function renderAgenda(){
   mSel.innerHTML=`<option value="">Todos os meses</option>`+months.map(m=>`<option value="${m}" ${cur===m?'selected':''}>${m}</option>`).join('');
   const tbody=document.getElementById('agenda-table-body');
   const today=new Date().toISOString().split('T')[0];
-  if(!items.length){tbody.innerHTML=`<tr><td colspan="8" class="empty"><div class="empty-icon">📅</div>Nenhum compromisso cadastrado</td></tr>`;return;}
+  if(!items.length){tbody.innerHTML=`<tr><td colspan="8" class="empty"><div class="empty-icon">${ic('calendar',36)}</div>Nenhum compromisso cadastrado</td></tr>`;_lcIcons();return;}
   tbody.innerHTML=items.map(a=>{const past=a.data<today&&a.status==='Pendente';return`<tr>
     <td style="font-weight:700;${past?'color:var(--red)':''}">${formatDate(a.data)}${a.hora?' '+a.hora:''}</td>
     <td><strong>${a.titulo}</strong></td>
@@ -985,10 +992,11 @@ function renderAgenda(){
     <td>${statusBadge(a.status)}</td>
     <td style="font-size:12px;color:var(--text2)">${a.obs||'—'}</td>
     <td><div style="display:flex;gap:4px">
-      <button class="btn btn-ghost btn-sm btn-icon" onclick="openAgendaModal(${a.id})">✏️</button>
-      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteAgenda(${a.id})">🗑️</button>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="openAgendaModal(${a.id})">${ic('pencil',13)}</button>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteAgenda(${a.id})">${ic('trash-2',13)}</button>
     </div></td>
   </tr>`;}).join('');
+  _lcIcons();
 }
 function openAgendaModal(id){
   editingAgId=id||null;updateOpSelects();
@@ -1047,7 +1055,7 @@ initAuth();
 </script>
 
 <!-- ===== ADMIN SYSTEM ===== -->
-<button id="admin-lock-btn" title="Configuração do Painel" onclick="openLogin()">⚙️</button>
+<button id="admin-lock-btn" title="Configuração do Painel" onclick="openLogin()"><i data-lucide="settings" style="width:18px;height:18px"></i></button>
 
 <!-- Login Modal -->
 <div id="login-overlay">
@@ -1380,6 +1388,7 @@ loadConfig();
   setInterval(check,60000);
   document.addEventListener('visibilitychange',function(){ if(!document.hidden){ if(pending){ location.reload(); } else { check(); } } });
 })();
+document.addEventListener('DOMContentLoaded',function(){ if(typeof lucide!=='undefined') lucide.createIcons(); });
 </script>
 </body>
 </html>
