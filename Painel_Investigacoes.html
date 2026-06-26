@@ -1197,46 +1197,69 @@ function renderOpCal(){
   const fmt=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
   const titleEl=document.getElementById('ag-week-title');
   if(titleEl)titleEl.textContent=fmt(days[0])+' – '+fmt(days[6])+' · '+days[0].getFullYear();
-  // ── Gantt de operações ──
-  const opsAtivas=db.operacoes.filter(o=>o.status==='Em andamento'||o.status==='Fase inicial'||o.status==='Planejamento');
+  // ── Gantt de operações (encadeado: cada op começa após o previsao da anterior) ──
+  const opsAtivas=db.operacoes.filter(o=>o.status!=='Concluído');
   const strip=document.getElementById('ag-op-strip');
   if(strip){
     const DOW2=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-    // header row (days)
+    const DEF_DUR=14;
+    // Ordenar por previsao; sem data vai ao final
+    const opsSorted=opsAtivas.slice().sort((a,b)=>{
+      if(!a.previsao&&!b.previsao)return 0;
+      if(!a.previsao)return 1;
+      if(!b.previsao)return -1;
+      return a.previsao.localeCompare(b.previsao);
+    });
+    // Calcular datas encadeadas
+    function addDays(dateStr,n){const d=new Date(dateStr);d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];}
+    function diffDays(a,b){return Math.max(1,Math.round((new Date(b)-new Date(a))/86400000)+1);}
+    let chainedOps=[];
+    opsSorted.forEach((op,idx)=>{
+      const dur=(op.inicio&&op.previsao)?diffDays(op.inicio,op.previsao):DEF_DUR;
+      let chainStart;
+      if(idx===0){
+        chainStart=op.inicio||today;
+      } else {
+        const prevEnd=chainedOps[idx-1].chainEnd;
+        const dayAfter=addDays(prevEnd,1);
+        // usa o maior: dia após anterior OU inicio próprio
+        chainStart=(op.inicio&&op.inicio>dayAfter)?op.inicio:dayAfter;
+      }
+      const chainEnd=op.previsao||addDays(chainStart,dur-1);
+      chainedOps.push({...op,chainStart,chainEnd});
+    });
     let gh=`<div class="ag-gantt-wrap ag-gantt-op-colors">`;
-    gh+=`<div class="ag-gantt-label">${ic('bar-chart-2',11)} Operações em andamento nesta semana</div>`;
+    gh+=`<div class="ag-gantt-label">${ic('bar-chart-2',11)} Linha do tempo das operações (sequencial)</div>`;
     gh+=`<div class="ag-gantt-header">`+weekDts.map((dt,i)=>`<div class="ag-gantt-dow">${DOW2[days[i].getDay()]} ${days[i].getDate()}</div>`).join('')+`</div>`;
     gh+=`<div class="ag-gantt-rows">`;
-    if(!opsAtivas.length){
-      gh+=`<div style="font-size:12px;color:var(--text3);padding:8px 0">Nenhuma operação ativa</div>`;
+    if(!chainedOps.length){
+      gh+=`<div style="font-size:12px;color:var(--text3);padding:8px 0">Nenhuma operação cadastrada</div>`;
     } else {
-      opsAtivas.forEach((op,idx)=>{
+      chainedOps.forEach((op,idx)=>{
         const color=_OP_COLORS[idx%_OP_COLORS.length];
-        // Determine span: use op.inicio and op.previsao; fallback to today/end-of-week
-        const opStart=op.inicio||today;
-        const opEnd=op.previsao||weekEnd;
-        // Find which columns (0-6) this op occupies this week
+        const opStart=op.chainStart, opEnd=op.chainEnd;
+        const fmtDate=s=>s?new Date(s).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}):'—';
+        // Calcular colunas visíveis nesta semana
         let startCol=-1, endCol=-1;
-        for(let c=0;c<7;c++){
-          if(weekDts[c]>=opStart && startCol===-1) startCol=c;
-          if(weekDts[c]<=opEnd) endCol=c;
+        if(opStart<=weekStart) startCol=0; else {
+          for(let c=0;c<7;c++){if(weekDts[c]>=opStart&&startCol===-1)startCol=c;}
         }
-        // If op spans the whole week or beyond
-        if(opStart<=weekStart) startCol=0;
-        if(opEnd>=weekEnd) endCol=6;
-        // If op doesn't touch this week at all, skip
-        if(endCol<0||startCol>6||opEnd<weekStart||opStart>weekEnd){
-          // Still show as a "not in this week" indicator
+        if(opEnd>=weekEnd) endCol=6; else {
+          for(let c=6;c>=0;c--){if(weekDts[c]<=opEnd&&endCol===-1)endCol=c;}
+        }
+        if(endCol<0||opEnd<weekStart||opStart>weekEnd){
+          // Fora desta semana — mostra indicador com datas
+          const side=opEnd<weekStart?'antes':'depois';
           gh+=`<div class="ag-gantt-row"><div style="grid-column:1/8;font-size:10.5px;color:var(--text3);padding:3px 6px;display:flex;align-items:center;gap:6px">`;
           gh+=`<span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;display:inline-block"></span>`;
-          gh+=`${op.nome} <span style="opacity:.6">(fora desta semana)</span></div></div>`;
+          gh+=`${op.nome} <span style="opacity:.55">(${side} desta semana · ${fmtDate(opStart)} – ${fmtDate(opEnd)})</span></div></div>`;
           return;
         }
-        if(startCol<0) startCol=0;
-        // Build row: empty cells before, bar, empty cells after
+        if(startCol<0)startCol=0;
+        const tooltip=`${op.nome} · ${fmtDate(opStart)} – ${fmtDate(opEnd)}`;
         gh+=`<div class="ag-gantt-row">`;
-        if(startCol>0) gh+=`<div style="grid-column:1/${startCol+1}"></div>`;
-        gh+=`<div class="ag-gantt-bar" style="grid-column:${startCol+1}/${endCol+2};background:${color}" title="${op.nome}${op.previsao?' · Previsão: '+op.previsao:''}">${op.nome}</div>`;
+        if(startCol>0)gh+=`<div style="grid-column:1/${startCol+1}"></div>`;
+        gh+=`<div class="ag-gantt-bar" style="grid-column:${startCol+1}/${endCol+2};background:${color}" title="${tooltip}">${op.nome}</div>`;
         gh+=`</div>`;
       });
     }
