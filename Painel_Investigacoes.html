@@ -9,7 +9,6 @@
 <title>Painel de Investigações — Rumo Logística</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/dist/vis-network.min.js"></script>
 <style>
   :root {
     --navy:#003865;--navy2:#1a3a5c;--orange:#F78344;--orange-h:#e06d30;
@@ -556,37 +555,7 @@ function renderOps(){
     </div></td>
   </tr>`;}).join('');
 }
-let _opsTeia=null;
-function renderOpsTeiaGraph(){
-  const container=document.getElementById('ops-teia-container');
-  if(!container)return;
-  const ops=db.operacoes.filter(o=>o.localidade&&o.localidade.trim());
-  if(!ops.length){container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text2);font-size:13px">Nenhuma operação com localidade cadastrada</div>';return;}
-  const nodes=[],edges=[];
-  const locMap={};
-  let nid=1;
-  // nós: operações
-  ops.forEach(op=>{
-    nodes.push({id:'op_'+op.id,label:op.nome,title:'<b>'+op.nome+'</b><br>'+op.local+'<br>'+op.localidade+'<br>Status: '+op.status,group:'op',color:{background:'#003865',border:'#001f3f'},font:{color:'#fff',size:12},shape:'box',margin:8});
-  });
-  // nós: localidades únicas
-  const locs=[...new Set(ops.map(o=>o.localidade.trim()))];
-  locs.forEach(loc=>{
-    nodes.push({id:'loc_'+loc,label:loc,title:'Localidade: '+loc,group:'loc',color:{background:'#e0edff',border:'#003865'},font:{color:'#003865',size:11,bold:true},shape:'ellipse'});
-  });
-  // arestas: op → localidade
-  ops.forEach(op=>{
-    edges.push({from:'op_'+op.id,to:'loc_'+op.localidade.trim(),color:{color:'#93c5fd'},width:2});
-  });
-  if(_opsTeia){_opsTeia.destroy();_opsTeia=null;}
-  _opsTeia=new vis.Network(container,{nodes:new vis.DataSet(nodes),edges:new vis.DataSet(edges)},{
-    physics:{solver:'forceAtlas2Based',forceAtlas2Based:{gravitationalConstant:-60,centralGravity:0.01,springLength:120,springConstant:0.08},stabilization:{iterations:200}},
-    interaction:{hover:true,tooltipDelay:150},
-    nodes:{borderWidth:2,borderWidthSelected:3,shadow:true},
-    edges:{smooth:{type:'continuous'}},
-    layout:{improvedLayout:true}
-  });
-}
+
 // ─── SUPABASE — armazenamento PRIVADO + autenticação ────────────────────────
 // PREENCHA com os dados do seu projeto Supabase (Settings → API):
 const SUPABASE_URL      = 'https://rfwmklqzlfvllsrkvgob.supabase.co';
