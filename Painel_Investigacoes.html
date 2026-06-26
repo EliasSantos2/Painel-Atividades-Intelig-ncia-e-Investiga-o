@@ -155,8 +155,33 @@
   .wa-btn{display:inline-flex;align-items:center;gap:4px;background:#e6f4ec;color:#1d6e3a;border:1px solid #b4e0c4;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .15s;}
   .wa-btn:hover{background:#25d366;color:#fff;border-color:#25d366;}
 
+  /* ── CALENDÁRIO DE AGENDA ── */
+  .ag-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .ag-cal-nav h3{font-size:15px;font-weight:800;color:var(--navy);text-transform:capitalize;}
+  .ag-cal-nav-btns{display:flex;gap:6px;align-items:center;}
+  .ag-view-toggle{display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden;background:#fff;}
+  .ag-view-toggle button{background:none;border:none;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text2);transition:all .15s;}
+  .ag-view-toggle button.active{background:var(--navy);color:#fff;}
+  .ag-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+  .ag-cal-dow{text-align:center;padding:6px 0;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+  .ag-cal-day{min-height:88px;background:#fff;border:1px solid var(--border);border-radius:6px;padding:6px 7px;transition:background .12s;position:relative;}
+  .ag-cal-day.other-month{background:var(--bg3);opacity:.55;}
+  .ag-cal-day.today{border-color:var(--orange);box-shadow:0 0 0 2px rgba(247,131,68,.2);}
+  .ag-cal-day-num{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;}
+  .ag-cal-day.today .ag-cal-day-num{background:var(--orange);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;}
+  .ag-cal-chip{display:block;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:opacity .12s;}
+  .ag-cal-chip:hover{opacity:.8;}
+  .ag-chip-pendente{background:#e8f0f8;color:#003865;}
+  .ag-chip-andamento{background:#fff1e6;color:#9a3412;}
+  .ag-chip-concluido{background:#e6f4ec;color:#1d6e3a;}
+  .ag-chip-atrasado{background:#fdeaea;color:#9b1c1c;}
+  .ag-more{font-size:10px;color:var(--text3);font-weight:600;padding:1px 4px;cursor:pointer;}
+
   @media(max-width:700px){
     .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .ag-cal-day{min-height:55px;}
+    .ag-cal-chip{display:none;}
+    .ag-cal-day-num{font-size:12px;}
     .form-grid{grid-template-columns:1fr;}
     .form-group.full{grid-column:1;}
     main{padding:14px 16px;}
@@ -338,13 +363,33 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
 <div id="tab-agenda" class="tab-panel">
   <div class="actions-row" style="margin-bottom:18px">
     <button class="btn btn-primary" onclick="openAgendaModal()">+ Novo Compromisso</button>
-    <select class="filter-sel" id="agenda-filter-month" onchange="renderAgenda()"><option value="">Todos os meses</option></select>
+    <select class="filter-sel" id="agenda-filter-month" onchange="renderAgenda()" style="display:none"></select>
+    <div style="margin-left:auto" class="ag-view-toggle">
+      <button id="ag-btn-cal" class="active" onclick="_agSetView('cal')"><i data-lucide="calendar" style="width:13px;height:13px;vertical-align:-2px"></i> Calendário</button>
+      <button id="ag-btn-list" onclick="_agSetView('list')"><i data-lucide="list" style="width:13px;height:13px;vertical-align:-2px"></i> Lista</button>
+    </div>
   </div>
-  <div class="card">
-    <table><thead><tr>
-      <th>Data</th><th>Título</th><th>Operação</th><th>Responsável</th>
-      <th>Tipo</th><th>Status</th><th>Observações</th><th></th>
-    </tr></thead><tbody id="agenda-table-body"></tbody></table>
+  <!-- Calendário -->
+  <div id="ag-cal-wrap">
+    <div class="ag-cal-nav">
+      <div class="ag-cal-nav-btns">
+        <button class="btn btn-ghost btn-sm" onclick="_agCalPrev()"><i data-lucide="chevron-left" style="width:14px;height:14px;vertical-align:-2px"></i></button>
+        <button class="btn btn-ghost btn-sm" onclick="_agCalToday()">Hoje</button>
+        <button class="btn btn-ghost btn-sm" onclick="_agCalNext()"><i data-lucide="chevron-right" style="width:14px;height:14px;vertical-align:-2px"></i></button>
+      </div>
+      <h3 id="ag-cal-title"></h3>
+      <div style="width:120px"></div>
+    </div>
+    <div class="ag-cal-grid" id="ag-cal-grid"></div>
+  </div>
+  <!-- Lista -->
+  <div id="ag-list-wrap" style="display:none">
+    <div class="card">
+      <table><thead><tr>
+        <th>Data</th><th>Título</th><th>Operação</th><th>Responsável</th>
+        <th>Tipo</th><th>Status</th><th>Observações</th><th></th>
+      </tr></thead><tbody id="agenda-table-body"></tbody></table>
+    </div>
   </div>
 </div>
 
@@ -972,31 +1017,85 @@ function deleteTask(id){
   toast('Tarefa excluída','info');
 }
 
+let _agView='cal';
+let _agCalY=(new Date()).getFullYear();
+let _agCalM=(new Date()).getMonth();
+function _agSetView(v){
+  _agView=v;
+  document.getElementById('ag-btn-cal').className=v==='cal'?'active':'';
+  document.getElementById('ag-btn-list').className=v==='list'?'active':'';
+  document.getElementById('ag-cal-wrap').style.display=v==='cal'?'':'none';
+  document.getElementById('ag-list-wrap').style.display=v==='list'?'':'none';
+  renderAgenda();
+}
+function _agCalPrev(){_agCalM--;if(_agCalM<0){_agCalM=11;_agCalY--;}renderAgenda();}
+function _agCalNext(){_agCalM++;if(_agCalM>11){_agCalM=0;_agCalY++;}renderAgenda();}
+function _agCalToday(){const n=new Date();_agCalY=n.getFullYear();_agCalM=n.getMonth();renderAgenda();}
 function renderAgenda(){
-  const fM=document.getElementById('agenda-filter-month')?.value;
-  let items=[...db.agenda].sort((a,b)=>a.data.localeCompare(b.data));
-  if(fM)items=items.filter(a=>a.data.startsWith(fM));
-  const months=[...new Set(db.agenda.map(a=>a.data.substring(0,7)))].sort();
-  const mSel=document.getElementById('agenda-filter-month');
-  const cur=mSel.value;
-  mSel.innerHTML=`<option value="">Todos os meses</option>`+months.map(m=>`<option value="${m}" ${cur===m?'selected':''}>${m}</option>`).join('');
-  const tbody=document.getElementById('agenda-table-body');
   const today=new Date().toISOString().split('T')[0];
-  if(!items.length){tbody.innerHTML=`<tr><td colspan="8" class="empty"><div class="empty-icon">${ic('calendar',36)}</div>Nenhum compromisso cadastrado</td></tr>`;_lcIcons();return;}
-  tbody.innerHTML=items.map(a=>{const past=a.data<today&&a.status==='Pendente';return`<tr>
-    <td style="font-weight:700;${past?'color:var(--red)':''}">${formatDate(a.data)}${a.hora?' '+a.hora:''}</td>
-    <td><strong>${a.titulo}</strong></td>
-    <td><span class="badge badge-navy" style="font-size:11px">${getOpName(a.opId)}</span></td>
-    <td style="font-size:12px;color:var(--text2)">${a.responsavel||'—'}</td>
-    <td><span class="badge badge-gray" style="font-size:11px">${a.tipo}</span></td>
-    <td>${statusBadge(a.status)}</td>
-    <td style="font-size:12px;color:var(--text2)">${a.obs||'—'}</td>
-    <td><div style="display:flex;gap:4px">
-      <button class="btn btn-ghost btn-sm btn-icon" onclick="openAgendaModal(${a.id})">${ic('pencil',13)}</button>
-      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteAgenda(${a.id})">${ic('trash-2',13)}</button>
-    </div></td>
-  </tr>`;}).join('');
-  _lcIcons();
+  if(_agView==='list'){
+    let items=[...db.agenda].sort((a,b)=>a.data.localeCompare(b.data));
+    const tbody=document.getElementById('agenda-table-body');
+    if(!items.length){tbody.innerHTML=`<tr><td colspan="8" class="empty"><div class="empty-icon">${ic('calendar',36)}</div>Nenhum compromisso cadastrado</td></tr>`;_lcIcons();return;}
+    tbody.innerHTML=items.map(a=>{const past=a.data<today&&a.status==='Pendente';return`<tr>
+      <td style="font-weight:700;${past?'color:var(--red)':''}">${formatDate(a.data)}${a.hora?' '+a.hora:''}</td>
+      <td><strong>${a.titulo}</strong></td>
+      <td><span class="badge badge-navy" style="font-size:11px">${getOpName(a.opId)}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${a.responsavel||'—'}</td>
+      <td><span class="badge badge-gray" style="font-size:11px">${a.tipo}</span></td>
+      <td>${statusBadge(a.status)}</td>
+      <td style="font-size:12px;color:var(--text2)">${a.obs||'—'}</td>
+      <td><div style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="openAgendaModal(${a.id})">${ic('pencil',13)}</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteAgenda(${a.id})">${ic('trash-2',13)}</button>
+      </div></td>
+    </tr>`;}).join('');
+    _lcIcons();return;
+  }
+  // Calendário
+  const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const DIAS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const titleEl=document.getElementById('ag-cal-title');
+  if(titleEl)titleEl.textContent=MESES[_agCalM]+' '+_agCalY;
+  const firstDay=new Date(_agCalY,_agCalM,1).getDay();
+  const daysInMonth=new Date(_agCalY,_agCalM+1,0).getDate();
+  const daysInPrev=new Date(_agCalY,_agCalM,0).getDate();
+  // map items by date
+  const byDate={};
+  db.agenda.forEach(a=>{(byDate[a.data]=byDate[a.data]||[]).push(a);});
+  let html=DIAS.map(d=>`<div class="ag-cal-dow">${d}</div>`).join('');
+  // prev month filler
+  for(let i=0;i<firstDay;i++){
+    const d=daysInPrev-firstDay+1+i;
+    const dt=`${_agCalY}-${String(_agCalM===0?12:_agCalM).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    html+=`<div class="ag-cal-day other-month"><div class="ag-cal-day-num">${d}</div>${_agChips(byDate[dt]||[],today,dt)}</div>`;
+  }
+  // current month
+  for(let d=1;d<=daysInMonth;d++){
+    const dt=`${_agCalY}-${String(_agCalM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=dt===today;
+    html+=`<div class="ag-cal-day${isToday?' today':''}"><div class="ag-cal-day-num">${d}</div>${_agChips(byDate[dt]||[],today,dt)}</div>`;
+  }
+  // next month filler
+  const total=firstDay+daysInMonth;
+  const rem=total%7===0?0:7-(total%7);
+  for(let d=1;d<=rem;d++){
+    const dt=`${_agCalY}-${String(_agCalM+2>12?1:_agCalM+2).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    html+=`<div class="ag-cal-day other-month"><div class="ag-cal-day-num">${d}</div>${_agChips(byDate[dt]||[],today,dt)}</div>`;
+  }
+  const grid=document.getElementById('ag-cal-grid');
+  if(grid){grid.innerHTML=html;}_lcIcons();
+}
+function _agChips(items,today,dt){
+  if(!items.length)return'';
+  const MAX=3;
+  let html=items.slice(0,MAX).map(a=>{
+    const atrasado=a.data<today&&a.status==='Pendente';
+    const cls=atrasado?'ag-chip-atrasado':a.status==='Concluído'?'ag-chip-concluido':a.status==='Em andamento'?'ag-chip-andamento':'ag-chip-pendente';
+    return`<span class="ag-cal-chip ${cls}" onclick="openAgendaModal(${a.id})" title="${a.titulo}${a.hora?' '+a.hora:''}">${a.hora?a.hora+' ':''}${a.titulo}</span>`;
+  }).join('');
+  if(items.length>MAX)html+=`<span class="ag-more">+${items.length-MAX} mais</span>`;
+  return html;
 }
 function openAgendaModal(id){
   editingAgId=id||null;updateOpSelects();
