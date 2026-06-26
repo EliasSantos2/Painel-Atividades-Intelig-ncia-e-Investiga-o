@@ -202,7 +202,7 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
     </div>
   </div>
   <div class="header-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-    <div id="auth-userbox" style="display:none"><span id="auth-username"></span><button onclick="uploadLocal()" title="Enviar os dados deste computador para todos" style="margin-right:6px">&#8593; Sincronizar meus dados</button><button onclick="authLogout()">Sair</button></div>
+    <div id="auth-userbox" style="display:none"><span id="auth-username"></span><span id="sync-status" style="font-size:11px;color:var(--text2);margin-right:10px"></span><button onclick="authLogout()">Sair</button></div>
     <span id="last-updated"></span>
   </div>
 </header>
@@ -622,20 +622,34 @@ async function authLogout(){
 // ── DADOS COMPARTILHADOS (Supabase) — visíveis para todos os usuários ──────
 const SHARE_TABLE='painel_inv';
 let _sharedRev=null, _sharedLoaded=false, _sharedPoll=null;
+function _syncStatus(txt){ const el=document.getElementById('sync-status'); if(el) el.textContent=txt; }
 async function loadShared(){
   const c=sb(); if(!c||!_session) return false;
   try{
+    _syncStatus('⟳ Sincronizando…');
     const {data,error}=await c.from(SHARE_TABLE).select('data,updated_at').eq('id',1).maybeSingle();
     if(error) throw error;
-    if(data && data.data){ db=data.data; _sharedRev=data.updated_at; }
-    else { await c.from(SHARE_TABLE).upsert({id:1,data:db,updated_at:new Date().toISOString()}); }
+    let local=null; try{ const r=localStorage.getItem(SK); if(r) local=JSON.parse(r); }catch(e){}
+    const localTotal=(local?(local.operacoes||[]).length+(local.tarefas||[]).length+(local.agenda||[]).length:0);
+    if(data && data.data){
+      const remTotal=(data.data.operacoes||[]).length+(data.data.tarefas||[]).length+(data.data.agenda||[]).length;
+      if(local && localTotal>remTotal){ db=local; await c.from(SHARE_TABLE).upsert({id:1,data:db,updated_at:new Date().toISOString()}); _sharedRev=new Date().toISOString(); }
+      else { db=data.data; _sharedRev=data.updated_at; }
+    } else {
+      if(local && localTotal>0){ db=local; }
+      await c.from(SHARE_TABLE).upsert({id:1,data:db,updated_at:new Date().toISOString()});
+    }
+    _syncStatus('✔ Sincronizado');
     return true;
-  }catch(e){ console.warn('loadShared: tabela painel_inv ausente ou sem permissao — usando copia local',e); return false; }
+  }catch(e){ console.warn('loadShared',e); _syncStatus(''); return false; }
 }
 async function pushShared(){
   const c=sb(); if(!c||!_session) return;
-  try{ const {data,error}=await c.from(SHARE_TABLE).upsert({id:1,data:db,updated_at:new Date().toISOString()}).select('updated_at'); if(!error&&data&&data[0]) _sharedRev=data[0].updated_at; }
-  catch(e){ console.warn('pushShared',e); }
+  try{
+    _syncStatus('⟳ Salvando…');
+    const {data,error}=await c.from(SHARE_TABLE).upsert({id:1,data:db,updated_at:new Date().toISOString()}).select('updated_at');
+    if(!error&&data&&data[0]){ _sharedRev=data[0].updated_at; _syncStatus('✔ Sincronizado'); }
+  }catch(e){ console.warn('pushShared',e); _syncStatus(''); }
 }
 async function refreshShared(){
   const c=sb(); if(!c||!_session) return;
