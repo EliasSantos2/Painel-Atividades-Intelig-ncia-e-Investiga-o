@@ -532,7 +532,16 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
   <div class="modal-body"><div class="form-grid">
     <div class="form-group full"><label>Tarefa / Atividade *</label><input id="task-nome" placeholder="Descreva a tarefa…"></div>
     <div class="form-group"><label>Operação *</label><select id="task-op"></select></div>
-    <div class="form-group"><label>Responsável</label><input id="task-resp" placeholder="Ex: Gabriel / Deligi"></div>
+    <div class="form-group"><label>Responsável</label>
+      <select id="task-resp">
+        <option value="">— Não atribuído —</option>
+        <option>Elias</option>
+        <option>Gabriel</option>
+        <option>Delgado</option>
+        <option>Bruxo</option>
+        <option>Leandro</option>
+      </select>
+    </div>
     <div class="form-group full">
       <label><i data-lucide="smartphone" style="width:12px;height:12px;vertical-align:middle"></i> WhatsApp do Responsável</label>
       <input id="task-wa" placeholder="DDD + número, sem espaços. Ex: 11987654321" oninput="previewWA(this.value)">
@@ -1328,18 +1337,22 @@ function renderOpCal(){
   }).join('');
   _lcIcons();
 }
+const _TEAM=['Elias','Gabriel','Delgado','Bruxo','Leandro'];
 function renderPessoaCal(){
   const today=new Date().toISOString().split('T')[0];
-  // Separar responsáveis compostos (ex: "Gabriel / Deligi") em nomes individuais
+  // Mapear tarefas por cada membro do time fixo
   const pessoaMap={};
+  _TEAM.forEach(nome=>{ pessoaMap[nome]={nome,tarefas:[]}; });
   db.tarefas.forEach(t=>{
-    const nomes=(t.responsavel||'').split(/[\/,;]+/).map(n=>n.trim()).filter(Boolean);
-    nomes.forEach(nome=>{
-      if(!pessoaMap[nome]) pessoaMap[nome]={nome,tarefas:[]};
-      pessoaMap[nome].tarefas.push(t);
+    const resp=(t.responsavel||'').trim();
+    _TEAM.forEach(nome=>{
+      // match se o campo responsavel contém o nome (case-insensitive)
+      if(resp && resp.toLowerCase().indexOf(nome.toLowerCase())!==-1){
+        pessoaMap[nome].tarefas.push(t);
+      }
     });
   });
-  const pessoas=Object.values(pessoaMap).sort((a,b)=>a.nome.localeCompare(b.nome));
+  const pessoas=_TEAM.map(n=>pessoaMap[n]);
   const grid=document.getElementById('ag-pessoa-grid');
   if(!grid) return;
   if(!pessoas.length){
