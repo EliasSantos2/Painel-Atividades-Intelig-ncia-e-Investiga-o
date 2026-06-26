@@ -539,6 +539,8 @@ function renderOps(){
   let ops=db.operacoes;
   if(opSearchVal)ops=ops.filter(o=>o.nome.toLowerCase().includes(opSearchVal)||o.local.toLowerCase().includes(opSearchVal));
   if(opStatusFilter)ops=ops.filter(o=>o.status===opStatusFilter);
+  const _opOrd={'Em andamento':0,'Fase inicial':1,'Planejamento':2,'Encerrado':3,'Concluído':4};
+  ops=ops.slice().sort((a,b)=>(_opOrd[a.status]??2)-(_opOrd[b.status]??2));
   const tbody=document.getElementById('ops-table-body');
   if(!ops.length){tbody.innerHTML=`<tr><td colspan="10" class="empty"><div class="empty-icon">🔍</div>Nenhuma operação encontrada</td></tr>`;return;}
   tbody.innerHTML=ops.map((op,i)=>{const s=getOpStats(op.id);return`<tr>
@@ -785,6 +787,8 @@ function renderTasks(){
   if(fOp)ts=ts.filter(t=>t.opId==fOp);
   if(fSt)ts=ts.filter(t=>t.status===fSt);
   if(fPr)ts=ts.filter(t=>t.prioridade===fPr);
+  const _tsOrd={'Em andamento':0,'Pendente':1,'Concluído':2};
+  ts=ts.slice().sort((a,b)=>(_tsOrd[a.status]??1)-(_tsOrd[b.status]??1));
   const tbody=document.getElementById('tasks-table-body');
   if(!ts.length){tbody.innerHTML=`<tr><td colspan="9" class="empty"><div class="empty-icon">✅</div>Nenhuma tarefa encontrada</td></tr>`;return;}
   tbody.innerHTML=ts.map(t=>{const done=t.status==='Concluído';return`<tr style="${done?'opacity:.55':''}">
