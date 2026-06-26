@@ -7,10 +7,13 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel de Investigações — Rumo Logística</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
+  @font-face{font-family:'Cera Pro';src:url('fonts/Fontspring-DEMO-cerapro-regular.otf') format('opentype');font-weight:400;font-style:normal;}
+  @font-face{font-family:'Cera Pro';src:url('fonts/Fontspring-DEMO-cerapro-light.otf') format('opentype');font-weight:300;font-style:normal;}
+  @font-face{font-family:'Cera Pro';src:url('fonts/Fontspring-DEMO-cerapro-medium.otf') format('opentype');font-weight:500;font-style:normal;}
+  @font-face{font-family:'Cera Pro';src:url('fonts/Fontspring-DEMO-cerapro-bold.otf') format('opentype');font-weight:700;font-style:normal;}
   :root {
     --navy:#003865;--navy2:#00284a;--navy-light:#e8f0f8;
     --orange:#F78344;--orange-h:#e06d30;--orange-light:#fff4ed;
@@ -21,7 +24,7 @@
     --shadow-sm:0 1px 3px rgba(0,56,101,.07);
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans','Segoe UI',Arial,sans-serif;font-size:14px;min-height:100vh;-webkit-font-smoothing:antialiased;}
+  body{background:var(--bg);color:var(--text);font-family:'Cera Pro','Segoe UI',Arial,sans-serif;font-size:14px;min-height:100vh;-webkit-font-smoothing:antialiased;}
 
   /* ── HEADER ── */
   header{background:var(--navy);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:58px;box-shadow:0 2px 12px rgba(0,0,0,.22);}
@@ -1394,7 +1397,7 @@ initAuth();
     <div class="ap-row">
       <label>Fonte Base</label>
       <select id="c-font" onchange="applyFont(this.value)">
-        <option value="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif">Cera Pro</option>
+        <option value="'Cera Pro','Segoe UI',Arial,sans-serif">Cera Pro</option>
         <option value="'Segoe UI',Arial,sans-serif">Segoe UI</option>
         <option value="Arial,sans-serif">Arial</option>
         <option value="'Helvetica Neue',sans-serif">Helvetica Neue</option>
@@ -1472,7 +1475,7 @@ const defaultConfig = {
   '--bg':'#f4f6fa','--bg2':'#ffffff','--bg3':'#eef1f7',
   '--text':'#1a2535','--text2':'#5a6a80',
   '--green':'#2e9e57','--yellow':'#d97706','--red':'#dc2626',
-  font:"'Plus Jakarta Sans','Segoe UI',Arial,sans-serif", fontSize:'14'
+  font:"'Cera Pro','Segoe UI',Arial,sans-serif", fontSize:'14'
 };
 
 function openLogin(){
