@@ -561,7 +561,9 @@ function renderDashboard(){
     <div class="kpi-card"><div class="kpi-val" style="color:#475569">${pendente}</div><div class="kpi-label">Pendentes</div></div>
     <div class="kpi-card red-top"><div class="kpi-val">${altaPend}</div><div class="kpi-label">Alta Prior. Pend.</div></div>
   `;
-  document.getElementById('dash-ops-body').innerHTML=ops.map(op=>{const s=getOpStats(op.id);return`<tr>
+  const _dashOpOrd={'Em andamento':0,'Fase inicial':1,'Planejamento':2,'Encerrado':3,'Concluído':4};
+  const opsSorted=ops.slice().sort((a,b)=>(_dashOpOrd[a.status]??2)-(_dashOpOrd[b.status]??2));
+  document.getElementById('dash-ops-body').innerHTML=opsSorted.map(op=>{const s=getOpStats(op.id);return`<tr>
     <td><strong>${op.nome}</strong></td><td style="color:var(--text2);font-size:12px">${op.local}</td>
     <td style="font-size:12px;color:var(--text2)">${op.localidade||'—'}</td><td>${statusBadge(op.status)}</td>
     <td style="min-width:120px">${progressBar(op.status==='Concluído'?100:s.pct)}</td>
