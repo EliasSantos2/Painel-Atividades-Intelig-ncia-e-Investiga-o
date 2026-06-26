@@ -6,9 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Indicadores da Inteligência — Rumo Logística</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<title>Indicadores da Inteligência — Rumo Logística</title><script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -31,7 +29,7 @@
   --shadow:0 2px 10px rgba(0,56,101,.08);--shadow2:0 4px 20px rgba(0,56,101,.12);
   --radius:10px;
 }
-body{font-family:'Outfit','Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px}
+body{font-family:Verdana,'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px}
 
 /* ── TOP BAR ── */
 .topbar{background:#fff;padding:6px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,56,101,.06)}
@@ -52,7 +50,7 @@ body{font-family:'Outfit','Segoe UI',Arial,sans-serif;background:var(--bg);color
 .filters{background:#fff;padding:12px 24px;display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border);box-shadow:var(--shadow)}
 .fgrp{display:flex;flex-direction:column;gap:4px}
 .fgrp label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:700}
-.fgrp select{background:#fff;border:1.5px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer;min-width:120px;font-family:'Outfit','Segoe UI',Arial,sans-serif;transition:.15s}
+.fgrp select{background:#fff;border:1.5px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer;min-width:120px;font-family:Verdana,'Segoe UI',Arial,sans-serif;transition:.15s}
 .fgrp select:hover,.fgrp select:focus{border-color:var(--navy);outline:none}
 .btn-reset{background:var(--navy);color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.15s}
 .btn-reset:hover{background:var(--orange)}
@@ -155,9 +153,9 @@ body{font-family:'Outfit','Segoe UI',Arial,sans-serif;background:var(--bg);color
 .leg-dot{width:11px;height:11px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle;flex-shrink:0}
 
 /* CERA PRO UNIVERSAL */
-select,input,button,textarea,label{font-family:'Outfit','Segoe UI',Arial,sans-serif!important}
-.leaflet-popup-content,.leaflet-popup-content *{font-family:'Outfit','Segoe UI',Arial,sans-serif!important}
-.leaflet-container{font-family:'Outfit','Segoe UI',Arial,sans-serif!important}
+select,input,button,textarea,label{font-family:Verdana,'Segoe UI',Arial,sans-serif!important}
+.leaflet-popup-content,.leaflet-popup-content *{font-family:Verdana,'Segoe UI',Arial,sans-serif!important}
+.leaflet-container{font-family:Verdana,'Segoe UI',Arial,sans-serif!important}
 .deinter-tooltip{background:rgba(255,255,255,.95)!important;border:1px solid #D9DEE8!important;border-radius:6px!important;padding:4px 10px!important;font-size:12px!important;box-shadow:0 2px 8px rgba(0,0,0,.12)!important}
 .deinter-tooltip::before{display:none}
 </style>
@@ -641,7 +639,7 @@ function buildCharts(data) {
   { const _cl = document.getElementById('count-label'); if(_cl) _cl.textContent = total.toLocaleString('pt-BR') + ' registros'; }
 
 
-  const opts = { responsive:true, plugins:{ legend:{ labels:{ color:'#1a2740', font:{size:11,family:"'Outfit','Segoe UI',Arial,sans-serif"} } } } };
+  const opts = { responsive:true, plugins:{ legend:{ labels:{ color:'#1a2740', font:{size:11,family:"Verdana,'Segoe UI',Arial,sans-serif"} } } } };
 
   // PIE Classificação
   destroyChart('class');
