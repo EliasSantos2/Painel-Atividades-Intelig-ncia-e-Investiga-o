@@ -182,6 +182,23 @@
   .ag-tc-baixa{background:#e6f4ec;color:#1d6e3a;border-left:2px solid var(--green);}
   .ag-tc-concluido{background:#f1f4f9;color:#6b7280;border-left:2px solid #9ca3af;text-decoration:line-through;opacity:.7;}
 
+  /* ── AGENDA POR PESSOA ── */
+  .ag-pessoa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding-bottom:24px;}
+  .ag-pessoa-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow-sm);}
+  .ag-pessoa-hdr{background:var(--navy);padding:12px 16px;display:flex;align-items:center;gap:10px;}
+  .ag-pessoa-avatar{width:34px;height:34px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;}
+  .ag-pessoa-nome{color:#fff;font-size:13px;font-weight:700;line-height:1.2;}
+  .ag-pessoa-sub{color:rgba(255,255,255,.55);font-size:10.5px;}
+  .ag-pessoa-body{padding:10px 14px;}
+  .ag-pessoa-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #edf0f7;}
+  .ag-pessoa-item:last-child{border-bottom:none;}
+  .ag-pessoa-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+  .ag-pessoa-info{flex:1;min-width:0;}
+  .ag-pessoa-tarefa{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ag-pessoa-meta{font-size:10.5px;color:var(--text3);margin-top:2px;}
+  .ag-pessoa-prazo{font-size:10.5px;font-weight:700;white-space:nowrap;}
+  .ag-pessoa-empty{padding:16px;text-align:center;font-size:12px;color:var(--text3);}
+
   /* ── GANTT OPERACIONAL ── */
   .ag-gantt-wrap{margin-bottom:16px;}
   .ag-gantt-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
@@ -407,16 +424,19 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
 <div id="tab-agenda" class="tab-panel">
   <!-- Sub-nav -->
   <div class="ag-subnav">
-    <button id="ag-sub-rel" class="ag-sub-btn active" onclick="_agSubTab('rel')">
-      <i data-lucide="file-text" style="width:14px;height:14px;vertical-align:-2px"></i> Agenda de Apresentação de Relatórios
-    </button>
-    <button id="ag-sub-op" class="ag-sub-btn" onclick="_agSubTab('op')">
+    <button id="ag-sub-op" class="ag-sub-btn active" onclick="_agSubTab('op')">
       <i data-lucide="layout-list" style="width:14px;height:14px;vertical-align:-2px"></i> Agenda Operacional da Semana
+    </button>
+    <button id="ag-sub-pessoa" class="ag-sub-btn" onclick="_agSubTab('pessoa')">
+      <i data-lucide="users" style="width:14px;height:14px;vertical-align:-2px"></i> Agenda por Pessoa
+    </button>
+    <button id="ag-sub-rel" class="ag-sub-btn" onclick="_agSubTab('rel')">
+      <i data-lucide="file-text" style="width:14px;height:14px;vertical-align:-2px"></i> Agenda de Relatórios
     </button>
   </div>
 
   <!-- ── PAINEL: RELATÓRIOS ── -->
-  <div id="ag-pane-rel">
+  <div id="ag-pane-rel" style="display:none">
     <div class="actions-row" style="margin-bottom:18px">
       <button class="btn btn-primary" onclick="openAgendaModal()">+ Novo Compromisso</button>
       <div style="margin-left:auto" class="ag-view-toggle">
@@ -448,8 +468,13 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
     </div>
   </div>
 
+  <!-- ── PAINEL: POR PESSOA ── -->
+  <div id="ag-pane-pessoa" style="display:none">
+    <div id="ag-pessoa-grid"></div>
+  </div>
+
   <!-- ── PAINEL: OPERACIONAL ── -->
-  <div id="ag-pane-op" style="display:none">
+  <div id="ag-pane-op">
     <div class="actions-row" style="margin-bottom:18px">
       <div class="ag-week-nav">
         <button class="btn btn-ghost btn-sm" onclick="_opCalPrev()"><i data-lucide="chevron-left" style="width:14px;height:14px;vertical-align:-2px"></i></button>
@@ -660,7 +685,7 @@ function switchTab(id,btn){
   if(id==='dashboard')renderDashboard();
   if(id==='operacoes')renderOps();
   if(id==='tarefas')renderTasks();
-  if(id==='agenda')renderAgenda();
+  if(id==='agenda')_agSubTab(_agSubPane);
 }
 
 function renderDashboard(){
@@ -1173,16 +1198,20 @@ function _agChips(items,today,dt){
   return html;
 }
 // ── AGENDA OPERACIONAL SEMANAL ──
-let _agSubPane='rel';
+let _agSubPane='op';
 let _opCalRef=_getMondayOf(new Date());
 function _getMondayOf(d){const dt=new Date(d);dt.setHours(0,0,0,0);const day=dt.getDay();const diff=day===0?-6:1-day;dt.setDate(dt.getDate()+diff);return dt;}
 function _agSubTab(pane){
   _agSubPane=pane;
-  document.getElementById('ag-sub-rel').className='ag-sub-btn'+(pane==='rel'?' active':'');
-  document.getElementById('ag-sub-op').className='ag-sub-btn'+(pane==='op'?' active':'');
-  document.getElementById('ag-pane-rel').style.display=pane==='rel'?'':'none';
-  document.getElementById('ag-pane-op').style.display=pane==='op'?'':'none';
-  if(pane==='op')renderOpCal();else renderAgenda();
+  ['rel','op','pessoa'].forEach(p=>{
+    const b=document.getElementById('ag-sub-'+p);
+    if(b) b.className='ag-sub-btn'+(pane===p?' active':'');
+    const el=document.getElementById('ag-pane-'+p);
+    if(el) el.style.display=pane===p?'':'none';
+  });
+  if(pane==='op') renderOpCal();
+  else if(pane==='pessoa') renderPessoaCal();
+  else renderAgenda();
   _lcIcons();
 }
 function _opCalPrev(){_opCalRef=new Date(_opCalRef);_opCalRef.setDate(_opCalRef.getDate()-7);renderOpCal();}
@@ -1295,6 +1324,65 @@ function renderOpCal(){
         <span class="ag-week-num">${d.getDate()}</span>
       </div>
       <div class="ag-week-day-body">${chips||empty}</div>
+    </div>`;
+  }).join('');
+  _lcIcons();
+}
+function renderPessoaCal(){
+  const today=new Date().toISOString().split('T')[0];
+  // Separar responsáveis compostos (ex: "Gabriel / Deligi") em nomes individuais
+  const pessoaMap={};
+  db.tarefas.forEach(t=>{
+    const nomes=(t.responsavel||'').split(/[\/,;]+/).map(n=>n.trim()).filter(Boolean);
+    nomes.forEach(nome=>{
+      if(!pessoaMap[nome]) pessoaMap[nome]={nome,tarefas:[]};
+      pessoaMap[nome].tarefas.push(t);
+    });
+  });
+  const pessoas=Object.values(pessoaMap).sort((a,b)=>a.nome.localeCompare(b.nome));
+  const grid=document.getElementById('ag-pessoa-grid');
+  if(!grid) return;
+  if(!pessoas.length){
+    grid.innerHTML=`<div class="ag-pessoa-empty">${ic('users',28)}<br><br>Nenhum responsável cadastrado nas tarefas.</div>`;
+    _lcIcons(); return;
+  }
+  const prioColor={Alta:'var(--red)',Média:'var(--yellow)',Baixa:'var(--green)'};
+  grid.className='ag-pessoa-grid';
+  grid.innerHTML=pessoas.map(p=>{
+    const tarefas=p.tarefas.slice().sort((a,b)=>{
+      // Sem prazo vai para o final; depois ordena por prazo asc
+      if(!a.prazo&&!b.prazo) return 0;
+      if(!a.prazo) return 1;
+      if(!b.prazo) return -1;
+      return a.prazo.localeCompare(b.prazo);
+    });
+    const pendentes=tarefas.filter(t=>t.status!=='Concluído').length;
+    const initials=p.nome.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const itens=tarefas.map(t=>{
+      const done=t.status==='Concluído';
+      const atrasada=t.prazo&&t.prazo<today&&!done;
+      const dot=done?'#9ca3af':atrasada?'var(--red)':(prioColor[t.prioridade]||'var(--text3)');
+      const prazoCor=atrasada?'var(--red)':done?'#9ca3af':'var(--navy)';
+      const prazoTxt=t.prazo?formatDate(t.prazo):(done?'—':'Sem prazo');
+      const opName=getOpName(t.opId);
+      return`<div class="ag-pessoa-item">
+        <span class="ag-pessoa-dot" style="background:${dot}"></span>
+        <div class="ag-pessoa-info">
+          <div class="ag-pessoa-tarefa" title="${t.nome}">${done?'<s>':''} ${t.nome}${done?'</s>':''}</div>
+          <div class="ag-pessoa-meta">${ic('folder',10)} ${opName} · ${statusBadge(t.status)}</div>
+        </div>
+        <span class="ag-pessoa-prazo" style="color:${prazoCor}">${prazoTxt}</span>
+      </div>`;
+    }).join('');
+    return`<div class="ag-pessoa-card">
+      <div class="ag-pessoa-hdr">
+        <div class="ag-pessoa-avatar">${initials}</div>
+        <div>
+          <div class="ag-pessoa-nome">${p.nome}</div>
+          <div class="ag-pessoa-sub">${pendentes} tarefa(s) em aberto · ${tarefas.length} total</div>
+        </div>
+      </div>
+      <div class="ag-pessoa-body">${itens||`<div class="ag-pessoa-empty">Nenhuma tarefa</div>`}</div>
     </div>`;
   }).join('');
   _lcIcons();
