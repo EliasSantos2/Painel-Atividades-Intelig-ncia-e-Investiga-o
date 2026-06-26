@@ -9,6 +9,7 @@
 <title>Painel de Investigações — Rumo Logística</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/dist/vis-network.min.js"></script>
 <style>
   :root {
     --navy:#003865;--navy2:#1a3a5c;--orange:#F78344;--orange-h:#e06d30;
@@ -226,7 +227,7 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
       <div class="card">
         <div class="card-header"><h2>▶ Status por Operação</h2></div>
         <table><thead><tr>
-          <th>Operação</th><th>Local / Empresa</th><th>Localidade</th>
+          <th>Operação</th><th>Empresa</th><th>Localidade</th>
           <th>Status</th><th>Conclusão</th><th>Pend.</th><th>Próximo Marco</th>
         </tr></thead><tbody id="dash-ops-body"></tbody></table>
       </div>
@@ -262,9 +263,13 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
   </div>
   <div class="card">
     <table><thead><tr>
-      <th>#</th><th>Operação</th><th>Local</th><th>Localidade</th>
+      <th>#</th><th>Operação</th><th>Empresa</th><th>Localidade</th>
       <th>Status</th><th>% Conc.</th><th>Pend.</th><th>Próximo Marco</th><th>RELINT</th><th></th>
     </tr></thead><tbody id="ops-table-body"></tbody></table>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <div class="card-header"><h2>🕸️ Teia de Vínculos por Localidade</h2></div>
+    <div id="ops-teia-container" style="height:420px;background:#f8fafc;border-radius:0 0 8px 8px"></div>
   </div>
 </div>
 <input type="file" id="relint-hidden-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" style="display:none" onchange="onRelintFileChosen(this)">
@@ -312,7 +317,7 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
   <div class="modal-header"><h3 id="op-modal-title">Nova Operação</h3><button class="close-btn" onclick="closeModal('op-modal')">×</button></div>
   <div class="modal-body"><div class="form-grid">
     <div class="form-group"><label>Nome da Operação *</label><input id="op-nome" placeholder="Ex: Ponto Cego"></div>
-    <div class="form-group"><label>Local / Empresa *</label><input id="op-local" placeholder="Ex: Rondonópolis/MT – TRO"></div>
+    <div class="form-group"><label>Empresa *</label><input id="op-local" placeholder="Ex: RUMO"></div>
     <div class="form-group"><label>Localidade (Município - UF)</label><input id="op-localidade" list="municipios-list" placeholder="Digite o município…" autocomplete="off"><datalist id="municipios-list"></datalist></div>
     <div class="form-group"><label>Status</label>
       <select id="op-status"><option>Em andamento</option><option>Fase inicial</option><option>Planejamento</option><option>Concluído</option></select>
@@ -474,7 +479,7 @@ function switchTab(id,btn){
   document.getElementById('tab-'+id).classList.add('active');
   btn.classList.add('active');
   if(id==='dashboard')renderDashboard();
-  if(id==='operacoes')renderOps();
+  if(id==='operacoes'){renderOps();renderOpsTeiaGraph();}
   if(id==='tarefas')renderTasks();
   if(id==='agenda')renderAgenda();
 }
@@ -503,7 +508,7 @@ function renderDashboard(){
   document.getElementById('dash-ops-body').innerHTML=ops.map(op=>{const s=getOpStats(op.id);return`<tr>
     <td><strong>${op.nome}</strong></td><td style="color:var(--text2);font-size:12px">${op.local}</td>
     <td style="font-size:12px;color:var(--text2)">${op.localidade||'—'}</td><td>${statusBadge(op.status)}</td>
-    <td style="min-width:120px">${progressBar(s.pct)}</td>
+    <td style="min-width:120px">${progressBar(op.status==='Concluído'?100:s.pct)}</td>
     <td><span class="badge ${s.pend?'badge-orange':'badge-green'}">${s.pend}</span></td>
     <td style="font-size:12px;color:var(--text2);max-width:180px;white-space:normal">${op.marco||'—'}</td>
   </tr>`;}).join('');
@@ -545,7 +550,7 @@ function renderOps(){
     <td style="color:var(--text2)">${i+1}</td><td><strong>${op.nome}</strong></td>
     <td style="color:var(--text2);font-size:12px">${op.local}</td>
     <td style="font-size:12px;color:var(--text2)">${op.localidade||'—'}</td>
-    <td>${statusBadge(op.status)}</td><td style="min-width:120px">${progressBar(s.pct)}</td>
+    <td>${statusBadge(op.status)}</td><td style="min-width:120px">${progressBar(op.status==='Concluído'?100:s.pct)}</td>
     <td><span class="badge ${s.pend?'badge-orange':'badge-green'}">${s.pend}</span></td>
     <td style="font-size:12px;color:var(--text2);max-width:140px;white-space:normal">${op.marco||'—'}</td>
     <td style="max-width:160px">${relintCell(op)}</td>
@@ -554,6 +559,37 @@ function renderOps(){
       <button class="btn btn-danger btn-sm btn-icon" onclick="deleteOp(${op.id})">🗑️</button>
     </div></td>
   </tr>`;}).join('');
+}
+let _opsTeia=null;
+function renderOpsTeiaGraph(){
+  const container=document.getElementById('ops-teia-container');
+  if(!container)return;
+  const ops=db.operacoes.filter(o=>o.localidade&&o.localidade.trim());
+  if(!ops.length){container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text2);font-size:13px">Nenhuma operação com localidade cadastrada</div>';return;}
+  const nodes=[],edges=[];
+  const locMap={};
+  let nid=1;
+  // nós: operações
+  ops.forEach(op=>{
+    nodes.push({id:'op_'+op.id,label:op.nome,title:'<b>'+op.nome+'</b><br>'+op.local+'<br>'+op.localidade+'<br>Status: '+op.status,group:'op',color:{background:'#003865',border:'#001f3f'},font:{color:'#fff',size:12},shape:'box',margin:8});
+  });
+  // nós: localidades únicas
+  const locs=[...new Set(ops.map(o=>o.localidade.trim()))];
+  locs.forEach(loc=>{
+    nodes.push({id:'loc_'+loc,label:loc,title:'Localidade: '+loc,group:'loc',color:{background:'#e0edff',border:'#003865'},font:{color:'#003865',size:11,bold:true},shape:'ellipse'});
+  });
+  // arestas: op → localidade
+  ops.forEach(op=>{
+    edges.push({from:'op_'+op.id,to:'loc_'+op.localidade.trim(),color:{color:'#93c5fd'},width:2});
+  });
+  if(_opsTeia){_opsTeia.destroy();_opsTeia=null;}
+  _opsTeia=new vis.Network(container,{nodes:new vis.DataSet(nodes),edges:new vis.DataSet(edges)},{
+    physics:{solver:'forceAtlas2Based',forceAtlas2Based:{gravitationalConstant:-60,centralGravity:0.01,springLength:120,springConstant:0.08},stabilization:{iterations:200}},
+    interaction:{hover:true,tooltipDelay:150},
+    nodes:{borderWidth:2,borderWidthSelected:3,shadow:true},
+    edges:{smooth:{type:'continuous'}},
+    layout:{improvedLayout:true}
+  });
 }
 // ─── SUPABASE — armazenamento PRIVADO + autenticação ────────────────────────
 // PREENCHA com os dados do seu projeto Supabase (Settings → API):
