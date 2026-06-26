@@ -1467,16 +1467,29 @@ function infTeia(rows){
   const container=document.getElementById('inf-teia');
   if(typeof vis==='undefined'){ container.innerHTML='<div style="padding:20px;color:#888">Biblioteca de rede indisponível.</div>'; return; }
   const pessoa={};
-  rows.forEach(r=>{ const k=_infNorm(r.nome); if(!k) return; if(!pessoa[k]) pessoa[k]={mae:_infNorm(r.mae),pai:_infNorm(r.pai),nomeOrig:r.nome}; else { if(!pessoa[k].mae) pessoa[k].mae=_infNorm(r.mae); if(!pessoa[k].pai) pessoa[k].pai=_infNorm(r.pai); } });
+  rows.forEach(r=>{ const k=_infNorm(r.nome); if(!k) return; if(!pessoa[k]) pessoa[k]={mae:_infNorm(r.mae),pai:_infNorm(r.pai),nomeOrig:r.nome,status:r.status||''}; else { if(!pessoa[k].mae) pessoa[k].mae=_infNorm(r.mae); if(!pessoa[k].pai) pessoa[k].pai=_infNorm(r.pai); } });
   const porMae={},porPai={};
   Object.keys(pessoa).forEach(k=>{ const p=pessoa[k]; if(p.mae){(porMae[p.mae]=porMae[p.mae]||[]).push(k);} if(p.pai){(porPai[p.pai]=porPai[p.pai]||[]).push(k);} });
   const nodes=new Map(), edges=[];
-  function addInd(k){ if(!nodes.has('i:'+k)) nodes.set('i:'+k,{id:'i:'+k,label:pessoa[k].nomeOrig,color:'#005CA9',shape:'dot',size:10,font:{size:11,color:'#1a2740'}}); }
-  Object.keys(porMae).forEach(m=>{ const kids=porMae[m]; if(kids.length>=2){ nodes.set('m:'+m,{id:'m:'+m,label:m,color:'#C0392B',shape:'dot',size:15,font:{size:10,color:'#7a2620'}}); kids.forEach(k=>{ addInd(k); edges.push({from:'m:'+m,to:'i:'+k,color:{color:'#E3A6A0'}}); }); } });
-  Object.keys(porPai).forEach(p=>{ const kids=porPai[p]; if(kids.length>=2){ nodes.set('p:'+p,{id:'p:'+p,label:p,color:'#F78344',shape:'dot',size:15,font:{size:10,color:'#9c5a23'}}); kids.forEach(k=>{ addInd(k); edges.push({from:'p:'+p,to:'i:'+k,color:{color:'#F3C9A6'}}); }); } });
+  function addInd(k){
+    if(!nodes.has('i:'+k)){
+      const p=pessoa[k];
+      const sCor=p.status==='PRESO'?'#dc2626':p.status==='CONDUZIDO'?'#d97706':p.status==='ABORDADO'?'#16a34a':p.status==='IDENTIFICADO'?'#7c3aed':'#003865';
+      nodes.set('i:'+k,{id:'i:'+k,label:p.nomeOrig,title:'<b>'+infEsc(p.nomeOrig)+'</b><br>Status: '+(p.status||'—')+'<br>Mãe: '+(p.mae||'—')+'<br>Pai: '+(p.pai||'—'),color:{background:sCor,border:'#001f3f'},font:{color:'#fff',size:11},shape:'box',margin:6,shadow:true});
+    }
+  }
+  Object.keys(porMae).forEach(m=>{ const kids=porMae[m]; if(kids.length>=2){ nodes.set('m:'+m,{id:'m:'+m,label:'♀ '+m,title:'<b>Mãe</b>: '+infEsc(m)+'<br>Filhos no sistema: '+kids.length,color:{background:'#fce7f3',border:'#be185d'},font:{color:'#9d174d',size:11,bold:true},shape:'ellipse',shadow:true}); kids.forEach(k=>{ addInd(k); edges.push({from:'m:'+m,to:'i:'+k,color:{color:'#f9a8d4'},width:2,dashes:false}); }); } });
+  Object.keys(porPai).forEach(p=>{ const kids=porPai[p]; if(kids.length>=2){ nodes.set('p:'+p,{id:'p:'+p,label:'♂ '+p,title:'<b>Pai</b>: '+infEsc(p)+'<br>Filhos no sistema: '+kids.length,color:{background:'#dbeafe',border:'#1d4ed8'},font:{color:'#1e40af',size:11,bold:true},shape:'ellipse',shadow:true}); kids.forEach(k=>{ addInd(k); edges.push({from:'p:'+p,to:'i:'+k,color:{color:'#93c5fd'},width:2,dashes:false}); }); } });
   if(_infNet){ _infNet.destroy(); _infNet=null; }
-  if(nodes.size===0){ container.innerHTML='<div style="padding:20px;color:#888">Nenhum vínculo de parentesco (mãe/pai compartilhado por 2+ infratores) identificado.</div>'; return; }
-  _infNet=new vis.Network(container,{nodes:new vis.DataSet([...nodes.values()]),edges:new vis.DataSet(edges)},{physics:{stabilization:true,barnesHut:{gravitationalConstant:-8000,springLength:110}},interaction:{hover:true},nodes:{borderWidth:0},edges:{smooth:false,width:1}});
+  if(nodes.size===0){ container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#888;font-size:13px">Nenhum vínculo de parentesco (mãe/pai compartilhado por 2+ infratores) identificado.</div>'; return; }
+  container.innerHTML='';
+  _infNet=new vis.Network(container,{nodes:new vis.DataSet([...nodes.values()]),edges:new vis.DataSet(edges)},{
+    physics:{solver:'forceAtlas2Based',forceAtlas2Based:{gravitationalConstant:-60,centralGravity:0.01,springLength:130,springConstant:0.08},stabilization:{iterations:250}},
+    interaction:{hover:true,tooltipDelay:150},
+    nodes:{borderWidth:2,borderWidthSelected:3},
+    edges:{smooth:{type:'continuous'}},
+    layout:{improvedLayout:true}
+  });
   _infNet.on('click',function(params){ if(params.nodes&&params.nodes.length){ const id=params.nodes[0]; if(id.slice(0,2)==='i:') infShowPessoa(id.slice(2)); else if(id.slice(0,2)==='m:'||id.slice(0,2)==='p:') infShowParent(id); } });
 }
 
