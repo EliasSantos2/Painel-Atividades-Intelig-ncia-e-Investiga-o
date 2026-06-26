@@ -267,10 +267,6 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
       <th>Status</th><th>% Conc.</th><th>Pend.</th><th>Próximo Marco</th><th>RELINT</th><th></th>
     </tr></thead><tbody id="ops-table-body"></tbody></table>
   </div>
-  <div class="card" style="margin-top:18px">
-    <div class="card-header"><h2>🕸️ Teia de Vínculos por Localidade</h2></div>
-    <div id="ops-teia-container" style="height:420px;background:#f8fafc;border-radius:0 0 8px 8px"></div>
-  </div>
 </div>
 <input type="file" id="relint-hidden-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" style="display:none" onchange="onRelintFileChosen(this)">
 
@@ -479,7 +475,7 @@ function switchTab(id,btn){
   document.getElementById('tab-'+id).classList.add('active');
   btn.classList.add('active');
   if(id==='dashboard')renderDashboard();
-  if(id==='operacoes'){renderOps();renderOpsTeiaGraph();}
+  if(id==='operacoes')renderOps();
   if(id==='tarefas')renderTasks();
   if(id==='agenda')renderAgenda();
 }
