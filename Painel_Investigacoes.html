@@ -179,6 +179,17 @@
   .ag-tc-baixa{background:#e6f4ec;color:#1d6e3a;border-left:2px solid var(--green);}
   .ag-tc-concluido{background:#f1f4f9;color:#6b7280;border-left:2px solid #9ca3af;text-decoration:line-through;opacity:.7;}
 
+  /* ── GANTT OPERACIONAL ── */
+  .ag-gantt-wrap{margin-bottom:16px;}
+  .ag-gantt-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .ag-gantt-header{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:4px;}
+  .ag-gantt-dow{text-align:center;font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;}
+  .ag-gantt-rows{display:flex;flex-direction:column;gap:4px;}
+  .ag-gantt-row{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;min-height:24px;}
+  .ag-gantt-bar{border-radius:5px;padding:3px 8px;font-size:10.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;display:flex;align-items:center;}
+  .ag-gantt-void{/* empty day cell */}
+  .ag-gantt-op-colors{--gc0:#003865;--gc1:#F78344;--gc2:#1d8a48;--gc3:#8e44ad;--gc4:#c8231f;--gc5:#0077b6;}
+
   /* ── STRIP OPERAÇÕES ── */
   .ag-op-strip{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
   .ag-op-pill{display:flex;align-items:center;gap:6px;background:var(--navy);color:#fff;border-radius:20px;padding:5px 12px 5px 8px;font-size:11.5px;font-weight:600;}
@@ -464,6 +475,8 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
     <div class="form-group"><label>Status</label>
       <select id="op-status"><option>Em andamento</option><option>Fase inicial</option><option>Planejamento</option><option>Concluído</option></select>
     </div>
+    <div class="form-group"><label>Data de Início</label><input type="date" id="op-inicio"></div>
+    <div class="form-group"><label>Previsão de Conclusão</label><input type="date" id="op-previsao"></div>
     <div class="form-group full"><label>Próximo Marco</label><input id="op-marco" placeholder="Ex: Parecer do GAECO e execução das medidas operacionais"></div>
     <div class="form-group full"><label>Objetivo da Operação</label><textarea id="op-objetivo" placeholder="Descreva o objetivo principal…"></textarea></div>
     <div class="form-group full"><label>Principais Entregas Realizadas</label><textarea id="op-entregas" placeholder="Liste as entregas já concluídas…"></textarea></div>
@@ -941,12 +954,13 @@ function openOpModal(id){
   if(id){const op=getOp(id);
     document.getElementById('op-nome').value=op.nome;document.getElementById('op-local').value=op.local;
     document.getElementById('op-localidade').value=op.localidade||'';document.getElementById('op-status').value=op.status;
+    document.getElementById('op-inicio').value=op.inicio||'';document.getElementById('op-previsao').value=op.previsao||'';
     document.getElementById('op-marco').value=op.marco||'';
     document.getElementById('op-objetivo').value=op.objetivo||'';document.getElementById('op-entregas').value=op.entregas||'';
     document.getElementById('op-relint-url').value=(op.relint&&op.relint.url)||'';
     document.getElementById('op-relint-name').value=(op.relint&&op.relint.name)||'';
   }else{
-    ['op-nome','op-local','op-localidade','op-marco','op-objetivo','op-entregas','op-relint-url','op-relint-name'].forEach(x=>document.getElementById(x).value='');
+    ['op-nome','op-local','op-localidade','op-inicio','op-previsao','op-marco','op-objetivo','op-entregas','op-relint-url','op-relint-name'].forEach(x=>document.getElementById(x).value='');
     document.getElementById('op-status').value='Em andamento';
   }
   document.getElementById('op-modal').classList.add('open');
@@ -955,7 +969,7 @@ function saveOp(){
   const nome=document.getElementById('op-nome').value.trim();
   const local=document.getElementById('op-local').value.trim();
   if(!nome||!local){toast('Preencha os campos obrigatórios','error');return;}
-  const data={nome,local,localidade:document.getElementById('op-localidade').value.trim(),status:document.getElementById('op-status').value,marco:document.getElementById('op-marco').value.trim(),objetivo:document.getElementById('op-objetivo').value.trim(),entregas:document.getElementById('op-entregas').value.trim()};
+  const data={nome,local,localidade:document.getElementById('op-localidade').value.trim(),status:document.getElementById('op-status').value,inicio:document.getElementById('op-inicio').value,previsao:document.getElementById('op-previsao').value,marco:document.getElementById('op-marco').value.trim(),objetivo:document.getElementById('op-objetivo').value.trim(),entregas:document.getElementById('op-entregas').value.trim()};
   const relUrl=document.getElementById('op-relint-url').value.trim();
   const relName=document.getElementById('op-relint-name').value.trim();
   let target;
@@ -1171,27 +1185,65 @@ function _agSubTab(pane){
 function _opCalPrev(){_opCalRef=new Date(_opCalRef);_opCalRef.setDate(_opCalRef.getDate()-7);renderOpCal();}
 function _opCalNext(){_opCalRef=new Date(_opCalRef);_opCalRef.setDate(_opCalRef.getDate()+7);renderOpCal();}
 function _opCalToday(){_opCalRef=_getMondayOf(new Date());renderOpCal();}
+const _OP_COLORS=['#003865','#F78344','#1d8a48','#8e44ad','#c8231f','#0077b6','#c47d0e'];
 function renderOpCal(){
   const today=new Date().toISOString().split('T')[0];
   const mon=new Date(_opCalRef);
   const days=[];
   for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);days.push(d);}
-  const weekStart=days[0].toISOString().split('T')[0];
-  const weekEnd=days[6].toISOString().split('T')[0];
-  // Título da semana
+  const weekDts=days.map(d=>d.toISOString().split('T')[0]);
+  const weekStart=weekDts[0], weekEnd=weekDts[6];
+  // Título
   const fmt=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
   const titleEl=document.getElementById('ag-week-title');
   if(titleEl)titleEl.textContent=fmt(days[0])+' – '+fmt(days[6])+' · '+days[0].getFullYear();
-  // Strip de operações em andamento
+  // ── Gantt de operações ──
   const opsAtivas=db.operacoes.filter(o=>o.status==='Em andamento'||o.status==='Fase inicial'||o.status==='Planejamento');
   const strip=document.getElementById('ag-op-strip');
   if(strip){
-    if(opsAtivas.length){
-      strip.innerHTML=`<span class="ag-op-strip-label">${ic('zap',11)} Em andamento:</span>`+
-        opsAtivas.map(o=>`<span class="ag-op-pill"><span class="ag-op-pill-dot"></span>${o.nome}</span>`).join('');
-    } else {strip.innerHTML='';}
+    const DOW2=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    // header row (days)
+    let gh=`<div class="ag-gantt-wrap ag-gantt-op-colors">`;
+    gh+=`<div class="ag-gantt-label">${ic('bar-chart-2',11)} Operações em andamento nesta semana</div>`;
+    gh+=`<div class="ag-gantt-header">`+weekDts.map((dt,i)=>`<div class="ag-gantt-dow">${DOW2[days[i].getDay()]} ${days[i].getDate()}</div>`).join('')+`</div>`;
+    gh+=`<div class="ag-gantt-rows">`;
+    if(!opsAtivas.length){
+      gh+=`<div style="font-size:12px;color:var(--text3);padding:8px 0">Nenhuma operação ativa</div>`;
+    } else {
+      opsAtivas.forEach((op,idx)=>{
+        const color=_OP_COLORS[idx%_OP_COLORS.length];
+        // Determine span: use op.inicio and op.previsao; fallback to today/end-of-week
+        const opStart=op.inicio||today;
+        const opEnd=op.previsao||weekEnd;
+        // Find which columns (0-6) this op occupies this week
+        let startCol=-1, endCol=-1;
+        for(let c=0;c<7;c++){
+          if(weekDts[c]>=opStart && startCol===-1) startCol=c;
+          if(weekDts[c]<=opEnd) endCol=c;
+        }
+        // If op spans the whole week or beyond
+        if(opStart<=weekStart) startCol=0;
+        if(opEnd>=weekEnd) endCol=6;
+        // If op doesn't touch this week at all, skip
+        if(endCol<0||startCol>6||opEnd<weekStart||opStart>weekEnd){
+          // Still show as a "not in this week" indicator
+          gh+=`<div class="ag-gantt-row"><div style="grid-column:1/8;font-size:10.5px;color:var(--text3);padding:3px 6px;display:flex;align-items:center;gap:6px">`;
+          gh+=`<span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;display:inline-block"></span>`;
+          gh+=`${op.nome} <span style="opacity:.6">(fora desta semana)</span></div></div>`;
+          return;
+        }
+        if(startCol<0) startCol=0;
+        // Build row: empty cells before, bar, empty cells after
+        gh+=`<div class="ag-gantt-row">`;
+        if(startCol>0) gh+=`<div style="grid-column:1/${startCol+1}"></div>`;
+        gh+=`<div class="ag-gantt-bar" style="grid-column:${startCol+1}/${endCol+2};background:${color}" title="${op.nome}${op.previsao?' · Previsão: '+op.previsao:''}">${op.nome}</div>`;
+        gh+=`</div>`;
+      });
+    }
+    gh+=`</div></div>`;
+    strip.innerHTML=gh;
   }
-  // Map tarefas por prazo
+  // ── Grade semanal de tarefas ──
   const DOW=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const byDate={};
   db.tarefas.forEach(t=>{if(t.prazo)(byDate[t.prazo]=byDate[t.prazo]||[]).push(t);});
@@ -1209,8 +1261,7 @@ function renderOpCal(){
       const opName=getOpName(t.opId);
       return`<div class="ag-task-chip ${cls}" onclick="showTab('tarefas')" title="${t.nome} — ${opName}">
         <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.nome}</span>
-      </div>
-      <div style="font-size:9.5px;color:var(--text3);padding:0 6px 3px;margin-top:-2px">${opName}</div>`;
+      </div><div style="font-size:9.5px;color:var(--text3);padding:0 6px 3px;margin-top:-2px">${opName}</div>`;
     }).join('');
     const empty=!tasks.length?`<div style="padding:10px 8px;font-size:10px;color:var(--text3);text-align:center">—</div>`:'';
     return`<div class="ag-week-day${isToday?' today':''}${isWE?' weekend':''}">

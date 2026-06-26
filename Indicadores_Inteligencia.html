@@ -458,6 +458,18 @@ select,input,button,textarea,label{font-family:'Plus Jakarta Sans','Segoe UI',Ar
   <div id="inf-dash" style="display:none">
     <div style="display:flex;justify-content:flex-end;padding:8px 24px 0"><button onclick="infLogout()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer">Sair</button></div>
     <div id="inf-filtros" style="padding:6px 24px 0"></div>
+    <!-- Busca global -->
+    <div style="padding:12px 24px 4px;display:flex;align-items:center;gap:10px">
+      <div style="position:relative;flex:1;max-width:520px">
+        <i data-lucide="search" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#7a8699;pointer-events:none"></i>
+        <input id="inf-search-input" type="text" placeholder="Buscar por CPF, nome, VUL, cidade, artigo ou qualquer campo…"
+          oninput="infSearchFn(this.value)"
+          style="width:100%;box-sizing:border-box;padding:9px 12px 9px 34px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;transition:border-color .18s"
+          onfocus="this.style.borderColor='var(--navy)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <span id="inf-search-count" style="font-size:12px;color:#7a8699;white-space:nowrap"></span>
+      <button id="inf-search-clear" onclick="infSearchClear()" style="display:none;background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--navy)">Limpar busca</button>
+    </div>
     <div class="kpis" style="grid-template-columns:repeat(5,1fr)">
       <div class="kpi k3"><i data-lucide="users-round" style="color:var(--navy2);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Infratores Cadastrados</div><div class="kpi-val" id="inf-cad">—</div><div class="kpi-sub">indivíduos distintos</div></div>
       <div class="kpi k2" style="cursor:pointer" title="Filtrar por PRESO" onclick="infApplyClick('status','PRESO')"><i data-lucide="shield-alert" style="color:var(--red);width:24px;height:24px;margin-bottom:8px;display:block"></i><div class="kpi-lbl">Presos</div><div class="kpi-val" id="inf-preso" style="color:var(--red)">—</div><div class="kpi-sub">status PRESO</div></div>
@@ -1510,11 +1522,42 @@ function infRanking(rows){
   const el=document.getElementById('inf-ranking'); if(el) el.innerHTML=h;
 }
 let _infFilters={};
-function infFilteredRows(){ if(!_infRows) return []; const ks=Object.keys(_infFilters); if(!ks.length) return _infRows; return _infRows.filter(function(r){ return ks.every(function(k){ return (r[k]==null?'':String(r[k])).trim()===_infFilters[k]; }); }); }
+let _infSearch='';
+function infFilteredRows(){
+  if(!_infRows) return [];
+  let rows=_infRows;
+  const ks=Object.keys(_infFilters);
+  if(ks.length) rows=rows.filter(function(r){ return ks.every(function(k){ return (r[k]==null?'':String(r[k])).trim()===_infFilters[k]; }); });
+  if(_infSearch){
+    const q=_infSearch.toLowerCase().trim();
+    rows=rows.filter(function(r){ return Object.values(r).some(function(v){ return v!=null&&String(v).toLowerCase().indexOf(q)!==-1; }); });
+  }
+  return rows;
+}
+function infSearchFn(val){
+  _infSearch=val||'';
+  const clearBtn=document.getElementById('inf-search-clear');
+  if(clearBtn) clearBtn.style.display=_infSearch?'':'none';
+  infRedraw();
+}
+function infSearchClear(){
+  _infSearch='';
+  const inp=document.getElementById('inf-search-input');
+  if(inp) inp.value='';
+  const clearBtn=document.getElementById('inf-search-clear');
+  if(clearBtn) clearBtn.style.display='none';
+  infRedraw();
+}
 function infApplyClick(field,value){ if(value==null||value==='') return; if(_infFilters[field]===value){ delete _infFilters[field]; } else { _infFilters[field]=value; } infRedraw(); }
 function infRemoveFilter(field){ delete _infFilters[field]; infRedraw(); }
 function infClearFilters(){ _infFilters={}; infRedraw(); }
-function infRedraw(){ if(!_infRows) return; infRender(infFilteredRows()); infChips(); }
+function infRedraw(){
+  if(!_infRows) return;
+  const rows=infFilteredRows();
+  const countEl=document.getElementById('inf-search-count');
+  if(countEl) countEl.textContent=(_infSearch||Object.keys(_infFilters).length)?rows.length+' resultado(s)':'';
+  infRender(rows); infChips();
+}
 function infChips(){
   const el=document.getElementById('inf-filtros'); if(!el) return;
   const ks=Object.keys(_infFilters);
