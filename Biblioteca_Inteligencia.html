@@ -29,7 +29,7 @@ body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;font-si
 header{background:var(--navy);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:58px;box-shadow:0 2px 12px rgba(0,0,0,.22);flex-shrink:0;}
 .header-left{display:flex;align-items:center;gap:14px;}
 .header-logo{width:3px;height:32px;background:var(--orange);border-radius:2px;flex-shrink:0;}
-.header-title h1{font-size:14px;font-weight:700;color:#fff;letter-spacing:.2px;}
+.header-title h1{font-size:14px;font-weight:700;color:#fff;}
 .header-title p{font-size:10.5px;color:rgba(255,255,255,.5);margin-top:1px;}
 .header-right{display:flex;align-items:center;gap:14px;}
 .user-info{font-size:12px;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:6px;}
@@ -49,6 +49,16 @@ main{flex:1;padding:26px 28px;overflow-y:auto;min-height:0;}
 .tab-pane{display:none;}
 .tab-pane.active{display:block;}
 
+/* ── SETUP BANNER ── */
+.setup-banner{background:#fff8e1;border:1.5px solid #ffc107;border-radius:10px;padding:20px 22px;margin-bottom:22px;}
+.setup-banner h3{font-size:14px;font-weight:700;color:#664d03;margin-bottom:8px;}
+.setup-banner p{font-size:13px;color:#664d03;line-height:1.6;margin-bottom:12px;}
+.setup-banner ol{font-size:13px;color:#664d03;line-height:1.8;padding-left:20px;margin-bottom:12px;}
+.setup-banner pre{background:rgba(0,0,0,.07);border-radius:6px;padding:12px 14px;font-size:11.5px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;color:#1a1a1a;border:1px solid rgba(0,0,0,.1);}
+.btn-copy{background:#664d03;color:#fff;border:none;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;margin-top:10px;font-family:Arial,sans-serif;display:inline-flex;align-items:center;gap:6px;}
+.btn-copy:hover{opacity:.85;}
+.copy-ok{font-size:12px;color:var(--green);font-weight:600;margin-left:10px;display:none;}
+
 /* ── SECTION TITLE ── */
 .sec-title{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 .sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
@@ -60,8 +70,7 @@ main{flex:1;padding:26px 28px;overflow-y:auto;min-height:0;}
 .tmpl-card.has-file{border-color:var(--green-br);background:#fafffe;}
 .tmpl-card-hdr{display:flex;align-items:flex-start;gap:12px;}
 .tmpl-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.tmpl-icon.word{background:#e8f0fe;}
-.tmpl-icon.ppt{background:#fff0e8;}
+.tmpl-icon.word{background:#e8f0fe;}.tmpl-icon.ppt{background:#fff0e8;}
 .tmpl-icon svg{width:22px;height:22px;}
 .tmpl-card-hdr .info{flex:1;}
 .tmpl-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;}
@@ -69,17 +78,21 @@ main{flex:1;padding:26px 28px;overflow-y:auto;min-height:0;}
 .tmpl-status{font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;white-space:nowrap;margin-top:4px;display:inline-block;}
 .tmpl-status.empty{background:var(--bg3);color:var(--text3);border:1px solid var(--border);}
 .tmpl-status.filled{background:var(--green-bg);color:var(--green);border:1px solid var(--green-br);}
-.tmpl-meta{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;}
-.tmpl-actions{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;}
-.btn-upload{background:var(--navy);color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;font-family:Arial,sans-serif;}
-.btn-upload:hover{background:var(--navy2);}
-.btn-upload:disabled{opacity:.4;pointer-events:none;}
+.tmpl-meta{font-size:11px;color:var(--text3);}
+.tmpl-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-up{background:var(--navy);color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;font-family:Arial,sans-serif;}
+.btn-up:hover{background:var(--navy2);}
+.btn-up:disabled{opacity:.4;pointer-events:none;}
 .btn-dl{background:var(--green-bg);color:var(--green);border:1px solid var(--green-br);padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;font-family:Arial,sans-serif;}
 .btn-dl:hover{background:#dcfce7;}
 .btn-dl:disabled{opacity:.3;pointer-events:none;}
 .btn-del{background:none;border:none;color:var(--text3);padding:8px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;transition:.15s;}
 .btn-del:hover{background:var(--red-bg);color:var(--red);}
 input[type=file]{display:none;}
+
+/* ── UPLOAD PROGRESS ── */
+.progress-wrap{height:4px;background:var(--border);border-radius:2px;overflow:hidden;display:none;}
+.progress-bar{height:100%;background:var(--orange);width:0%;transition:width .2s;}
 
 /* ── APRENDIZAGEM ── */
 .ap-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
@@ -104,26 +117,25 @@ input[type=file]{display:none;}
 .file-drop p{font-size:13px;color:var(--text2);}
 .file-drop small{font-size:11px;color:var(--text3);}
 .fd-chosen{font-size:12px;color:var(--green);font-weight:600;margin-top:6px;display:none;}
+.modal-err{font-size:12px;color:var(--red);margin-top:8px;display:none;padding:8px 12px;background:var(--red-bg);border-radius:6px;}
 .modal-actions{display:flex;gap:10px;margin-top:18px;}
 .btn-confirm{background:var(--navy);color:#fff;border:none;padding:10px 22px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;flex:1;transition:.15s;}
 .btn-confirm:hover{background:var(--navy2);}
 .btn-confirm:disabled{opacity:.4;pointer-events:none;}
-.btn-cancel{background:var(--bg3);color:var(--text2);border:1px solid var(--border);padding:10px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif;transition:.15s;}
+.btn-cancel{background:var(--bg3);color:var(--text2);border:1px solid var(--border);padding:10px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif;}
 .btn-cancel:hover{background:var(--border);}
-.modal-err{font-size:12px;color:var(--red);margin-top:8px;display:none;}
 
-/* ── LOGIN OVERLAY ── */
+/* ── LOGIN ── */
 #login-overlay{position:fixed;inset:0;background:rgba(0,24,56,.88);z-index:800;display:flex;align-items:center;justify-content:center;padding:20px;}
 #login-overlay.hidden{display:none;}
 .login-box{background:#fff;border-radius:14px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 32px 80px rgba(0,0,0,.35);}
 .login-box .lb-logo{width:4px;height:36px;background:var(--orange);border-radius:2px;margin-bottom:22px;}
 .login-box h2{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px;}
 .login-box p{font-size:13px;color:var(--text2);margin-bottom:24px;}
-.login-box .form-group{margin-bottom:14px;}
 .login-box .btn-login{width:100%;background:var(--navy);color:#fff;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;transition:.15s;margin-top:6px;}
 .login-box .btn-login:hover{background:var(--navy2);}
 .login-box .btn-login:disabled{opacity:.5;pointer-events:none;}
-.login-err{font-size:12.5px;color:var(--red);margin-top:10px;text-align:center;display:none;}
+.login-err{font-size:12.5px;color:var(--red);margin-top:10px;text-align:center;display:none;padding:8px;background:var(--red-bg);border-radius:6px;}
 
 /* ── PIN CARDS ── */
 .pin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
@@ -131,16 +143,14 @@ input[type=file]{display:none;}
 .pin-card:hover{box-shadow:var(--shadow);}
 .pin-card-hdr{display:flex;align-items:flex-start;gap:11px;}
 .pin-type-icon{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.pin-type-icon.pdf{background:#fee2e2;}
-.pin-type-icon.word{background:#e8f0fe;}
-.pin-type-icon.ppt{background:#fff0e8;}
-.pin-type-icon.other{background:var(--bg3);}
+.pin-type-icon.pdf{background:#fee2e2;}.pin-type-icon.word{background:#e8f0fe;}
+.pin-type-icon.ppt{background:#fff0e8;}.pin-type-icon.other{background:var(--bg3);}
 .pin-type-icon svg{width:20px;height:20px;}
 .pin-info{flex:1;min-width:0;}
 .pin-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;word-break:break-word;}
 .pin-meta{font-size:11px;color:var(--text3);margin-top:3px;}
 .pin-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:8px;background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-br);}
-.pin-actions{display:flex;gap:7px;margin-top:4px;}
+.pin-actions{display:flex;gap:7px;}
 .pin-dl{background:var(--navy-light);color:var(--navy);border:none;padding:7px 13px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:.15s;font-family:Arial,sans-serif;}
 .pin-dl:hover{background:var(--navy);color:#fff;}
 .pin-rm{background:none;border:none;color:var(--text3);padding:7px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;transition:.15s;}
@@ -152,21 +162,13 @@ input[type=file]{display:none;}
 .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
-/* ── DIAG BANNER ── */
-#diag-banner{background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px 18px;margin:0 0 20px;display:none;font-size:13px;color:#664d03;line-height:1.6;}
-#diag-banner strong{display:block;margin-bottom:6px;font-size:13.5px;}
-#diag-banner pre{background:rgba(0,0,0,.06);border-radius:5px;padding:10px 12px;font-size:11.5px;overflow-x:auto;margin-top:10px;white-space:pre-wrap;word-break:break-all;}
-#diag-banner .diag-err{color:#dc2626;font-weight:700;margin-top:6px;}
-#diag-banner .btn-copy-sql{background:#664d03;color:#fff;border:none;padding:6px 14px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;margin-top:10px;font-family:Arial,sans-serif;}
-#diag-banner .btn-copy-sql:hover{opacity:.85;}
-
 /* ── TOAST ── */
-#bl-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a2535;color:#fff;padding:12px 22px;border-radius:9px;font-size:13px;font-weight:600;box-shadow:0 8px 28px rgba(0,0,0,.3);z-index:900;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;}
+#bl-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a2535;color:#fff;padding:12px 22px;border-radius:9px;font-size:13px;font-weight:600;box-shadow:0 8px 28px rgba(0,0,0,.3);z-index:900;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw;}
 </style>
 </head>
 <body>
 
-<!-- LOGIN OVERLAY -->
+<!-- LOGIN -->
 <div id="login-overlay">
   <div class="login-box">
     <div class="lb-logo"></div>
@@ -217,24 +219,41 @@ input[type=file]{display:none;}
 
 <main id="main-content" style="display:none">
 
-  <!-- TAB: MODELOS -->
+  <!-- MODELOS -->
   <div class="tab-pane active" id="pane-modelos">
-    <div id="diag-banner"></div>
-    <div class="sec-title"><i data-lucide="file-text" style="width:14px;height:14px"></i> Modelos Oficiais — clique em "Carregar" para adicionar ou substituir</div>
+    <div id="setup-banner" class="setup-banner" style="display:none">
+      <h3>⚙ Configuração inicial necessária</h3>
+      <p>Para salvar e compartilhar os arquivos entre todos os usuários, execute o SQL abaixo uma única vez no <strong>Supabase → SQL Editor</strong>:</p>
+      <ol>
+        <li>Acesse <strong>supabase.com</strong> → seu projeto → <strong>SQL Editor</strong></li>
+        <li>Cole o código abaixo e clique em <strong>Run</strong></li>
+        <li>Recarregue esta página</li>
+      </ol>
+      <pre id="setup-sql-pre"></pre>
+      <button class="btn-copy" onclick="_copySetupSql()">
+        <i data-lucide="copy" style="width:13px;height:13px"></i> Copiar SQL
+      </button>
+      <span class="copy-ok" id="copy-ok-setup">✓ Copiado!</span>
+    </div>
+    <div class="sec-title">
+      <i data-lucide="file-text" style="width:14px;height:14px"></i> Modelos Oficiais
+    </div>
     <div class="tmpl-grid" id="tmpl-grid"></div>
-    <div id="tmpl-file-inputs"></div>
+    <div id="tmpl-inputs"></div>
   </div>
 
-  <!-- TAB: APRENDIZAGEM -->
+  <!-- APRENDIZAGEM -->
   <div class="tab-pane" id="pane-aprend">
     <div class="ap-toolbar">
-      <button class="btn-add-pin" onclick="_apOpenModal()">
+      <button class="btn-add-pin" onclick="_apOpen()">
         <i data-lucide="pin" style="width:15px;height:15px"></i> Adicionar documento
       </button>
       <input class="ap-search" id="ap-search" type="text" placeholder="Buscar livros e manuais…" oninput="_apRender()">
-      <span class="ap-count" id="ap-count">0 documento(s)</span>
+      <span class="ap-count" id="ap-count"></span>
     </div>
-    <div class="sec-title"><i data-lucide="book-open" style="width:14px;height:14px"></i> Acervo fixado — livros e manuais</div>
+    <div class="sec-title">
+      <i data-lucide="book-open" style="width:14px;height:14px"></i> Acervo fixado
+    </div>
     <div class="pin-grid" id="pin-grid"></div>
     <div class="ap-empty" id="ap-empty" style="display:none">
       <i data-lucide="inbox" style="width:36px;height:36px;opacity:.3;margin-bottom:10px;display:block"></i>
@@ -249,33 +268,33 @@ input[type=file]{display:none;}
   <span id="loading-msg">Carregando…</span>
 </div>
 
-<!-- MODAL: ADICIONAR PIN -->
-<div class="modal-overlay hidden" id="ap-modal" onclick="if(event.target===this)_apCloseModal()">
+<!-- MODAL PIN -->
+<div class="modal-overlay hidden" id="ap-modal" onclick="if(event.target===this)_apClose()">
   <div class="modal">
-    <h3>Fixar documento</h3>
+    <h3>Fixar documento no acervo</h3>
     <div class="form-group">
-      <label>Título / Nome do documento</label>
-      <input type="text" id="ap-title-inp" placeholder="Ex: Manual de Inteligência Policial" oninput="_apCheckBtn()">
+      <label>Título</label>
+      <input type="text" id="ap-title" placeholder="Ex: Manual de Inteligência Policial" oninput="_apCheck()">
     </div>
     <div class="form-group">
       <label>Arquivo</label>
       <div class="file-drop" id="ap-drop"
-           onclick="document.getElementById('ap-file-inp').click()"
-           ondragover="_apDrag(event)"
-           ondrop="_apDropFile(event)">
+           onclick="document.getElementById('ap-file').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="_apDrop(event)">
         <div class="fd-icon"><i data-lucide="upload-cloud" style="width:30px;height:30px"></i></div>
         <p>Clique ou arraste o arquivo aqui</p>
-        <small>PDF · DOCX · PPTX · XLSX · sem limite de tamanho</small>
+        <small>PDF · DOCX · PPTX · XLSX · qualquer tamanho</small>
         <div class="fd-chosen" id="ap-chosen"></div>
       </div>
-      <input type="file" id="ap-file-inp"
-             accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt"
-             onchange="_apFileChosen(this)">
+      <input type="file" id="ap-file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt" onchange="_apFileSet(this)">
+      <div class="progress-wrap" id="ap-prog-wrap"><div class="progress-bar" id="ap-prog"></div></div>
     </div>
     <div class="modal-err" id="ap-err"></div>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="_apCloseModal()">Cancelar</button>
-      <button class="btn-confirm" id="ap-confirm-btn" onclick="_apUpload()" disabled>Fixar documento</button>
+      <button class="btn-cancel" onclick="_apClose()">Cancelar</button>
+      <button class="btn-confirm" id="ap-ok" onclick="_apUpload()" disabled>Fixar documento</button>
     </div>
   </div>
 </div>
@@ -284,130 +303,105 @@ input[type=file]{display:none;}
 
 <script>
 // ── SUPABASE ────────────────────────────────────────────
-const SB_URL    = 'https://rfwmklqzlfvllsrkvgob.supabase.co';
-const SB_KEY    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmd21rbHF6bGZ2bGxzcmt2Z29iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzg4NzIsImV4cCI6MjA5NzgxNDg3Mn0.xwJItVzF3jW46BtMQBLSNj3rT64G0dybPZQZ_k-QlTM';
-const SB_BUCKET = 'relints';
-const SB_TTL    = 7200;
-const IDX_PATH  = 'biblioteca/_index.json';
+const SB_URL = 'https://rfwmklqzlfvllsrkvgob.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmd21rbHF6bGZ2bGxzcmt2Z29iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzg4NzIsImV4cCI6MjA5NzgxNDg3Mn0.xwJItVzF3jW46BtMQBLSNj3rT64G0dybPZQZ_k-QlTM';
+const TABLE = 'biblioteca_arquivos';
+
+// SQL para criar a tabela (mostrado ao usuário se não existir)
+const SETUP_SQL = `-- Execute no Supabase → SQL Editor:
+
+create table if not exists biblioteca_arquivos (
+  id bigserial primary key,
+  tipo text not null,
+  slot_id text,
+  titulo text not null,
+  nome_arquivo text not null,
+  tipo_mime text,
+  tamanho bigint,
+  conteudo text not null,
+  data_upload timestamptz default now()
+);
+
+alter table biblioteca_arquivos enable row level security;
+
+create policy "biblioteca_leitura"
+on biblioteca_arquivos for select
+to authenticated using (true);
+
+create policy "biblioteca_escrita"
+on biblioteca_arquivos for insert
+to authenticated with check (true);
+
+create policy "biblioteca_exclusao"
+on biblioteca_arquivos for delete
+to authenticated using (true);`;
 
 let _sb = null;
-let _idx = { modelos:{}, pins:[] };
+let _ready = false;
 
-function _sbC(){
-  if(!_sb) _sb = supabase.createClient(SB_URL, SB_KEY);
-  return _sb;
+function _sbC(){ if(!_sb) _sb=supabase.createClient(SB_URL,SB_KEY); return _sb; }
+
+// ── TEMPLATES ────────────────────────────────────────────
+const TEMPLATES = [
+  {id:'relint',       name:'Modelo Relint',                    type:'word', accept:'.doc,.docx'},
+  {id:'relint_mpf',   name:'Modelo Relint MPF',                type:'word', accept:'.doc,.docx'},
+  {id:'relint_mp',    name:'Modelo Relint MP',                 type:'word', accept:'.doc,.docx'},
+  {id:'relint_gaeco', name:'Modelo Relint GAECO',              type:'word', accept:'.doc,.docx'},
+  {id:'relint_pc',    name:'Modelo Relint Polícia Civil',      type:'word', accept:'.doc,.docx'},
+  {id:'relint_pm',    name:'Modelo Relint Polícia Militar',    type:'word', accept:'.doc,.docx'},
+  {id:'sindicancia',  name:'Modelo de Sindicância',            type:'word', accept:'.doc,.docx'},
+  {id:'apres_ppt',    name:'Modelo de Apresentação — Org Seg', type:'ppt',  accept:'.ppt,.pptx'},
+];
+
+// ── SVGs ─────────────────────────────────────────────────
+const SVG = {
+  word: c=>`<svg viewBox="0 0 24 24" fill="none" stroke="${c||'#2563eb'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>`,
+  ppt:  c=>`<svg viewBox="0 0 24 24" fill="none" stroke="${c||'#ea580c'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+  pdf:  c=>`<svg viewBox="0 0 24 24" fill="none" stroke="${c||'#dc2626'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h1a2 2 0 0 1 0 4H9v-4z"/><line x1="14" y1="13" x2="14" y2="17"/><line x1="14" y1="13" x2="16" y2="13"/></svg>`,
+  file: ()=>`<svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+};
+function _svgByExt(e){
+  if(e==='pdf') return SVG.pdf();
+  if(['doc','docx'].includes(e)) return SVG.word();
+  if(['ppt','pptx'].includes(e)) return SVG.ppt();
+  return SVG.file();
 }
-
-// ── ÍNDICE COMPARTILHADO ─────────────────────────────────
-// O arquivo biblioteca/_index.json no bucket é a fonte de
-// verdade compartilhada entre todos os usuários.
-async function _loadIdx(){
-  try{
-    const {data,error} = await _sbC().storage.from(SB_BUCKET).download(IDX_PATH);
-    if(error){ if(error.message&&error.message.includes('not found')) return; throw error; }
-    const txt = await data.text();
-    _idx = JSON.parse(txt);
-    if(!_idx.modelos) _idx.modelos={};
-    if(!_idx.pins)    _idx.pins=[];
-  }catch(e){ console.warn('Índice não encontrado, iniciando vazio.'); }
-}
-
-async function _saveIdx(){
-  const blob = new Blob([JSON.stringify(_idx)],{type:'application/json'});
-  const {error} = await _sbC().storage.from(SB_BUCKET).upload(IDX_PATH, blob, {upsert:true,contentType:'application/json'});
-  if(error) throw error;
+function _extCls(e){
+  if(e==='pdf') return 'pdf';
+  if(['doc','docx'].includes(e)) return 'word';
+  if(['ppt','pptx'].includes(e)) return 'ppt';
+  return 'other';
 }
 
 // ── AUTH ─────────────────────────────────────────────────
 async function _login(){
-  const email = document.getElementById('li-email').value.trim();
-  const pass  = document.getElementById('li-pass').value;
-  const btn   = document.getElementById('li-btn');
-  const err   = document.getElementById('li-err');
+  const email=document.getElementById('li-email').value.trim();
+  const pass=document.getElementById('li-pass').value;
+  const btn=document.getElementById('li-btn');
+  const err=document.getElementById('li-err');
   err.style.display='none';
-  if(!email||!pass){ err.textContent='Preencha e-mail e senha.'; err.style.display=''; return; }
-  btn.disabled=true; btn.textContent='Entrando…';
-  const {data,error} = await _sbC().auth.signInWithPassword({email,password:pass});
+  if(!email||!pass){err.textContent='Preencha e-mail e senha.';err.style.display='';return;}
+  btn.disabled=true;btn.textContent='Entrando…';
+  const {data,error}=await _sbC().auth.signInWithPassword({email,password:pass});
   if(error){
     err.textContent=error.message.includes('Invalid')?'E-mail ou senha incorretos.':error.message;
-    err.style.display=''; btn.disabled=false; btn.textContent='Entrar'; return;
+    err.style.display='';btn.disabled=false;btn.textContent='Entrar';return;
   }
-  await _afterLogin(data.session);
+  await _start();
 }
 
-async function _afterLogin(session){
+async function _start(){
   document.getElementById('login-overlay').classList.add('hidden');
-  document.getElementById('hdr-email').textContent = session.user.email;
-  document.getElementById('hdr-user').style.display='flex';
-  document.getElementById('hdr-logout').style.display='';
-  _showLoading('Carregando biblioteca…');
-  await _loadIdx();
-  _hideLoading();
-  lucide.createIcons();
-  _renderTemplates();
-  _apRender();
-  _diagStorage();
-}
-
-// ── DIAGNÓSTICO DE STORAGE ───────────────────────────────
-const FIX_SQL = `-- Cole este SQL no Supabase → SQL Editor e execute:
-
--- Permissão de LEITURA na pasta biblioteca/
-create policy "biblioteca_select"
-on storage.objects for select
-to authenticated
-using (bucket_id = 'relints' and (storage.foldername(name))[1] = 'biblioteca');
-
--- Permissão de UPLOAD na pasta biblioteca/
-create policy "biblioteca_insert"
-on storage.objects for insert
-to authenticated
-with check (bucket_id = 'relints' and (storage.foldername(name))[1] = 'biblioteca');
-
--- Permissão de SUBSTITUIÇÃO na pasta biblioteca/
-create policy "biblioteca_update"
-on storage.objects for update
-to authenticated
-using (bucket_id = 'relints' and (storage.foldername(name))[1] = 'biblioteca');
-
--- Permissão de EXCLUSÃO na pasta biblioteca/
-create policy "biblioteca_delete"
-on storage.objects for delete
-to authenticated
-using (bucket_id = 'relints' and (storage.foldername(name))[1] = 'biblioteca');`;
-
-async function _diagStorage(){
-  const banner = document.getElementById('diag-banner');
-  banner.style.display = 'none';
-  // Tenta fazer upload de um arquivo de teste de 1 byte
-  const testPath = 'biblioteca/_diag_test.txt';
-  const blob = new Blob(['ok'],{type:'text/plain'});
-  const {error} = await _sbC().storage.from(SB_BUCKET).upload(testPath, blob, {upsert:true, contentType:'text/plain'});
-  if(!error){
-    // Limpa o arquivo de teste
-    try{ await _sbC().storage.from(SB_BUCKET).remove([testPath]); }catch(e){}
-    return; // tudo OK, não mostra banner
+  const {data:{session}}=await _sbC().auth.getSession();
+  if(session){
+    document.getElementById('hdr-email').textContent=session.user.email;
+    document.getElementById('hdr-user').style.display='flex';
+    document.getElementById('hdr-logout').style.display='';
   }
-  // Mostra erro e instruções
-  banner.innerHTML = `
-    <strong>⚠ Upload bloqueado — permissão necessária no Supabase Storage</strong>
-    Erro: <span class="diag-err">${_esc(error.message)}</span><br><br>
-    O bucket <code>relints</code> não tem política de escrita para a pasta <code>biblioteca/</code>.
-    Para corrigir, acesse <strong>supabase.com → seu projeto → SQL Editor</strong> e execute o SQL abaixo:
-    <pre id="fix-sql-pre">${_esc(FIX_SQL)}</pre>
-    <button class="btn-copy-sql" onclick="_copySql()">📋 Copiar SQL</button>
-    <span id="copy-ok" style="margin-left:10px;font-size:12px;color:#16a34a;display:none">✓ Copiado!</span>
-  `;
-  banner.style.display = '';
-  lucide.createIcons();
-}
-
-function _copySql(){
-  navigator.clipboard.writeText(FIX_SQL).then(()=>{
-    const ok = document.getElementById('copy-ok');
-    ok.style.display = '';
-    setTimeout(()=>{ ok.style.display='none'; }, 2500);
-  });
+  _showLoading('Carregando biblioteca…');
+  await _checkTable();
+  await Promise.all([_renderTemplates(), _apRender()]);
+  _hideLoading();
 }
 
 async function _logout(){
@@ -419,201 +413,256 @@ async function _logout(){
   document.getElementById('li-btn').disabled=false;
   document.getElementById('li-btn').textContent='Entrar';
   document.getElementById('li-pass').value='';
+  _ready=false;
 }
 
-function _showLoading(msg){
+function _showLoading(m){
   document.getElementById('main-content').style.display='none';
-  const ld=document.getElementById('page-loading');
-  ld.style.display='flex';
-  document.getElementById('loading-msg').textContent=msg||'Carregando…';
+  document.getElementById('page-loading').style.display='flex';
+  document.getElementById('loading-msg').textContent=m||'Carregando…';
 }
 function _hideLoading(){
   document.getElementById('page-loading').style.display='none';
   document.getElementById('main-content').style.display='';
 }
 
-// ── TEMPLATES ────────────────────────────────────────────
-const TEMPLATES = [
-  {id:'relint',       name:'Modelo Relint',                    type:'word',accept:'.doc,.docx'},
-  {id:'relint_mpf',   name:'Modelo Relint MPF',                type:'word',accept:'.doc,.docx'},
-  {id:'relint_mp',    name:'Modelo Relint MP',                 type:'word',accept:'.doc,.docx'},
-  {id:'relint_gaeco', name:'Modelo Relint GAECO',              type:'word',accept:'.doc,.docx'},
-  {id:'relint_pc',    name:'Modelo Relint Polícia Civil',      type:'word',accept:'.doc,.docx'},
-  {id:'relint_pm',    name:'Modelo Relint Polícia Militar',    type:'word',accept:'.doc,.docx'},
-  {id:'sindicancia',  name:'Modelo de Sindicância',            type:'word',accept:'.doc,.docx'},
-  {id:'apres_ppt',    name:'Modelo de Apresentação — Org Seg', type:'ppt', accept:'.ppt,.pptx'},
-];
-
-function _wordSvg(c='#2563eb'){return`<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>`;}
-function _pptSvg(c='#ea580c'){return`<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;}
-function _pdfSvg(c='#dc2626'){return`<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h1a2 2 0 0 1 0 4H9v-4z"/><line x1="14" y1="13" x2="14" y2="17"/><line x1="14" y1="13" x2="16" y2="13"/></svg>`;}
-function _extSvg(ext){
-  if(ext==='pdf') return _pdfSvg();
-  if(['doc','docx'].includes(ext)) return _wordSvg();
-  if(['ppt','pptx'].includes(ext)) return _pptSvg();
-  return `<svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+// ── VERIFICA TABELA ───────────────────────────────────────
+async function _checkTable(){
+  const {error}=await _sbC().from(TABLE).select('id').limit(1);
+  const banner=document.getElementById('setup-banner');
+  const pre=document.getElementById('setup-sql-pre');
+  if(error && (error.code==='42P01'||error.message.toLowerCase().includes('does not exist')||error.message.toLowerCase().includes('relation'))){
+    pre.textContent=SETUP_SQL;
+    banner.style.display='';
+    _ready=false;
+  } else {
+    banner.style.display='none';
+    _ready=true;
+  }
+  lucide.createIcons();
 }
 
-function _renderTemplates(){
+function _copySetupSql(){
+  navigator.clipboard.writeText(SETUP_SQL).then(()=>{
+    const ok=document.getElementById('copy-ok-setup');
+    ok.style.display='';
+    setTimeout(()=>ok.style.display='none',2500);
+  });
+}
+
+// ── MODELOS ───────────────────────────────────────────────
+let _modelos = {}; // slot_id → row
+
+async function _renderTemplates(){
+  if(!_ready){ _buildTemplateCards({}); return; }
+  const {data,error}=await _sbC().from(TABLE).select('id,slot_id,titulo,nome_arquivo,tamanho,data_upload').eq('tipo','modelo');
+  const map={};
+  if(!error && data) data.forEach(r=>{ map[r.slot_id]=r; });
+  _modelos=map;
+  _buildTemplateCards(map);
+}
+
+function _buildTemplateCards(map){
   const grid=document.getElementById('tmpl-grid');
-  const inps=document.getElementById('tmpl-file-inputs');
+  const inps=document.getElementById('tmpl-inputs');
   grid.innerHTML=''; inps.innerHTML='';
   TEMPLATES.forEach(t=>{
-    const m=_idx.modelos[t.id];
-    const has=!!(m&&m.path);
+    const m=map[t.id];
+    const has=!!m;
     const card=document.createElement('div');
     card.className='tmpl-card'+(has?' has-file':'');
     card.id='tc-'+t.id;
-    const ico=t.type==='ppt'?_pptSvg():_wordSvg();
+    const ico=t.type==='ppt'?SVG.ppt():SVG.word();
     const icoCls=t.type==='ppt'?'ppt':'word';
     const typeL=t.type==='ppt'?'PowerPoint (.pptx)':'Word (.docx)';
+    const dateStr=has?new Date(m.data_upload).toLocaleDateString('pt-BR'):'';
+    const sizeStr=has?_fmt(m.tamanho):'';
     card.innerHTML=`
       <div class="tmpl-card-hdr">
         <div class="tmpl-icon ${icoCls}">${ico}</div>
         <div class="info">
-          <div class="tmpl-name">${t.name}</div>
+          <div class="tmpl-name">${_esc(t.name)}</div>
           <div class="tmpl-type">${typeL}</div>
           <span class="tmpl-status ${has?'filled':'empty'}">${has?'● Carregado':'○ Sem modelo'}</span>
         </div>
       </div>
-      ${has?`<div class="tmpl-meta">📅 ${m.date||''} &nbsp;·&nbsp; ${_esc(m.fname||'')}</div>`:''}
+      ${has?`<div class="tmpl-meta">📅 ${dateStr} &nbsp;·&nbsp; ${_esc(m.nome_arquivo)} ${sizeStr?'· '+sizeStr:''}</div>`:''}
       <div class="tmpl-actions">
-        <button class="btn-upload" id="bu-${t.id}" onclick="document.getElementById('fi-${t.id}').click()">
+        <button class="btn-up" id="bu-${t.id}" onclick="document.getElementById('fi-${t.id}').click()" ${_ready?'':'disabled'}>
           <i data-lucide="upload" style="width:13px;height:13px"></i> ${has?'Substituir':'Carregar'}
         </button>
         <button class="btn-dl" ${has?'':'disabled'} onclick="_tmplDl('${t.id}')">
           <i data-lucide="download" style="width:13px;height:13px"></i> Baixar
         </button>
         ${has?`<button class="btn-del" title="Remover" onclick="_tmplDel('${t.id}')"><i data-lucide="trash-2" style="width:13px;height:13px"></i></button>`:''}
-      </div>`;
+      </div>
+      <div class="progress-wrap" id="pw-${t.id}"><div class="progress-bar" id="pb-${t.id}"></div></div>`;
     grid.appendChild(card);
     const fi=document.createElement('input');
     fi.type='file'; fi.id='fi-'+t.id; fi.accept=t.accept;
-    fi.onchange=function(){_tmplUpload(t.id,this);};
+    fi.onchange=()=>_tmplUpload(t.id,fi);
     inps.appendChild(fi);
   });
   lucide.createIcons();
 }
 
-async function _tmplUpload(id,inp){
+async function _tmplUpload(id, inp){
   const file=inp.files[0]; if(!file) return;
-  const ext=file.name.split('.').pop().toLowerCase();
-  const path=`biblioteca/modelos/${id}.${ext}`;
+  const tmpl=TEMPLATES.find(t=>t.id===id);
   const btn=document.getElementById('bu-'+id);
-  btn.disabled=true; btn.innerHTML=`<i data-lucide="loader" style="width:13px;height:13px"></i> Enviando…`; lucide.createIcons();
-  const {error}=await _sbC().storage.from(SB_BUCKET).upload(path,file,{upsert:true,contentType:file.type});
-  if(error){_toast('❌ '+error.message,'#dc2626'); btn.disabled=false; _renderTemplates(); inp.value=''; return;}
-  _idx.modelos[id]={path,fname:file.name,date:new Date().toLocaleDateString('pt-BR')};
-  try{ await _saveIdx(); }catch(e){ _toast('⚠ Arquivo enviado mas índice não salvo: '+e.message,'#b45309'); }
+  const pw=document.getElementById('pw-'+id);
+  const pb=document.getElementById('pb-'+id);
+  btn.disabled=true;
+  btn.innerHTML=`<i data-lucide="loader" style="width:13px;height:13px"></i> Lendo…`;
+  lucide.createIcons();
+  pw.style.display=''; pb.style.width='10%';
+
+  let b64;
+  try{ b64=await _toB64(file,p=>{ pb.style.width=Math.round(p*60+10)+'%'; }); }
+  catch(e){ _toast('❌ Erro ao ler arquivo: '+e.message,'#dc2626'); btn.disabled=false; btn.innerHTML=`<i data-lucide="upload" style="width:13px;height:13px"></i> Carregar`; pw.style.display='none'; lucide.createIcons(); inp.value=''; return; }
+
+  pb.style.width='75%';
+  btn.innerHTML=`<i data-lucide="loader" style="width:13px;height:13px"></i> Enviando…`; lucide.createIcons();
+
+  // Apagar modelo anterior se existir
+  const prev=_modelos[id];
+  if(prev){ await _sbC().from(TABLE).delete().eq('id',prev.id); }
+
+  const {error}=await _sbC().from(TABLE).insert({
+    tipo:'modelo', slot_id:id, titulo:tmpl.name,
+    nome_arquivo:file.name, tipo_mime:file.type,
+    tamanho:file.size, conteudo:b64
+  });
+
+  pb.style.width='100%';
+  setTimeout(()=>{ pw.style.display='none'; pb.style.width='0%'; },600);
+
+  if(error){
+    _toast('❌ '+error.message,'#dc2626');
+    btn.disabled=false;
+    btn.innerHTML=`<i data-lucide="upload" style="width:13px;height:13px"></i> Carregar`;
+    lucide.createIcons(); inp.value=''; return;
+  }
   inp.value='';
-  _toast('✓ Modelo "'+TEMPLATES.find(t=>t.id===id).name+'" enviado!');
-  _renderTemplates();
+  _toast('✓ "'+tmpl.name+'" enviado com sucesso!');
+  await _renderTemplates();
 }
 
 async function _tmplDl(id){
-  const m=_idx.modelos[id]; if(!m) return;
-  const {data,error}=await _sbC().storage.from(SB_BUCKET).createSignedUrl(m.path,SB_TTL);
-  if(error){_toast('❌ '+error.message,'#dc2626');return;}
-  const a=document.createElement('a');a.href=data.signedUrl;a.download=m.fname||id;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  _toast('⬇ Baixando '+m.fname+'…');
+  _toast('⏳ Preparando download…');
+  const {data,error}=await _sbC().from(TABLE).select('conteudo,nome_arquivo,tipo_mime').eq('tipo','modelo').eq('slot_id',id).single();
+  if(error||!data){ _toast('❌ Erro ao baixar: '+(error?.message||'não encontrado'),'#dc2626'); return; }
+  _downloadB64(data.conteudo, data.nome_arquivo, data.tipo_mime);
+  _toast('⬇ Baixando '+data.nome_arquivo+'…');
 }
 
 async function _tmplDel(id){
   if(!confirm('Remover este modelo? Todos os usuários perderão acesso.')) return;
-  const m=_idx.modelos[id];
-  if(m&&m.path){try{await _sbC().storage.from(SB_BUCKET).remove([m.path]);}catch(e){}}
-  delete _idx.modelos[id];
-  try{await _saveIdx();}catch(e){}
+  const m=_modelos[id]; if(!m) return;
+  const {error}=await _sbC().from(TABLE).delete().eq('id',m.id);
+  if(error){ _toast('❌ '+error.message,'#dc2626'); return; }
   _toast('Modelo removido.');
-  _renderTemplates();
+  await _renderTemplates();
 }
 
 // ── APRENDIZAGEM ─────────────────────────────────────────
 let _apFile=null;
 
-function _apOpenModal(){
+function _apOpen(){
   document.getElementById('ap-modal').classList.remove('hidden');
-  document.getElementById('ap-title-inp').value='';
-  const ch=document.getElementById('ap-chosen');ch.textContent='';ch.style.display='none';
-  document.getElementById('ap-confirm-btn').disabled=true;
-  document.getElementById('ap-file-inp').value='';
+  document.getElementById('ap-title').value='';
+  const ch=document.getElementById('ap-chosen'); ch.textContent=''; ch.style.display='none';
+  document.getElementById('ap-ok').disabled=true;
+  document.getElementById('ap-file').value='';
   document.getElementById('ap-err').style.display='none';
+  document.getElementById('ap-prog-wrap').style.display='none';
   _apFile=null; lucide.createIcons();
 }
-function _apCloseModal(){document.getElementById('ap-modal').classList.add('hidden');_apFile=null;}
-function _apFileChosen(inp){_apFile=inp.files[0]||null;const ch=document.getElementById('ap-chosen');ch.textContent=_apFile?'📎 '+_apFile.name:'';ch.style.display=_apFile?'':'none';_apCheckBtn();}
-function _apCheckBtn(){const t=document.getElementById('ap-title-inp').value.trim();document.getElementById('ap-confirm-btn').disabled=!(t&&_apFile);}
-function _apDrag(e){e.preventDefault();document.getElementById('ap-drop').classList.add('drag');}
-function _apDropFile(e){e.preventDefault();document.getElementById('ap-drop').classList.remove('drag');const f=e.dataTransfer.files[0];if(f){_apFile=f;const ch=document.getElementById('ap-chosen');ch.textContent='📎 '+f.name;ch.style.display='';_apCheckBtn();}}
+function _apClose(){ document.getElementById('ap-modal').classList.add('hidden'); _apFile=null; }
+function _apFileSet(inp){ _apFile=inp.files[0]||null; const ch=document.getElementById('ap-chosen'); ch.textContent=_apFile?'📎 '+_apFile.name:''; ch.style.display=_apFile?'':'none'; _apCheck(); }
+function _apCheck(){ document.getElementById('ap-ok').disabled=!(document.getElementById('ap-title').value.trim()&&_apFile); }
+function _apDrop(e){ e.preventDefault(); document.getElementById('ap-drop').classList.remove('drag'); const f=e.dataTransfer.files[0]; if(f){ _apFile=f; const ch=document.getElementById('ap-chosen'); ch.textContent='📎 '+f.name; ch.style.display=''; _apCheck(); } }
 
 async function _apUpload(){
-  const title=document.getElementById('ap-title-inp').value.trim();
+  const title=document.getElementById('ap-title').value.trim();
   if(!title||!_apFile) return;
-  const btn=document.getElementById('ap-confirm-btn');
-  btn.textContent='Enviando…'; btn.disabled=true;
-  const err=document.getElementById('ap-err');err.style.display='none';
+  const btn=document.getElementById('ap-ok');
+  const err=document.getElementById('ap-err');
+  const pw=document.getElementById('ap-prog-wrap');
+  const pb=document.getElementById('ap-prog');
+  btn.disabled=true; btn.textContent='Lendo…'; err.style.display='none';
+  pw.style.display=''; pb.style.width='10%';
+
+  let b64;
+  try{ b64=await _toB64(_apFile,p=>{ pb.style.width=Math.round(p*60+10)+'%'; }); }
+  catch(e){ err.textContent='Erro ao ler arquivo: '+e.message; err.style.display=''; btn.disabled=false; btn.textContent='Fixar documento'; pw.style.display='none'; return; }
+
+  btn.textContent='Enviando…'; pb.style.width='75%';
+
   const ext=_apFile.name.split('.').pop().toLowerCase();
-  const slug=Date.now()+'_'+_apFile.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-  const path=`biblioteca/aprendizagem/${slug}`;
-  const {error}=await _sbC().storage.from(SB_BUCKET).upload(path,_apFile,{upsert:false,contentType:_apFile.type});
-  if(error){err.textContent='Erro ao enviar: '+error.message;err.style.display='';btn.textContent='Fixar documento';btn.disabled=false;return;}
-  _idx.pins.unshift({id:Date.now(),title,path,fname:_apFile.name,ext,date:new Date().toLocaleDateString('pt-BR'),size:_apFile.size});
-  try{await _saveIdx();}catch(e){err.textContent='Arquivo enviado mas índice não salvo: '+e.message;err.style.display='';}
-  _apCloseModal();
-  _toast('✓ "'+title+'" fixado com sucesso!');
-  _apRender();
+  const {error}=await _sbC().from(TABLE).insert({
+    tipo:'aprendizagem', slot_id:null, titulo:title,
+    nome_arquivo:_apFile.name, tipo_mime:_apFile.type,
+    tamanho:_apFile.size, conteudo:b64
+  });
+
+  pb.style.width='100%';
+  setTimeout(()=>{ pw.style.display='none'; pb.style.width='0%'; },600);
+
+  if(error){ err.textContent='Erro ao salvar: '+error.message; err.style.display=''; btn.disabled=false; btn.textContent='Fixar documento'; return; }
+  _apClose();
+  _toast('✓ "'+title+'" fixado!');
+  await _apRender();
 }
 
-function _apRender(){
-  const pins=_idx.pins||[];
+async function _apRender(){
+  if(!_ready){ document.getElementById('pin-grid').innerHTML=''; document.getElementById('ap-empty').style.display=''; return; }
   const q=(document.getElementById('ap-search')?.value||'').toLowerCase().trim();
-  const filt=q?pins.filter(p=>p.title.toLowerCase().includes(q)||(p.fname||'').toLowerCase().includes(q)):pins;
-  document.getElementById('ap-count').textContent=pins.length+' documento(s)';
+  const {data,error}=await _sbC().from(TABLE).select('id,titulo,nome_arquivo,tipo_mime,tamanho,data_upload').eq('tipo','aprendizagem').order('data_upload',{ascending:false});
+  const all=(!error&&data)?data:[];
+  const filt=q?all.filter(p=>p.titulo.toLowerCase().includes(q)||(p.nome_arquivo||'').toLowerCase().includes(q)):all;
+  document.getElementById('ap-count').textContent=all.length+' documento(s)';
   const grid=document.getElementById('pin-grid');
   const empty=document.getElementById('ap-empty');
-  if(!filt.length){grid.innerHTML='';empty.style.display='';return;}
+  if(!filt.length){ grid.innerHTML=''; empty.style.display=''; return; }
   empty.style.display='none';
-  const cls=ext=>['pdf'].includes(ext)?'pdf':['doc','docx'].includes(ext)?'word':['ppt','pptx'].includes(ext)?'ppt':'other';
-  grid.innerHTML=filt.map(p=>`
-    <div class="pin-card">
+  grid.innerHTML=filt.map(p=>{
+    const ext=(p.nome_arquivo||'').split('.').pop().toLowerCase();
+    return `<div class="pin-card">
       <div class="pin-card-hdr">
-        <div class="pin-type-icon ${cls(p.ext)}">${_extSvg(p.ext)}</div>
+        <div class="pin-type-icon ${_extCls(ext)}">${_svgByExt(ext)}</div>
         <div class="pin-info">
-          <div class="pin-title">${_esc(p.title)}</div>
-          <div class="pin-meta">${_esc(p.fname||'')} · ${p.date||''}</div>
-          <span class="pin-badge">${(p.ext||'').toUpperCase()}</span>
+          <div class="pin-title">${_esc(p.titulo)}</div>
+          <div class="pin-meta">${_esc(p.nome_arquivo||'')} · ${new Date(p.data_upload).toLocaleDateString('pt-BR')} ${p.tamanho?'· '+_fmt(p.tamanho):''}</div>
+          <span class="pin-badge">${ext.toUpperCase()}</span>
         </div>
       </div>
       <div class="pin-actions">
-        <button class="pin-dl" onclick="_pinDl(${p.id})">
+        <button class="pin-dl" onclick="_pinDl(${p.id},'${_esc(p.nome_arquivo||'arquivo')}','${_esc(p.tipo_mime||'')}')">
           <i data-lucide="download" style="width:12px;height:12px"></i> Baixar
         </button>
         <button class="pin-rm" title="Remover" onclick="_pinRm(${p.id})">
           <i data-lucide="trash-2" style="width:13px;height:13px"></i>
         </button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   lucide.createIcons();
 }
 
-async function _pinDl(id){
-  const p=(_idx.pins||[]).find(x=>x.id===id);if(!p)return;
-  const {data,error}=await _sbC().storage.from(SB_BUCKET).createSignedUrl(p.path,SB_TTL);
-  if(error){_toast('❌ '+error.message,'#dc2626');return;}
-  const a=document.createElement('a');a.href=data.signedUrl;a.download=p.fname||'arquivo';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  _toast('⬇ Baixando '+p.fname+'…');
+async function _pinDl(id,fname,mime){
+  _toast('⏳ Preparando download…');
+  const {data,error}=await _sbC().from(TABLE).select('conteudo,nome_arquivo,tipo_mime').eq('id',id).single();
+  if(error||!data){ _toast('❌ Erro ao baixar','#dc2626'); return; }
+  _downloadB64(data.conteudo, data.nome_arquivo||fname, data.tipo_mime||mime);
+  _toast('⬇ Baixando '+data.nome_arquivo+'…');
 }
 
 async function _pinRm(id){
   if(!confirm('Remover este documento do acervo?')) return;
-  const p=(_idx.pins||[]).find(x=>x.id===id);
-  if(p){try{await _sbC().storage.from(SB_BUCKET).remove([p.path]);}catch(e){}}
-  _idx.pins=(_idx.pins||[]).filter(x=>x.id!==id);
-  try{await _saveIdx();}catch(e){}
-  _toast('Documento removido.');
-  _apRender();
+  const {error}=await _sbC().from(TABLE).delete().eq('id',id);
+  if(error){ _toast('❌ '+error.message,'#dc2626'); return; }
+  _toast('Documento removido.'); await _apRender();
 }
 
 // ── TABS ────────────────────────────────────────────────
@@ -625,31 +674,56 @@ function _blTab(name){
 }
 
 // ── UTILS ───────────────────────────────────────────────
-function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function _esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function _fmt(n){
+  if(!n) return '';
+  if(n<1024) return n+'B';
+  if(n<1048576) return (n/1024).toFixed(1)+'KB';
+  if(n<1073741824) return (n/1048576).toFixed(1)+'MB';
+  return (n/1073741824).toFixed(1)+'GB';
+}
+
+// Lê arquivo como base64 com progresso simulado
+function _toB64(file, onProgress){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    let prog=0;
+    const tick=setInterval(()=>{ prog=Math.min(prog+0.05,0.95); if(onProgress) onProgress(prog); },100);
+    reader.onload=e=>{ clearInterval(tick); if(onProgress) onProgress(1); const b64=e.result.split(',')[1]; resolve(b64); };
+    reader.onerror=e=>{ clearInterval(tick); reject(e); };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Decodifica base64 e dispara download
+function _downloadB64(b64,fname,mime){
+  try{
+    const bytes=atob(b64);
+    const arr=new Uint8Array(bytes.length);
+    for(let i=0;i<bytes.length;i++) arr[i]=bytes.charCodeAt(i);
+    const blob=new Blob([arr],{type:mime||'application/octet-stream'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=fname||'arquivo';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),5000);
+  }catch(e){ _toast('❌ Erro ao gerar arquivo: '+e.message,'#dc2626'); }
+}
+
 function _toast(msg,bg){
   const t=document.getElementById('bl-toast');
-  t.textContent=msg;t.style.background=bg||'#1a2535';
-  t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';
+  t.textContent=msg; t.style.background=bg||'#1a2535';
+  t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)';
   clearTimeout(_toast._t);
-  _toast._t=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(80px)';},3200);
+  _toast._t=setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(80px)'; },3500);
 }
 
 // ── INIT ────────────────────────────────────────────────
-window.addEventListener('load', async function(){
+window.addEventListener('load', async ()=>{
   lucide.createIcons();
-  const {data:{session}} = await _sbC().auth.getSession();
-  if(session){
-    await _afterLogin(session);
-  } else {
-    document.getElementById('page-loading').style.display='none';
-    document.getElementById('login-overlay').classList.remove('hidden');
-  }
-  // ouvir mudanças de auth
-  _sbC().auth.onAuthStateChange((_event,session)=>{
-    if(!session && !document.getElementById('login-overlay').classList.contains('hidden')===false){
-      _logout();
-    }
-  });
+  const {data:{session}}=await _sbC().auth.getSession();
+  if(session){ await _start(); }
+  else{ document.getElementById('page-loading').style.display='none'; }
 });
 </script>
 </body>
