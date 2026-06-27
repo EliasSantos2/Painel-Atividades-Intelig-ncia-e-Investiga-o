@@ -8,6 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Consulta Oculta — Rumo Logística</title>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -18,6 +19,7 @@
   --orange:#F78344;--orange-h:#e06d30;
   --bg:#f0f3f8;--bg2:#fff;--bg3:#f5f7fc;--border:#dde3ee;
   --text:#1a2535;--text2:#5a6e8c;--text3:#8a9bb5;
+  --green:#1d8a48;
   --radius:8px;--shadow:0 1px 4px rgba(0,56,101,.08),0 4px 16px rgba(0,56,101,.06);
   --shadow-sm:0 1px 3px rgba(0,56,101,.07);
 }
@@ -40,24 +42,25 @@ nav a.nav-back:hover{color:var(--navy);}
 nav button.nav-tab{background:none;border:none;color:var(--text2);padding:0 18px;height:46px;cursor:pointer;font-size:12.5px;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .18s;letter-spacing:.1px;display:inline-flex;align-items:center;gap:7px;}
 nav button.nav-tab.active{color:var(--navy);border-bottom-color:var(--orange);}
 
-/* ── MAIN WRAPPER ── */
+/* ── MAIN ── */
 main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
-
-/* ── CARD ── */
 .co-wrap{display:flex;flex-direction:column;flex:1;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;min-height:0;}
 
-/* ── PICK BAR ── */
-.co-pick-bar{padding:10px 18px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;flex-shrink:0;}
-.co-pick-btn{background:var(--orange);color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.15s;white-space:nowrap;}
-.co-pick-btn:hover{background:var(--orange-h);}
+/* ── BARRA DE AÇÃO ── */
+.co-pick-bar{padding:10px 18px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap;}
+.co-login-btn{background:var(--navy);color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.15s;white-space:nowrap;}
+.co-login-btn:hover{background:var(--navy2);}
+.co-login-btn.connected{background:var(--green);}
+.co-index-btn{background:var(--orange);color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;white-space:nowrap;}
+.co-index-btn:hover{background:var(--orange-h);}
+.co-index-btn:disabled{opacity:.45;cursor:not-allowed;}
 .co-status{color:var(--text2);font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .co-badge{background:var(--navy-light);color:var(--navy);font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;display:none;}
 
 /* ── CHAT ── */
 .co-chat{display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
 .co-messages{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;}
-
-.co-msg-system{background:var(--navy-light);border-left:3px solid var(--navy);padding:12px 16px;border-radius:6px;font-size:12.5px;color:var(--text2);line-height:1.6;}
+.co-msg-system{background:var(--navy-light);border-left:3px solid var(--navy);padding:12px 16px;border-radius:6px;font-size:12.5px;color:var(--text2);line-height:1.65;}
 .co-msg-user{align-self:flex-end;background:var(--navy);color:#fff;padding:10px 16px;border-radius:12px 12px 2px 12px;max-width:72%;font-size:13px;line-height:1.5;word-break:break-word;}
 .co-msg-bot{align-self:flex-start;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:2px 12px 12px 12px;padding:14px 18px;font-size:12.5px;}
 .co-msg-loading{align-self:flex-start;display:flex;gap:5px;align-items:center;padding:10px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:2px 12px 12px 12px;}
@@ -77,7 +80,7 @@ main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden
 .co-excerpt{font-size:11.5px;color:var(--text2);line-height:1.65;border-left:2px solid var(--border);padding:4px 0 4px 10px;margin-top:7px;}
 .co-excerpt mark{background:#fff3cd;color:inherit;border-radius:2px;padding:0 2px;font-weight:600;}
 .co-empty{text-align:center;padding:40px;color:var(--text3);font-size:13px;}
-.co-no-support{background:#fff3cd;border:1px solid #f0c040;border-radius:8px;padding:16px 20px;color:#7a5800;font-size:13px;}
+.co-progress{font-size:11.5px;color:var(--text2);background:var(--navy-light);border-radius:6px;padding:8px 14px;margin-top:6px;line-height:1.5;}
 
 /* ── INPUT ── */
 .co-input-wrap{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:10px;background:#fff;flex-shrink:0;}
@@ -114,10 +117,13 @@ main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden
   <div class="co-wrap">
 
     <div class="co-pick-bar">
-      <button class="co-pick-btn" onclick="_coPickFolder()">
-        <i data-lucide="folder-open" style="width:14px;height:14px"></i> Selecionar Pasta OneDrive
+      <button class="co-login-btn" id="co-login-btn" onclick="_coLogin()">
+        <i data-lucide="log-in" style="width:14px;height:14px"></i> Conectar ao OneDrive
       </button>
-      <span id="co-status" class="co-status">Nenhuma pasta selecionada — clique para indexar os documentos</span>
+      <button class="co-index-btn" id="co-index-btn" onclick="_coStartIndex()" disabled>
+        <i data-lucide="refresh-cw" style="width:13px;height:13px"></i> Atualizar índice
+      </button>
+      <span id="co-status" class="co-status">Clique em "Conectar ao OneDrive" para autenticar</span>
       <span id="co-badge" class="co-badge">0 docs</span>
     </div>
 
@@ -125,9 +131,9 @@ main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden
       <div id="co-messages" class="co-messages">
         <div class="co-msg-system">
           <strong>Bem-vindo à Consulta Oculta.</strong><br><br>
-          Clique em <strong>Selecionar Pasta OneDrive</strong> para indexar automaticamente todos os documentos da pasta desejada. Em seguida, faça qualquer pergunta em linguagem natural e o sistema localizará as informações nos arquivos.<br><br>
+          Clique em <strong>Conectar ao OneDrive</strong> para autenticar com sua conta Microsoft. O sistema irá indexar automaticamente todos os documentos da pasta compartilhada e você poderá fazer perguntas sobre o conteúdo.<br><br>
           Formatos suportados: <strong>PDF · DOCX · XLSX · XLS · TXT · CSV · JSON · HTML · XML</strong><br>
-          <span style="font-size:11px;color:var(--text3)">Todos os dados são processados localmente no navegador — nenhum arquivo é enviado para servidores externos.</span>
+          <span style="font-size:11px;color:var(--text3)">Os textos são processados localmente no navegador após o download — nenhum dado é enviado a servidores externos além do OneDrive.</span>
         </div>
       </div>
       <div class="co-input-wrap">
@@ -144,118 +150,205 @@ main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden
 </main>
 
 <script>
-// ── INIT ──
-document.addEventListener('DOMContentLoaded',function(){
-  if(typeof lucide!=='undefined') lucide.createIcons();
+// ── CONFIG ──────────────────────────────────────────────
+const _CLIENT_ID   = '8a8629c6-71a2-45f0-b26d-519f44373b68';
+const _SHARED_URL  = 'https://1drv.ms/f/c/b476f1a47b64e77b/IgBt4LZJuuYFQrcoaDA95IrYAdsRLzCObT-Kxr_0TZApcLE?e=Blg9sz';
+const _SCOPES      = ['Files.Read.All','Sites.Read.All'];
+const _MAX_SIZE    = 30 * 1024 * 1024; // 30 MB por arquivo
+
+// ── MSAL ─────────────────────────────────────────────────
+const _msal = new msal.PublicClientApplication({
+  auth:{
+    clientId: _CLIENT_ID,
+    authority:'https://login.microsoftonline.com/common',
+    redirectUri: location.origin + location.pathname
+  },
+  cache:{ cacheLocation:'localStorage', storeAuthStateInCookie:false }
 });
-function _lc(){if(typeof lucide!=='undefined')lucide.createIcons();}
 
-// ── ENGINE ──
-let _coIndex=[];
+let _token = null;
+let _coIndex = [];
 
-async function _coPickFolder(){
-  if(!window.showDirectoryPicker){
-    _coRenderMsg('system','<div class="co-no-support">⚠️ Seu navegador não suporta acesso a pastas locais. Use <strong>Google Chrome</strong> ou <strong>Microsoft Edge</strong> versão 86 ou superior.</div>');
-    return;
+async function _getToken(){
+  const accounts = _msal.getAllAccounts();
+  if(accounts.length){
+    try{
+      const r = await _msal.acquireTokenSilent({scopes:_SCOPES, account:accounts[0]});
+      return r.accessToken;
+    }catch(e){}
   }
+  const r = await _msal.loginPopup({scopes:_SCOPES});
+  return r.accessToken;
+}
+
+async function _coLogin(){
+  _coSetStatus('Autenticando…');
   try{
-    const dir=await window.showDirectoryPicker({mode:'read'});
-    _coIndex=[];
-    _coSetStatus('Indexando arquivos…');
-    document.getElementById('co-badge').style.display='none';
-    const loadEl=_coRenderLoading('Lendo documentos da pasta…');
-    await _coIndexDir(dir,'');
-    loadEl.remove();
-    document.getElementById('co-badge').textContent=_coIndex.length+' docs';
-    document.getElementById('co-badge').style.display='';
+    _token = await _getToken();
+    const accounts = _msal.getAllAccounts();
+    const name = accounts[0]?.name || accounts[0]?.username || 'Conectado';
+    const btn = document.getElementById('co-login-btn');
+    btn.innerHTML = '<i data-lucide="check-circle" style="width:14px;height:14px"></i> ' + name;
+    btn.className = 'co-login-btn connected';
+    btn.onclick = null;
+    document.getElementById('co-index-btn').disabled = false;
+    _coSetStatus('Autenticado. Clique em "Atualizar índice" ou aguarde o carregamento automático.');
+    _lc();
+    _coStartIndex();
+  }catch(e){
+    _coSetStatus('Erro de autenticação: ' + e.message);
+    _coRenderMsg('system','⚠️ Falha na autenticação: <em>'+_coEsc(e.message)+'</em><br>Verifique se o popup foi bloqueado pelo navegador.');
+  }
+}
+
+// ── GRAPH API ────────────────────────────────────────────
+function _encodeSharingUrl(url){
+  const b64 = btoa(url).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  return 'u!' + b64;
+}
+
+async function _graphGet(url){
+  const resp = await fetch(url,{headers:{Authorization:'Bearer '+_token,'Content-Type':'application/json'}});
+  if(!resp.ok) throw new Error('Graph '+resp.status+': '+await resp.text());
+  return resp.json();
+}
+
+async function _graphGetBytes(url){
+  const resp = await fetch(url,{headers:{Authorization:'Bearer '+_token}});
+  if(!resp.ok) throw new Error('Download '+resp.status);
+  return resp.arrayBuffer();
+}
+
+// ── INDEXAÇÃO ────────────────────────────────────────────
+let _loadingEl = null;
+
+async function _coStartIndex(){
+  if(!_token){ _coRenderMsg('system','⚠️ Conecte ao OneDrive primeiro.'); return; }
+  _coIndex = [];
+  document.getElementById('co-index-btn').disabled = true;
+  document.getElementById('co-badge').style.display = 'none';
+  _loadingEl = _coRenderLoading('Conectando à pasta compartilhada…');
+
+  try{
+    const encoded = _encodeSharingUrl(_SHARED_URL);
+    const root = await _graphGet(`https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem`);
+    const driveId = root.parentReference?.driveId || root.remoteItem?.parentReference?.driveId;
+    const itemId  = root.id;
+
+    _coSetStatus('Mapeando arquivos…');
+    await _coIndexFolder(driveId, itemId, '');
+
+    if(_loadingEl){ _loadingEl.remove(); _loadingEl=null; }
+    document.getElementById('co-badge').textContent = _coIndex.length+' docs';
+    document.getElementById('co-badge').style.display = '';
+    document.getElementById('co-index-btn').disabled = false;
     _coSetStatus('✓ '+_coIndex.length+' documento(s) indexado(s) — faça sua pergunta');
-    const tipos=[...new Set(_coIndex.map(d=>d.name.split('.').pop().toUpperCase()))].join(' · ');
-    _coRenderMsg('system','<strong>'+_coIndex.length+'</strong> documento(s) indexado(s) com sucesso.<br>Tipos lidos: '+tipos+'<br><em>Agora faça qualquer pergunta.</em>');
+
+    const tipos = [...new Set(_coIndex.map(d=>d.name.split('.').pop().toUpperCase()))].join(' · ');
+    _coRenderMsg('system',
+      '<strong>'+_coIndex.length+'</strong> documento(s) indexado(s) com sucesso.<br>'+
+      'Tipos: '+tipos+'<br>'+
+      '<em>Faça qualquer pergunta sobre o conteúdo dos arquivos.</em>');
     _lc();
   }catch(e){
-    if(e.name!=='AbortError'){_coSetStatus('Erro: '+e.message);_coRenderMsg('system','⚠️ Erro ao acessar pasta: '+e.message);}
+    if(_loadingEl){ _loadingEl.remove(); _loadingEl=null; }
+    document.getElementById('co-index-btn').disabled = false;
+    _coSetStatus('Erro ao indexar: '+e.message);
+    _coRenderMsg('system','⚠️ Erro ao acessar a pasta: <em>'+_coEsc(e.message)+'</em><br>'+
+      'Verifique se as permissões <strong>Files.Read.All</strong> foram adicionadas no Azure.');
   }
 }
 
-async function _coIndexDir(dir,path){
-  for await(const[name,handle] of dir.entries()){
-    const fullPath=path?path+'/'+name:name;
-    if(handle.kind==='directory'){
-      await _coIndexDir(handle,fullPath);
-    }else{
-      const text=await _coReadHandle(handle,name);
-      if(text&&text.trim().length>10){
-        _coSetStatus('Indexando: '+name);
-        _coIndex.push({name,path:fullPath,text});
+async function _coIndexFolder(driveId, itemId, path){
+  let url = `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/children`+
+            `?$top=100&$select=id,name,file,folder,size,@microsoft.graph.downloadUrl`;
+  while(url){
+    _coSetStatus(`Lendo pasta: ${path||'/'} (${_coIndex.length} docs)`);
+    const data = await _graphGet(url);
+    for(const item of data.value){
+      const fullPath = path ? path+'/'+item.name : item.name;
+      if(item.folder){
+        await _coIndexFolder(driveId, item.id, fullPath);
+      }else if(item.file && (!item.size || item.size <= _MAX_SIZE)){
+        const text = await _coReadItem(driveId, item, fullPath);
+        if(text && text.trim().length > 10){
+          _coIndex.push({name:item.name, path:fullPath, text});
+        }
       }
     }
+    url = data['@odata.nextLink'] || null;
   }
 }
 
-async function _coReadHandle(handle,name){
-  const ext=name.split('.').pop().toLowerCase();
-  const txtExts=['txt','md','csv','json','html','htm','xml','log','tsv'];
+async function _coReadItem(driveId, item, path){
+  const ext = item.name.split('.').pop().toLowerCase();
+  const txtExts = ['txt','md','csv','json','html','htm','xml','log','tsv'];
   try{
-    const file=await handle.getFile();
-    if(txtExts.includes(ext)) return await file.text();
-    if(ext==='pdf') return await _coReadPDF(file);
-    if(ext==='docx') return await _coReadDOCX(file);
-    if(ext==='xlsx'||ext==='xls') return await _coReadXLSX(file);
+    const dlUrl = item['@microsoft.graph.downloadUrl'] ||
+                  `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${item.id}/content`;
+    if(txtExts.includes(ext)){
+      const r = await fetch(dlUrl);
+      return await r.text();
+    }
+    const buf = await (await fetch(dlUrl)).arrayBuffer();
+    if(ext==='pdf')  return await _coReadPDF(buf);
+    if(ext==='docx') return await _coReadDOCX(buf);
+    if(ext==='xlsx'||ext==='xls') return await _coReadXLSX(buf);
   }catch(e){}
   return null;
 }
 
-async function _coReadPDF(file){
+async function _coReadPDF(buf){
   if(!window.pdfjsLib) return null;
   try{
-    const buf=await file.arrayBuffer();
-    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    const pdf = await pdfjsLib.getDocument({data:buf}).promise;
     let text='';
     for(let i=1;i<=pdf.numPages;i++){
-      const page=await pdf.getPage(i);
-      const tc=await page.getTextContent();
-      text+=tc.items.map(s=>s.str).join(' ')+'\n';
+      const page = await pdf.getPage(i);
+      const tc = await page.getTextContent();
+      text += tc.items.map(s=>s.str).join(' ')+'\n';
     }
     return text;
   }catch(e){return null;}
 }
 
-async function _coReadDOCX(file){
+async function _coReadDOCX(buf){
   if(!window.mammoth) return null;
   try{
-    const buf=await file.arrayBuffer();
-    const r=await mammoth.extractRawText({arrayBuffer:buf});
+    const r = await mammoth.extractRawText({arrayBuffer:buf});
     return r.value;
   }catch(e){return null;}
 }
 
-async function _coReadXLSX(file){
+async function _coReadXLSX(buf){
   if(!window.XLSX) return null;
   try{
-    const buf=await file.arrayBuffer();
-    const wb=XLSX.read(buf,{type:'array'});
+    const wb = XLSX.read(buf,{type:'array'});
     return wb.SheetNames.map(n=>XLSX.utils.sheet_to_csv(wb.Sheets[n])).join('\n');
   }catch(e){return null;}
 }
 
+// ── BUSCA ────────────────────────────────────────────────
 function _coSearch(query){
   if(!_coIndex.length) return [];
-  const stop=new Set(['de','da','do','dos','das','em','na','no','nos','nas','que','com','por','para','uma','um','os','as','ao','se','ou','mas','mais','seu','sua','foi','são','este','esta','isso','essa','ele','ela','eles','elas']);
-  const allTerms=(query.toLowerCase().match(/\b\w{2,}\b/g)||[]);
-  const terms=allTerms.filter(t=>!stop.has(t));
-  const keywords=terms.length?terms:allTerms;
+  const stop = new Set(['de','da','do','dos','das','em','na','no','nos','nas','que','com','por',
+    'para','uma','um','os','as','ao','se','ou','mas','mais','seu','sua','foi','são',
+    'este','esta','isso','essa','ele','ela','eles','elas','isso','aqui','ali']);
+  const allTerms = (query.toLowerCase().match(/\b\w{2,}\b/g)||[]);
+  const terms = allTerms.filter(t=>!stop.has(t));
+  const keywords = terms.length ? terms : allTerms;
   if(!keywords.length) return [];
 
   return _coIndex.map(doc=>{
-    const lower=doc.text.toLowerCase();
-    let score=0;
-    const excerpts=[];
+    const lower = doc.text.toLowerCase();
+    let score = 0;
+    const excerpts = [];
     keywords.forEach(term=>{
       let idx=0;
       while((idx=lower.indexOf(term,idx))!==-1){score++;idx++;}
-      const pos=lower.indexOf(term);
+      const pos = lower.indexOf(term);
       if(pos!==-1){
-        const s=Math.max(0,pos-140),e=Math.min(doc.text.length,pos+220);
+        const s=Math.max(0,pos-140), e=Math.min(doc.text.length,pos+220);
         let ex=doc.text.slice(s,e).replace(/[\r\n\t]+/g,' ').trim();
         if(s>0)ex='…'+ex;
         if(e<doc.text.length)ex+='…';
@@ -270,26 +363,30 @@ function _coSearch(query){
 }
 
 function _coSend(){
-  const inp=document.getElementById('co-input');
-  const query=inp.value.trim();
+  const inp = document.getElementById('co-input');
+  const query = inp.value.trim();
   if(!query) return;
-  inp.value='';
-  _coRenderMsg('user',_coEsc(query));
+  inp.value = '';
+  _coRenderMsg('user', _coEsc(query));
 
   if(!_coIndex.length){
-    _coRenderMsg('bot','<div class="co-empty">📁 Nenhuma pasta indexada ainda.<br>Clique em <strong>Selecionar Pasta OneDrive</strong> para começar.</div>');
+    _coRenderMsg('bot','<div class="co-empty">📁 Nenhum documento indexado ainda.<br>'+(
+      _token ? 'Clique em <strong>Atualizar índice</strong> para carregar os arquivos.' :
+               'Clique em <strong>Conectar ao OneDrive</strong> para começar.'
+    )+'</div>');
     return;
   }
 
-  const loadEl=_coRenderLoading('Buscando nos '+_coIndex.length+' documentos…');
+  const loadEl = _coRenderLoading('Buscando nos '+_coIndex.length+' documentos…');
   setTimeout(()=>{
-    const results=_coSearch(query);
+    const results = _coSearch(query);
     loadEl.remove();
     if(!results.length){
-      _coRenderMsg('bot','<div class="co-empty">🔍 Nenhum resultado encontrado para <em>"'+_coEsc(query)+'"</em> nos '+_coIndex.length+' documentos indexados.</div>');
+      _coRenderMsg('bot','<div class="co-empty">🔍 Nenhum resultado para "<em>'+_coEsc(query)+'</em>" nos '+_coIndex.length+' documentos.</div>');
       return;
     }
-    const html=`<div class="co-results-header">Encontrei <strong>${results.length}</strong> documento(s) com referências a "<em>${_coEsc(query)}</em>":</div>`+
+    const html =
+      `<div class="co-results-header">Encontrei <strong>${results.length}</strong> documento(s) com referências a "<em>${_coEsc(query)}</em>":</div>`+
       results.map(r=>`
         <div class="co-result">
           <div class="co-result-hdr">
@@ -300,47 +397,72 @@ function _coSend(){
           </div>
           ${r.excerpts.map(ex=>`<div class="co-excerpt">${_coHL(ex,query)}</div>`).join('')}
         </div>`).join('');
-    _coRenderMsg('bot',html);
+    _coRenderMsg('bot', html);
     _lc();
-  },100);
+  }, 80);
 }
 
-function _coHL(text,query){
-  const terms=(query.toLowerCase().match(/\b\w{2,}\b/g)||[]);
-  let out=_coEsc(text);
+// ── HELPERS ──────────────────────────────────────────────
+function _coHL(text, query){
+  const terms = (query.toLowerCase().match(/\b\w{2,}\b/g)||[]);
+  let out = _coEsc(text);
   terms.forEach(t=>{
-    const re=new RegExp('('+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
-    out=out.replace(re,'<mark>$1</mark>');
+    const re = new RegExp('('+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+    out = out.replace(re,'<mark>$1</mark>');
   });
   return out;
 }
 
 function _coEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-function _coRenderMsg(role,html){
-  const list=document.getElementById('co-messages');
-  const div=document.createElement('div');
-  div.className='co-msg-'+(role==='user'?'user':role==='system'?'system':'bot');
-  div.innerHTML=html;
+function _coRenderMsg(role, html){
+  const list = document.getElementById('co-messages');
+  const div = document.createElement('div');
+  div.className = 'co-msg-'+(role==='user'?'user':role==='system'?'system':'bot');
+  div.innerHTML = html;
   list.appendChild(div);
-  list.scrollTop=list.scrollHeight;
+  list.scrollTop = list.scrollHeight;
   return div;
 }
 
 function _coRenderLoading(msg){
-  const list=document.getElementById('co-messages');
-  const div=document.createElement('div');
-  div.className='co-msg-loading';
-  div.innerHTML=`<div class="co-dot"></div><div class="co-dot"></div><div class="co-dot"></div><span style="font-size:12px;color:var(--text2);margin-left:6px">${msg}</span>`;
+  const list = document.getElementById('co-messages');
+  const div = document.createElement('div');
+  div.className = 'co-msg-loading';
+  div.innerHTML = `<div class="co-dot"></div><div class="co-dot"></div><div class="co-dot"></div><span style="font-size:12px;color:var(--text2);margin-left:6px">${msg}</span>`;
   list.appendChild(div);
-  list.scrollTop=list.scrollHeight;
+  list.scrollTop = list.scrollHeight;
   return div;
 }
 
 function _coSetStatus(msg){
-  const el=document.getElementById('co-status');
-  if(el) el.textContent=msg;
+  const el = document.getElementById('co-status');
+  if(el) el.textContent = msg;
 }
+
+function _lc(){ if(typeof lucide!=='undefined') lucide.createIcons(); }
+
+// ── INIT ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async function(){
+  _lc();
+  // Se já tem sessão salva, loga silenciosamente
+  try{
+    await _msal.handleRedirectPromise();
+    const accounts = _msal.getAllAccounts();
+    if(accounts.length){
+      _token = await _getToken();
+      const btn = document.getElementById('co-login-btn');
+      const name = accounts[0]?.name || accounts[0]?.username || 'Conectado';
+      btn.innerHTML = '<i data-lucide="check-circle" style="width:14px;height:14px"></i> '+name;
+      btn.className = 'co-login-btn connected';
+      btn.onclick = null;
+      document.getElementById('co-index-btn').disabled = false;
+      _coSetStatus('Sessão restaurada. Carregando documentos…');
+      _lc();
+      _coStartIndex();
+    }
+  }catch(e){}
+});
 </script>
 </body>
 </html>
