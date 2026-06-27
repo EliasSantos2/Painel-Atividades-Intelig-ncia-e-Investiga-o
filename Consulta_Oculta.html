@@ -33,25 +33,25 @@ header{background:var(--navy);padding:0 32px;display:flex;align-items:center;jus
 .header-title p{font-size:10.5px;color:rgba(255,255,255,.5);margin-top:1px;letter-spacing:.1px;}
 .accent-bar{height:3px;background:linear-gradient(90deg,var(--orange) 0%,#f9b98a 60%,transparent 100%);flex-shrink:0;}
 
-/* ── BACK NAV ── */
-.back-nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 28px;height:44px;display:flex;align-items:center;box-shadow:var(--shadow-sm);flex-shrink:0;}
-.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;font-weight:600;text-decoration:none;transition:color .18s;}
-.back-link:hover{color:var(--navy);}
+/* ── NAV ── */
+nav{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:2px;box-shadow:var(--shadow-sm);flex-shrink:0;}
+nav a.nav-back{display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;font-weight:600;padding:0 16px;height:46px;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .18s;}
+nav a.nav-back:hover{color:var(--navy);}
+nav button.nav-tab{background:none;border:none;color:var(--text2);padding:0 18px;height:46px;cursor:pointer;font-size:12.5px;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .18s;letter-spacing:.1px;display:inline-flex;align-items:center;gap:7px;}
+nav button.nav-tab.active{color:var(--navy);border-bottom-color:var(--orange);}
 
 /* ── MAIN WRAPPER ── */
-.co-page{flex:1;padding:24px 28px;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
 
 /* ── CARD ── */
 .co-wrap{display:flex;flex-direction:column;flex:1;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;min-height:0;}
 
-/* ── TOOLBAR ── */
-.co-toolbar{padding:10px 18px;background:var(--navy);display:flex;align-items:center;gap:14px;flex-shrink:0;}
-.co-title{color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
-.co-title-sep{width:1px;height:20px;background:rgba(255,255,255,.2);}
-.co-pick-btn{background:var(--orange);color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.15s;white-space:nowrap;margin-left:auto;}
+/* ── PICK BAR ── */
+.co-pick-bar{padding:10px 18px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;flex-shrink:0;}
+.co-pick-btn{background:var(--orange);color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.15s;white-space:nowrap;}
 .co-pick-btn:hover{background:var(--orange-h);}
-.co-status{color:rgba(255,255,255,.65);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px;}
-.co-badge{background:rgba(255,255,255,.15);color:#fff;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;display:none;}
+.co-status{color:var(--text2);font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.co-badge{background:var(--navy-light);color:var(--navy);font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;display:none;}
 
 /* ── CHAT ── */
 .co-chat{display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
@@ -101,26 +101,24 @@ header{background:var(--navy);padding:0 32px;display:flex;align-items:center;jus
 </header>
 <div class="accent-bar"></div>
 
-<nav class="back-nav">
-  <a href="index.html" class="back-link">
-    <i data-lucide="arrow-left" style="width:14px;height:14px"></i> Voltar ao Início
+<nav>
+  <a href="index.html" class="nav-back">
+    <i data-lucide="arrow-left" style="width:14px;height:14px"></i> Início
   </a>
+  <button class="nav-tab active">
+    <i data-lucide="search" style="width:14px;height:14px"></i> Consulta Oculta
+  </button>
 </nav>
 
-<div class="co-page">
+<main>
   <div class="co-wrap">
 
-    <div class="co-toolbar">
-      <div class="co-title">
-        <i data-lucide="search" style="width:16px;height:16px;color:var(--orange)"></i>
-        Consulta Oculta
-      </div>
-      <div class="co-title-sep"></div>
-      <span id="co-status" class="co-status">Nenhuma pasta selecionada</span>
-      <span id="co-badge" class="co-badge">0 docs</span>
+    <div class="co-pick-bar">
       <button class="co-pick-btn" onclick="_coPickFolder()">
         <i data-lucide="folder-open" style="width:14px;height:14px"></i> Selecionar Pasta OneDrive
       </button>
+      <span id="co-status" class="co-status">Nenhuma pasta selecionada — clique para indexar os documentos</span>
+      <span id="co-badge" class="co-badge">0 docs</span>
     </div>
 
     <div class="co-chat">
@@ -143,7 +141,7 @@ header{background:var(--navy);padding:0 32px;display:flex;align-items:center;jus
     </div>
 
   </div>
-</div>
+</main>
 
 <script>
 // ── INIT ──
