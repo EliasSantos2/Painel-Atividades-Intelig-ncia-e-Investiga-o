@@ -82,7 +82,7 @@ main{flex:1;padding:26px 28px;overflow-y:auto;min-height:0;}
 .tmpl-actions{display:flex;gap:8px;flex-wrap:wrap;}
 .btn-up{background:var(--navy);color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;font-family:Arial,sans-serif;}
 .btn-up:hover{background:var(--navy2);}
-.btn-up:disabled{opacity:.4;pointer-events:none;}
+.btn-up:disabled,.btn-up-disabled{opacity:.4;pointer-events:none;cursor:default;}
 .btn-dl{background:var(--green-bg);color:var(--green);border:1px solid var(--green-br);padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;font-family:Arial,sans-serif;}
 .btn-dl:hover{background:#dcfce7;}
 .btn-dl:disabled{opacity:.3;pointer-events:none;}
@@ -277,18 +277,18 @@ input[type=file]{display:none;}
       <input type="text" id="ap-title" placeholder="Ex: Manual de Inteligência Policial" oninput="_apCheck()">
     </div>
     <div class="form-group">
-      <label>Arquivo</label>
-      <div class="file-drop" id="ap-drop"
-           onclick="document.getElementById('ap-file').click()"
-           ondragover="event.preventDefault();this.classList.add('drag')"
-           ondragleave="this.classList.remove('drag')"
-           ondrop="_apDrop(event)">
+      <label style="display:block;font-size:11.5px;font-weight:700;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;">Arquivo</label>
+      <input type="file" id="ap-file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt" onchange="_apFileSet(this)" style="display:none">
+      <label for="ap-file" class="file-drop" id="ap-drop"
+             ondragover="event.preventDefault();this.classList.add('drag')"
+             ondragleave="this.classList.remove('drag')"
+             ondrop="_apDrop(event)"
+             style="cursor:pointer;display:block;">
         <div class="fd-icon"><i data-lucide="upload-cloud" style="width:30px;height:30px"></i></div>
         <p>Clique ou arraste o arquivo aqui</p>
         <small>PDF · DOCX · PPTX · XLSX · qualquer tamanho</small>
         <div class="fd-chosen" id="ap-chosen"></div>
-      </div>
-      <input type="file" id="ap-file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt" onchange="_apFileSet(this)">
+      </label>
       <div class="progress-wrap" id="ap-prog-wrap"><div class="progress-bar" id="ap-prog"></div></div>
     </div>
     <div class="modal-err" id="ap-err"></div>
@@ -477,6 +477,13 @@ function _buildTemplateCards(map){
     const typeL=t.type==='ppt'?'PowerPoint (.pptx)':'Word (.docx)';
     const dateStr=has?new Date(m.data_upload).toLocaleDateString('pt-BR'):'';
     const sizeStr=has?_fmt(m.tamanho):'';
+    // input de arquivo ANTES do card para que label for= funcione
+    const fi=document.createElement('input');
+    fi.type='file'; fi.id='fi-'+t.id; fi.accept=t.accept;
+    fi.style.display='none';
+    fi.onchange=()=>_tmplUpload(t.id,fi);
+    inps.appendChild(fi);
+
     card.innerHTML=`
       <div class="tmpl-card-hdr">
         <div class="tmpl-icon ${icoCls}">${ico}</div>
@@ -488,20 +495,15 @@ function _buildTemplateCards(map){
       </div>
       ${has?`<div class="tmpl-meta">📅 ${dateStr} &nbsp;·&nbsp; ${_esc(m.nome_arquivo)} ${sizeStr?'· '+sizeStr:''}</div>`:''}
       <div class="tmpl-actions">
-        <button class="btn-up" id="bu-${t.id}" onclick="document.getElementById('fi-${t.id}').click()" ${_ready?'':'disabled'}>
+        <label for="fi-${t.id}" class="btn-up${_ready?'':' btn-up-disabled'}" id="bu-${t.id}">
           <i data-lucide="upload" style="width:13px;height:13px"></i> ${has?'Substituir':'Carregar'}
-        </button>
+        </label>
         <button class="btn-dl" ${has?'':'disabled'} onclick="_tmplDl('${t.id}')">
           <i data-lucide="download" style="width:13px;height:13px"></i> Baixar
         </button>
         ${has?`<button class="btn-del" title="Remover" onclick="_tmplDel('${t.id}')"><i data-lucide="trash-2" style="width:13px;height:13px"></i></button>`:''}
       </div>
       <div class="progress-wrap" id="pw-${t.id}"><div class="progress-bar" id="pb-${t.id}"></div></div>`;
-    grid.appendChild(card);
-    const fi=document.createElement('input');
-    fi.type='file'; fi.id='fi-'+t.id; fi.accept=t.accept;
-    fi.onchange=()=>_tmplUpload(t.id,fi);
-    inps.appendChild(fi);
   });
   lucide.createIcons();
 }
