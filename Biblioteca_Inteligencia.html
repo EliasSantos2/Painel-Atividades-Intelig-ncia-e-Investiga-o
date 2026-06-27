@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biblioteca da Inteligência — Rumo Logística</title>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --navy:#003865;--navy2:#00284a;--navy3:#001828;--navy-light:#e8f0f8;
+  --orange:#F78344;--orange-h:#e06d30;
+  --bg:#f0f3f8;--bg2:#fff;--bg3:#f5f7fc;--border:#dde3ee;
+  --text:#1a2535;--text2:#5a6e8c;--text3:#8a9bb5;
+  --green:#16a34a;--green-bg:rgba(34,197,94,.1);--green-br:rgba(34,197,94,.25);
+  --red:#dc2626;--red-bg:rgba(220,38,38,.08);
+  --gold:#b45309;--gold-bg:rgba(180,83,9,.1);--gold-br:rgba(180,83,9,.25);
+  --radius:8px;--shadow:0 1px 4px rgba(0,56,101,.08),0 4px 16px rgba(0,56,101,.06);
+  --shadow-sm:0 1px 3px rgba(0,56,101,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;font-size:14px;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;}
+
+/* ── HEADER ── */
+header{background:var(--navy);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:58px;box-shadow:0 2px 12px rgba(0,0,0,.22);flex-shrink:0;}
+.header-left{display:flex;align-items:center;gap:14px;}
+.header-logo{width:3px;height:32px;background:var(--orange);border-radius:2px;flex-shrink:0;}
+.header-title h1{font-size:14px;font-weight:700;color:#fff;letter-spacing:.2px;}
+.header-title p{font-size:10.5px;color:rgba(255,255,255,.5);margin-top:1px;letter-spacing:.1px;}
+.accent-bar{height:3px;background:linear-gradient(90deg,var(--orange) 0%,#f9b98a 60%,transparent 100%);flex-shrink:0;}
+
+/* ── NAV ── */
+nav{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:2px;box-shadow:var(--shadow-sm);flex-shrink:0;}
+nav a.nav-back{display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;font-weight:600;padding:0 16px;height:46px;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .18s;}
+nav a.nav-back:hover{color:var(--navy);}
+nav button.nav-tab{background:none;border:none;color:var(--text2);padding:0 18px;height:46px;cursor:pointer;font-size:12.5px;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .18s;letter-spacing:.1px;display:inline-flex;align-items:center;gap:7px;}
+nav button.nav-tab.active{color:var(--navy);border-bottom-color:var(--orange);}
+
+/* ── MAIN ── */
+main{flex:1;padding:26px 28px;overflow-y:auto;min-height:0;}
+
+/* ── TABS CONTENT ── */
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+
+/* ── STATUS BAR ── */
+.sb{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);}
+.sb-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.sb-dot.warn{background:var(--orange);}
+.sb-text{font-size:12px;color:var(--text2);flex:1;}
+.sb-text strong{color:var(--text);}
+
+/* ── SECTION TITLE ── */
+.sec-title{font-size:13px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── TEMPLATE GRID ── */
+.tmpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:32px;}
+
+.tmpl-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-sm);transition:box-shadow .2s;}
+.tmpl-card:hover{box-shadow:var(--shadow);}
+.tmpl-card.has-file{border-color:var(--green-br);background:#fafffe;}
+
+.tmpl-card-hdr{display:flex;align-items:flex-start;gap:12px;}
+.tmpl-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tmpl-icon.word{background:#e8f0fe;}
+.tmpl-icon.ppt{background:#fff0e8;}
+.tmpl-icon svg{width:22px;height:22px;}
+.tmpl-card-hdr .info{flex:1;}
+.tmpl-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;}
+.tmpl-type{font-size:11px;color:var(--text3);margin-top:2px;}
+.tmpl-status{font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;white-space:nowrap;margin-top:4px;display:inline-block;}
+.tmpl-status.empty{background:var(--bg3);color:var(--text3);border:1px solid var(--border);}
+.tmpl-status.filled{background:var(--green-bg);color:var(--green);border:1px solid var(--green-br);}
+
+.tmpl-meta{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;}
+
+.tmpl-actions{display:flex;gap:8px;margin-top:4px;}
+.btn-upload{background:var(--navy);color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;font-family:Arial,sans-serif;}
+.btn-upload:hover{background:var(--navy2);}
+.btn-upload.loading{opacity:.55;pointer-events:none;}
+.btn-dl{background:var(--green-bg);color:var(--green);border:1px solid var(--green-br);padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;font-family:Arial,sans-serif;}
+.btn-dl:hover{background:#dcfce7;}
+.btn-dl:disabled{opacity:.3;pointer-events:none;}
+.btn-del{background:none;border:none;color:var(--text3);padding:8px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;transition:.15s;}
+.btn-del:hover{background:var(--red-bg);color:var(--red);}
+input[type=file]{display:none;}
+
+/* ── APRENDIZAGEM ── */
+.ap-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.btn-add-pin{background:var(--orange);color:#fff;border:none;padding:10px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.15s;font-family:Arial,sans-serif;}
+.btn-add-pin:hover{background:var(--orange-h);}
+.ap-search{flex:1;min-width:160px;border:1.5px solid var(--border);border-radius:6px;padding:9px 14px;font-size:13px;font-family:Arial,sans-serif;outline:none;transition:.15s;}
+.ap-search:focus{border-color:var(--navy);}
+.ap-count{font-size:12px;color:var(--text3);}
+
+/* ── UPLOAD MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.hidden{display:none;}
+.modal{background:#fff;border-radius:12px;padding:28px;width:100%;max-width:480px;box-shadow:0 24px 64px rgba(0,0,0,.25);}
+.modal h3{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:18px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
+.form-group input[type=text]{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:9px 12px;font-size:13px;font-family:Arial,sans-serif;outline:none;transition:.15s;}
+.form-group input[type=text]:focus{border-color:var(--navy);}
+.file-drop{border:2px dashed var(--border);border-radius:8px;padding:28px;text-align:center;cursor:pointer;transition:.2s;background:var(--bg3);}
+.file-drop:hover,.file-drop.drag{border-color:var(--orange);background:#fff8f3;}
+.file-drop .fd-icon{color:var(--text3);margin-bottom:8px;}
+.file-drop p{font-size:13px;color:var(--text2);}
+.file-drop small{font-size:11px;color:var(--text3);}
+.file-drop .fd-chosen{font-size:12px;color:var(--green);font-weight:600;margin-top:6px;}
+.modal-actions{display:flex;gap:10px;margin-top:18px;}
+.btn-confirm{background:var(--navy);color:#fff;border:none;padding:10px 22px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;flex:1;}
+.btn-confirm:hover{background:var(--navy2);}
+.btn-confirm:disabled{opacity:.4;pointer-events:none;}
+.btn-cancel{background:var(--bg3);color:var(--text2);border:1px solid var(--border);padding:10px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif;}
+.btn-cancel:hover{background:var(--border);}
+
+/* ── PIN CARDS ── */
+.pin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+.pin-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow-sm);transition:box-shadow .2s;}
+.pin-card:hover{box-shadow:var(--shadow);}
+.pin-card-hdr{display:flex;align-items:flex-start;gap:11px;}
+.pin-type-icon{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pin-type-icon.pdf{background:#fee2e2;}
+.pin-type-icon.word{background:#e8f0fe;}
+.pin-type-icon.ppt{background:#fff0e8;}
+.pin-type-icon.other{background:var(--bg3);}
+.pin-type-icon svg{width:20px;height:20px;}
+.pin-info{flex:1;min-width:0;}
+.pin-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;word-break:break-word;}
+.pin-meta{font-size:11px;color:var(--text3);margin-top:3px;}
+.pin-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:8px;background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-br);}
+.pin-actions{display:flex;gap:7px;margin-top:4px;}
+.pin-dl{background:var(--navy-light);color:var(--navy);border:none;padding:7px 13px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:.15s;font-family:Arial,sans-serif;}
+.pin-dl:hover{background:var(--navy);color:#fff;}
+.pin-rm{background:none;border:none;color:var(--text3);padding:7px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;transition:.15s;}
+.pin-rm:hover{background:var(--red-bg);color:var(--red);}
+.ap-empty{text-align:center;padding:56px;color:var(--text3);font-size:13px;}
+
+/* ── TOAST ── */
+#bl-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a2535;color:#fff;padding:12px 22px;border-radius:9px;font-size:13px;font-weight:600;box-shadow:0 8px 28px rgba(0,0,0,.3);z-index:600;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="header-logo"></div>
+    <div class="header-title">
+      <h1>Biblioteca da Inteligência</h1>
+      <p>Modelos de documentos e acervo de aprendizagem</p>
+    </div>
+  </div>
+  <div style="color:rgba(255,255,255,.4);font-size:11px">Rumo Logística · Núcleo de Inteligência</div>
+</header>
+<div class="accent-bar"></div>
+
+<nav>
+  <a href="index.html" class="nav-back">
+    <i data-lucide="arrow-left" style="width:14px;height:14px"></i> Início
+  </a>
+  <button class="nav-tab active" id="tab-modelos" onclick="_blTab('modelos')">
+    <i data-lucide="file-text" style="width:14px;height:14px"></i> Modelos de Documentos
+  </button>
+  <button class="nav-tab" id="tab-aprend" onclick="_blTab('aprend')">
+    <i data-lucide="book-open" style="width:14px;height:14px"></i> Aprendizagem
+  </button>
+</nav>
+
+<main>
+
+  <!-- ── TAB: MODELOS ── -->
+  <div class="tab-pane active" id="pane-modelos">
+
+    <div class="sb" id="bl-sb">
+      <div class="sb-dot" id="bl-sb-dot"></div>
+      <div class="sb-text" id="bl-sb-text">Conectando ao Supabase Storage…</div>
+    </div>
+
+    <div class="sec-title"><i data-lucide="file-text" style="width:14px;height:14px"></i> Modelos Oficiais — clique em "Carregar" para substituir o modelo</div>
+
+    <div class="tmpl-grid" id="tmpl-grid">
+      <!-- preenchido via JS -->
+    </div>
+
+  </div>
+
+  <!-- ── TAB: APRENDIZAGEM ── -->
+  <div class="tab-pane" id="pane-aprend">
+
+    <div class="ap-toolbar">
+      <button class="btn-add-pin" onclick="_apOpenModal()">
+        <i data-lucide="pin" style="width:15px;height:15px"></i> Adicionar documento
+      </button>
+      <input class="ap-search" id="ap-search" type="text" placeholder="Buscar livros e manuais…" oninput="_apRender()">
+      <span class="ap-count" id="ap-count">0 documento(s)</span>
+    </div>
+
+    <div class="sec-title"><i data-lucide="book-open" style="width:14px;height:14px"></i> Acervo fixado — livros e manuais para consulta</div>
+    <div class="pin-grid" id="pin-grid"></div>
+    <div class="ap-empty" id="ap-empty" style="display:none">
+      <i data-lucide="inbox" style="width:36px;height:36px;opacity:.3;margin-bottom:10px;display:block"></i>
+      Nenhum documento fixado ainda.<br>Clique em <strong>Adicionar documento</strong> para fixar um livro ou manual.
+    </div>
+
+  </div>
+
+</main>
+
+<!-- ── MODAL ADICIONAR PIN ── -->
+<div class="modal-overlay hidden" id="ap-modal" onclick="if(event.target===this)_apCloseModal()">
+  <div class="modal">
+    <h3>Fixar documento</h3>
+    <div class="form-group">
+      <label>Título / Nome do documento</label>
+      <input type="text" id="ap-title-inp" placeholder="Ex: Manual de Inteligência Policial">
+    </div>
+    <div class="form-group">
+      <label>Arquivo</label>
+      <div class="file-drop" id="ap-drop" onclick="document.getElementById('ap-file-inp').click()" ondragover="_apDrag(event)" ondrop="_apDropFile(event)">
+        <div class="fd-icon"><i data-lucide="upload-cloud" style="width:30px;height:30px"></i></div>
+        <p>Clique ou arraste o arquivo aqui</p>
+        <small>PDF · DOCX · PPTX · XLSX · até 50 MB</small>
+        <div class="fd-chosen" id="ap-chosen"></div>
+      </div>
+      <input type="file" id="ap-file-inp" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt" onchange="_apFileChosen(this)">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="_apCloseModal()">Cancelar</button>
+      <button class="btn-confirm" id="ap-confirm-btn" onclick="_apUpload()" disabled>Fixar documento</button>
+    </div>
+  </div>
+</div>
+
+<!-- HIDDEN FILE INPUTS para modelos (um por slot) -->
+<div id="tmpl-file-inputs"></div>
+
+<div id="bl-toast"></div>
+
+<script>
+// ── SUPABASE ─────────────────────────────────────────────
+const SB_URL  = 'https://rfwmklqzlfvllsrkvgob.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmd21rbHF6bGZ2bGxzcmt2Z29iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzg4NzIsImV4cCI6MjA5NzgxNDg3Mn0.xwJItVzF3jW46BtMQBLSNj3rT64G0dybPZQZ_k-QlTM';
+const SB_BUCKET = 'relints';
+const SB_TTL    = 3600;
+let _sb = null;
+
+function _sbClient(){
+  if(_sb) return _sb;
+  _sb = supabase.createClient(SB_URL, SB_KEY);
+  return _sb;
+}
+
+// ── TEMPLATES ────────────────────────────────────────────
+const TEMPLATES = [
+  { id:'relint',       name:'Modelo Relint',                     type:'word', accept:'.doc,.docx' },
+  { id:'relint_mpf',   name:'Modelo Relint MPF',                 type:'word', accept:'.doc,.docx' },
+  { id:'relint_mp',    name:'Modelo Relint MP',                  type:'word', accept:'.doc,.docx' },
+  { id:'relint_gaeco', name:'Modelo Relint GAECO',               type:'word', accept:'.doc,.docx' },
+  { id:'relint_pc',    name:'Modelo Relint Polícia Civil',        type:'word', accept:'.doc,.docx' },
+  { id:'relint_pm',    name:'Modelo Relint Polícia Militar',      type:'word', accept:'.doc,.docx' },
+  { id:'sindicancia',  name:'Modelo de Sindicância',             type:'word', accept:'.doc,.docx' },
+  { id:'apres_ppt',    name:'Modelo de Apresentação — Org Seg',  type:'ppt',  accept:'.ppt,.pptx' },
+];
+
+const SB_MODELOS_PREFIX = 'biblioteca/modelos/';
+const SB_APRENDIZAGEM_PREFIX = 'biblioteca/aprendizagem/';
+
+// localStorage key for template metadata
+const LS_TMPL = 'bl_modelos_v1';
+const LS_PINS = 'bl_pins_v1';
+
+function _tmplMeta(){ try{ return JSON.parse(localStorage.getItem(LS_TMPL)||'{}'); }catch(e){ return {}; } }
+function _saveTmplMeta(m){ localStorage.setItem(LS_TMPL, JSON.stringify(m)); }
+function _pinsMeta(){ try{ return JSON.parse(localStorage.getItem(LS_PINS)||'[]'); }catch(e){ return []; } }
+function _savePins(p){ localStorage.setItem(LS_PINS, JSON.stringify(p)); }
+
+// ── ICON HELPERS ─────────────────────────────────────────
+function _wordIcon(color='#2563eb'){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>`;
+}
+function _pptIcon(color='#ea580c'){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;
+}
+function _pdfIcon(color='#dc2626'){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h1a2 2 0 0 1 0 4H9v-4z"/><line x1="14" y1="13" x2="14" y2="17"/><line x1="14" y1="13" x2="16" y2="13"/></svg>`;
+}
+function _fileIcon(ext){
+  if(['pdf'].includes(ext)) return _pdfIcon();
+  if(['doc','docx'].includes(ext)) return _wordIcon();
+  if(['ppt','pptx'].includes(ext)) return _pptIcon();
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+}
+
+// ── RENDER TEMPLATES ─────────────────────────────────────
+function _renderTemplates(){
+  const meta = _tmplMeta();
+  const grid = document.getElementById('tmpl-grid');
+  const inputs = document.getElementById('tmpl-file-inputs');
+  grid.innerHTML = '';
+  inputs.innerHTML = '';
+
+  TEMPLATES.forEach(t => {
+    const m = meta[t.id];
+    const hasFil = !!(m && m.path);
+
+    const card = document.createElement('div');
+    card.className = 'tmpl-card' + (hasFil ? ' has-file' : '');
+    card.id = 'tmpl-card-' + t.id;
+
+    const iconHtml = t.type === 'ppt' ? _pptIcon() : _wordIcon();
+    const iconCls  = t.type === 'ppt' ? 'ppt' : 'word';
+    const typeLabel = t.type === 'ppt' ? 'PowerPoint (.pptx)' : 'Word (.docx)';
+
+    card.innerHTML = `
+      <div class="tmpl-card-hdr">
+        <div class="tmpl-icon ${iconCls}">${iconHtml}</div>
+        <div class="info">
+          <div class="tmpl-name">${t.name}</div>
+          <div class="tmpl-type">${typeLabel}</div>
+          <span class="tmpl-status ${hasFil?'filled':'empty'}" id="tmpl-status-${t.id}">
+            ${hasFil ? '● Carregado' : '○ Sem modelo'}
+          </span>
+        </div>
+      </div>
+      ${hasFil ? `<div class="tmpl-meta"><i data-lucide="clock" style="width:11px;height:11px"></i> ${m.date||''} &nbsp;·&nbsp; ${m.fname||''}</div>` : ''}
+      <div class="tmpl-actions">
+        <button class="btn-upload" id="btn-up-${t.id}" onclick="document.getElementById('fi-${t.id}').click()">
+          <i data-lucide="upload" style="width:13px;height:13px"></i> ${hasFil ? 'Substituir' : 'Carregar'}
+        </button>
+        <button class="btn-dl" id="btn-dl-${t.id}" onclick="_tmplDownload('${t.id}')" ${hasFil?'':'disabled'}>
+          <i data-lucide="download" style="width:13px;height:13px"></i> Baixar
+        </button>
+        ${hasFil ? `<button class="btn-del" title="Remover modelo" onclick="_tmplDelete('${t.id}')"><i data-lucide="trash-2" style="width:13px;height:13px"></i></button>` : ''}
+      </div>
+    `;
+    grid.appendChild(card);
+
+    // hidden file input
+    const fi = document.createElement('input');
+    fi.type = 'file';
+    fi.id = 'fi-' + t.id;
+    fi.accept = t.accept;
+    fi.onchange = function(){ _tmplUpload(t.id, this); };
+    inputs.appendChild(fi);
+  });
+
+  lucide.createIcons();
+}
+
+async function _tmplUpload(id, input){
+  const file = input.files[0];
+  if(!file) return;
+
+  const tmpl = TEMPLATES.find(t=>t.id===id);
+  const ext = file.name.split('.').pop().toLowerCase();
+  const path = SB_MODELOS_PREFIX + id + '.' + ext;
+
+  const btn = document.getElementById('btn-up-'+id);
+  btn.classList.add('loading');
+  btn.innerHTML = `<i data-lucide="loader" style="width:13px;height:13px"></i> Enviando…`;
+  lucide.createIcons();
+
+  const client = _sbClient();
+  const { error } = await client.storage.from(SB_BUCKET).upload(path, file, {upsert:true, contentType:file.type});
+
+  if(error){ _toast('❌ Erro ao enviar: '+error.message,'#dc2626'); btn.classList.remove('loading'); _renderTemplates(); input.value=''; return; }
+
+  const meta = _tmplMeta();
+  meta[id] = { path, fname:file.name, date:new Date().toLocaleDateString('pt-BR') };
+  _saveTmplMeta(meta);
+  input.value = '';
+  _toast('✓ Modelo "'+tmpl.name+'" enviado com sucesso!');
+  _renderTemplates();
+}
+
+async function _tmplDownload(id){
+  const meta = _tmplMeta();
+  const m = meta[id];
+  if(!m) return;
+  const {data, error} = await _sbClient().storage.from(SB_BUCKET).createSignedUrl(m.path, SB_TTL);
+  if(error){ _toast('❌ Erro ao gerar link: '+error.message,'#dc2626'); return; }
+  const a = document.createElement('a');
+  a.href = data.signedUrl;
+  a.download = m.fname || id;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  _toast('⬇ Baixando '+m.fname+'…');
+}
+
+async function _tmplDelete(id){
+  if(!confirm('Remover este modelo? A ação não pode ser desfeita.')) return;
+  const meta = _tmplMeta();
+  const m = meta[id];
+  if(m && m.path){ try{ await _sbClient().storage.from(SB_BUCKET).remove([m.path]); }catch(e){} }
+  delete meta[id];
+  _saveTmplMeta(meta);
+  _toast('Modelo removido.');
+  _renderTemplates();
+}
+
+// ── APRENDIZAGEM ─────────────────────────────────────────
+let _apFile = null;
+
+function _apOpenModal(){
+  document.getElementById('ap-modal').classList.remove('hidden');
+  document.getElementById('ap-title-inp').value = '';
+  document.getElementById('ap-chosen').textContent = '';
+  document.getElementById('ap-confirm-btn').disabled = true;
+  document.getElementById('ap-file-inp').value = '';
+  _apFile = null;
+  lucide.createIcons();
+}
+function _apCloseModal(){
+  document.getElementById('ap-modal').classList.add('hidden');
+  _apFile = null;
+}
+function _apFileChosen(input){
+  _apFile = input.files[0] || null;
+  document.getElementById('ap-chosen').textContent = _apFile ? '📎 '+_apFile.name : '';
+  document.getElementById('ap-confirm-btn').disabled = !(_apFile && document.getElementById('ap-title-inp').value.trim());
+}
+function _apCheckBtn(){
+  const title = document.getElementById('ap-title-inp').value.trim();
+  document.getElementById('ap-confirm-btn').disabled = !(title && _apFile);
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('ap-title-inp').addEventListener('input', _apCheckBtn);
+});
+
+function _apDrag(e){ e.preventDefault(); document.getElementById('ap-drop').classList.add('drag'); }
+function _apDropFile(e){
+  e.preventDefault();
+  document.getElementById('ap-drop').classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if(f){ _apFile=f; document.getElementById('ap-chosen').textContent='📎 '+f.name; _apCheckBtn(); }
+}
+
+async function _apUpload(){
+  const title = document.getElementById('ap-title-inp').value.trim();
+  if(!title || !_apFile) return;
+
+  const btn = document.getElementById('ap-confirm-btn');
+  btn.textContent = 'Enviando…'; btn.disabled = true;
+
+  const ext = _apFile.name.split('.').pop().toLowerCase();
+  const slug = Date.now() + '_' + _apFile.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  const path = SB_APRENDIZAGEM_PREFIX + slug;
+
+  const {error} = await _sbClient().storage.from(SB_BUCKET).upload(path, _apFile, {upsert:false, contentType:_apFile.type});
+  if(error){ _toast('❌ '+error.message,'#dc2626'); btn.textContent='Fixar documento'; btn.disabled=false; return; }
+
+  const pins = _pinsMeta();
+  pins.unshift({ id:Date.now(), title, path, fname:_apFile.name, ext, date:new Date().toLocaleDateString('pt-BR'), size:_apFile.size });
+  _savePins(pins);
+  _apCloseModal();
+  _toast('✓ "'+title+'" fixado com sucesso!');
+  _apRender();
+}
+
+function _apRender(){
+  const pins = _pinsMeta();
+  const q = (document.getElementById('ap-search')?.value||'').toLowerCase().trim();
+  const filtered = q ? pins.filter(p=>p.title.toLowerCase().includes(q)||p.fname.toLowerCase().includes(q)) : pins;
+
+  document.getElementById('ap-count').textContent = pins.length+' documento(s)';
+  const grid = document.getElementById('pin-grid');
+  const empty = document.getElementById('ap-empty');
+
+  if(!filtered.length){ grid.innerHTML=''; empty.style.display=''; return; }
+  empty.style.display='none';
+
+  const extClass = ext => ['pdf'].includes(ext)?'pdf':['doc','docx'].includes(ext)?'word':['ppt','pptx'].includes(ext)?'ppt':'other';
+  const extLabel = ext => ext.toUpperCase();
+
+  grid.innerHTML = filtered.map(p=>`
+    <div class="pin-card" id="pin-${p.id}">
+      <div class="pin-card-hdr">
+        <div class="pin-type-icon ${extClass(p.ext)}">${_fileIcon(p.ext)}</div>
+        <div class="pin-info">
+          <div class="pin-title">${_esc(p.title)}</div>
+          <div class="pin-meta">${_esc(p.fname)} &middot; ${p.date}</div>
+          <span class="pin-badge">${extLabel(p.ext)}</span>
+        </div>
+      </div>
+      <div class="pin-actions">
+        <button class="pin-dl" onclick="_pinDownload(${p.id})">
+          <i data-lucide="download" style="width:12px;height:12px"></i> Baixar
+        </button>
+        <button class="pin-rm" title="Remover" onclick="_pinRemove(${p.id})">
+          <i data-lucide="trash-2" style="width:13px;height:13px"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+  lucide.createIcons();
+}
+
+async function _pinDownload(id){
+  const pins = _pinsMeta();
+  const p = pins.find(x=>x.id===id);
+  if(!p) return;
+  const {data,error} = await _sbClient().storage.from(SB_BUCKET).createSignedUrl(p.path, SB_TTL);
+  if(error){ _toast('❌ '+error.message,'#dc2626'); return; }
+  const a = document.createElement('a');
+  a.href = data.signedUrl; a.download = p.fname;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  _toast('⬇ Baixando '+p.fname+'…');
+}
+
+async function _pinRemove(id){
+  if(!confirm('Remover este documento do acervo?')) return;
+  const pins = _pinsMeta();
+  const p = pins.find(x=>x.id===id);
+  if(p){ try{ await _sbClient().storage.from(SB_BUCKET).remove([p.path]); }catch(e){} }
+  _savePins(pins.filter(x=>x.id!==id));
+  _toast('Documento removido do acervo.');
+  _apRender();
+}
+
+// ── TABS ────────────────────────────────────────────────
+function _blTab(name){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pane-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ── STATUS BAR ──────────────────────────────────────────
+async function _checkStorage(){
+  const dot = document.getElementById('bl-sb-dot');
+  const txt = document.getElementById('bl-sb-text');
+  try{
+    const {data,error} = await _sbClient().storage.from(SB_BUCKET).list(SB_MODELOS_PREFIX.replace(/\/$/,''), {limit:1});
+    if(error) throw error;
+    dot.className='sb-dot';
+    txt.innerHTML='<strong>Supabase Storage conectado</strong> — arquivos armazenados com segurança no bucket <code style="background:var(--bg3);padding:1px 5px;border-radius:4px">relints</code>';
+  }catch(e){
+    dot.className='sb-dot warn';
+    txt.innerHTML='⚠ Não foi possível verificar o Storage: '+_esc(e.message)+' — os uploads podem falhar.';
+  }
+}
+
+// ── UTILS ───────────────────────────────────────────────
+function _esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function _toast(msg, bg){
+  const t = document.getElementById('bl-toast');
+  t.textContent = msg;
+  t.style.background = bg||'#1a2535';
+  t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)';
+  clearTimeout(_toast._tid);
+  _toast._tid = setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(80px)';},3000);
+}
+
+// ── INIT ────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function(){
+  lucide.createIcons();
+  _renderTemplates();
+  _apRender();
+  _checkStorage();
+});
+</script>
+</body>
+</html>
