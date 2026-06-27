@@ -9,6 +9,10 @@
 <title>Painel de Investigações — Rumo Logística</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
     --navy:#003865;--navy2:#00284a;--navy-light:#e8f0f8;
@@ -247,6 +251,41 @@
     .search-box{width:100%;}
   }
 
+/* ── CONSULTA OCULTA ── */
+.co-wrap{display:flex;flex-direction:column;height:calc(100vh - 140px);background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;}
+.co-toolbar{padding:10px 18px;background:var(--navy);display:flex;align-items:center;gap:14px;flex-shrink:0;}
+.co-pick-btn{background:var(--orange);color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.15s;white-space:nowrap;}
+.co-pick-btn:hover{background:var(--orange-h);}
+.co-status{color:rgba(255,255,255,.65);font-size:11.5px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.co-badge{background:rgba(255,255,255,.15);color:#fff;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;}
+.co-chat{display:flex;flex-direction:column;flex:1;overflow:hidden;}
+.co-messages{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;}
+.co-msg-system{background:var(--navy-light);border-left:3px solid var(--navy);padding:10px 14px;border-radius:6px;font-size:12.5px;color:var(--text2);align-self:stretch;}
+.co-msg-user{align-self:flex-end;background:var(--navy);color:#fff;padding:10px 16px;border-radius:12px 12px 2px 12px;max-width:72%;font-size:13px;line-height:1.5;word-break:break-word;}
+.co-msg-bot{align-self:flex-start;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:2px 12px 12px 12px;padding:14px 18px;font-size:12.5px;}
+.co-msg-loading{align-self:flex-start;display:flex;gap:5px;align-items:center;padding:10px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:2px 12px 12px 12px;}
+.co-dot{width:7px;height:7px;border-radius:50%;background:var(--navy);opacity:.4;animation:co-bounce .9s infinite;}
+.co-dot:nth-child(2){animation-delay:.18s;}
+.co-dot:nth-child(3){animation-delay:.36s;}
+@keyframes co-bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px);opacity:1}}
+.co-results-header{margin-bottom:12px;color:var(--text2);font-size:12.5px;}
+.co-result{border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;background:#fff;transition:.15s;}
+.co-result:last-child{margin-bottom:0;}
+.co-result-hdr{display:flex;align-items:center;gap:7px;margin-bottom:6px;flex-wrap:wrap;}
+.co-result-name{font-weight:700;font-size:12.5px;color:var(--navy);}
+.co-result-path{color:var(--text3);font-size:10.5px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.co-result-score{background:var(--navy-light);color:var(--navy);font-size:10.5px;padding:2px 8px;border-radius:10px;font-weight:700;white-space:nowrap;}
+.co-excerpt{font-size:11.5px;color:var(--text2);line-height:1.65;border-left:2px solid var(--border);padding:4px 0 4px 10px;margin-top:7px;}
+.co-excerpt mark{background:#fff3cd;color:inherit;border-radius:2px;padding:0 2px;font-weight:600;}
+.co-empty{text-align:center;padding:40px;color:var(--text3);font-size:13px;}
+.co-input-wrap{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:10px;background:#fff;flex-shrink:0;}
+.co-input{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;resize:none;font-family:Arial,sans-serif;transition:.15s;line-height:1.5;}
+.co-input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,56,101,.08);}
+.co-send-btn{background:var(--navy);color:#fff;border:none;border-radius:8px;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;align-self:flex-end;}
+.co-send-btn:hover{background:var(--navy2);}
+.co-send-btn:disabled{opacity:.4;cursor:not-allowed;}
+.co-no-support{background:#fff3cd;border:1px solid #f0c040;border-radius:8px;padding:16px 20px;color:#7a5800;font-size:13px;margin-bottom:16px;}
+
 /* ===== ADMIN PANEL ===== */
 #admin-lock-btn{position:fixed;bottom:24px;right:24px;z-index:9000;background:var(--navy);color:#fff;border:none;border-radius:50%;width:46px;height:46px;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.35);transition:.2s}
 #admin-lock-btn:hover{background:var(--orange)}
@@ -337,6 +376,7 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
   <button onclick="switchTab('operacoes',this)"><i data-lucide="clipboard-list" style="width:14px;height:14px"></i> Operações</button>
   <button onclick="switchTab('tarefas',this)"><i data-lucide="check-square" style="width:14px;height:14px"></i> Tarefas</button>
   <button onclick="switchTab('agenda',this)"><i data-lucide="calendar" style="width:14px;height:14px"></i> Agenda</button>
+  <button onclick="switchTab('consulta',this)"><i data-lucide="search" style="width:14px;height:14px"></i> Consulta Oculta</button>
 </nav>
 
 <main>
@@ -483,6 +523,36 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
     <div id="ag-op-strip"></div>
     <!-- Grade semanal -->
     <div class="ag-week-grid" id="ag-week-grid"></div>
+  </div>
+</div>
+
+
+<!-- CONSULTA OCULTA -->
+<div id="tab-consulta" class="tab-panel">
+  <div class="co-wrap">
+    <div class="co-toolbar">
+      <button class="co-pick-btn" onclick="_coPickFolder()">
+        <i data-lucide="folder-open" style="width:14px;height:14px"></i> Selecionar Pasta OneDrive
+      </button>
+      <span id="co-status" class="co-status">Nenhuma pasta selecionada — clique para indexar os documentos</span>
+      <span id="co-badge" class="co-badge" style="display:none">0 docs</span>
+    </div>
+    <div class="co-chat">
+      <div id="co-messages" class="co-messages">
+        <div class="co-msg-system">
+          <strong>Consulta Oculta</strong> — Selecione a pasta do OneDrive para indexar automaticamente todos os documentos (PDF, DOCX, XLSX, TXT, CSV). Depois faça qualquer pergunta e o sistema buscará respostas nos arquivos.<br><br>
+          Suporta: <strong>PDF · DOCX · XLSX · TXT · CSV · JSON · HTML</strong> — lidos diretamente no navegador, sem upload externo.
+        </div>
+      </div>
+      <div class="co-input-wrap">
+        <textarea id="co-input" class="co-input" rows="2"
+          placeholder="Digite sua pergunta sobre os documentos… (Enter para enviar, Shift+Enter para nova linha)"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_coSend()}"></textarea>
+        <button class="co-send-btn" id="co-send-btn" onclick="_coSend()" title="Enviar">
+          <i data-lucide="send" style="width:16px;height:16px"></i>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -691,6 +761,211 @@ function switchTab(id,btn){
   if(id==='operacoes')renderOps();
   if(id==='tarefas')renderTasks();
   if(id==='agenda')_agSubTab(_agSubPane);
+  if(id==='consulta')_lcIcons();
+}
+
+// ══════════════════════════════════════════════════════
+//  CONSULTA OCULTA — motor de busca em documentos locais
+// ══════════════════════════════════════════════════════
+let _coIndex=[];   // [{name,path,text,size}]
+let _coIndexing=false;
+
+async function _coPickFolder(){
+  if(!window.showDirectoryPicker){
+    _coRenderMsg('system','<div class="co-no-support">⚠️ Seu navegador não suporta acesso a pastas locais. Use <strong>Google Chrome</strong> ou <strong>Microsoft Edge</strong> versão 86 ou superior.</div>');
+    return;
+  }
+  try{
+    const dir=await window.showDirectoryPicker({mode:'read'});
+    _coIndex=[];
+    _coIndexing=true;
+    _coSetStatus('Indexando arquivos…');
+    document.getElementById('co-badge').style.display='none';
+    const loadEl=_coRenderLoading('Lendo documentos da pasta…');
+    await _coIndexDir(dir,'');
+    loadEl.remove();
+    _coIndexing=false;
+    document.getElementById('co-badge').textContent=_coIndex.length+' docs';
+    document.getElementById('co-badge').style.display='';
+    _coSetStatus('✓ '+_coIndex.length+' documento(s) indexado(s) — faça sua pergunta');
+    _coRenderMsg('system','<strong>'+_coIndex.length+'</strong> documento(s) indexado(s) com sucesso.<br>Tipos lidos: '+[...new Set(_coIndex.map(d=>d.name.split('.').pop().toUpperCase()))].join(' · ')+'<br><em>Agora faça qualquer pergunta.</em>');
+    _lcIcons();
+  }catch(e){
+    if(e.name!=='AbortError'){_coSetStatus('Erro: '+e.message);_coRenderMsg('system','⚠️ Erro ao acessar pasta: '+e.message);}
+  }
+}
+
+async function _coIndexDir(dir,path){
+  for await(const[name,handle] of dir.entries()){
+    const fullPath=path?path+'/'+name:name;
+    if(handle.kind==='directory'){
+      await _coIndexDir(handle,fullPath);
+    }else{
+      const text=await _coReadHandle(handle,name);
+      if(text&&text.trim().length>10){
+        _coSetStatus('Indexando: '+name);
+        _coIndex.push({name,path:fullPath,text,size:text.length});
+      }
+    }
+  }
+}
+
+async function _coReadHandle(handle,name){
+  const ext=name.split('.').pop().toLowerCase();
+  const txtExts=['txt','md','csv','json','html','htm','xml','log','tsv'];
+  try{
+    const file=await handle.getFile();
+    if(txtExts.includes(ext)) return await file.text();
+    if(ext==='pdf') return await _coReadPDF(file);
+    if(ext==='docx') return await _coReadDOCX(file);
+    if(ext==='xlsx'||ext==='xls') return await _coReadXLSX(file);
+  }catch(e){}
+  return null;
+}
+
+async function _coReadPDF(file){
+  if(!window.pdfjsLib) return null;
+  try{
+    const buf=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    let text='';
+    for(let i=1;i<=pdf.numPages;i++){
+      const page=await pdf.getPage(i);
+      const tc=await page.getTextContent();
+      text+=tc.items.map(s=>s.str).join(' ')+'\n';
+    }
+    return text;
+  }catch(e){return null;}
+}
+
+async function _coReadDOCX(file){
+  if(!window.mammoth) return null;
+  try{
+    const buf=await file.arrayBuffer();
+    const r=await mammoth.extractRawText({arrayBuffer:buf});
+    return r.value;
+  }catch(e){return null;}
+}
+
+async function _coReadXLSX(file){
+  if(!window.XLSX) return null;
+  try{
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    return wb.SheetNames.map(n=>XLSX.utils.sheet_to_csv(wb.Sheets[n])).join('\n');
+  }catch(e){return null;}
+}
+
+function _coSearch(query){
+  if(!_coIndex.length) return [];
+  // tokeniza a query: palavras com 2+ caracteres
+  const raw=query.toLowerCase();
+  const terms=raw.match(/\b\w{2,}\b/g)||[];
+  if(!terms.length) return [];
+
+  // stopwords básicas em PT
+  const stop=new Set(['de','da','do','dos','das','em','na','no','nos','nas','que','com','por','para','uma','um','os','as','ao','se','ou','mas','mais','seu','sua','foi','são']);
+  const keywords=terms.filter(t=>!stop.has(t));
+  if(!keywords.length) return terms; // fallback sem filtro
+
+  return _coIndex.map(doc=>{
+    const lower=doc.text.toLowerCase();
+    let score=0;
+    const excerpts=[];
+    keywords.forEach(term=>{
+      let idx=0,occ=0;
+      while((idx=lower.indexOf(term,idx))!==-1){score++;occ++;idx++;}
+      if(occ>0){
+        // pega trecho ao redor da 1ª ocorrência
+        const pos=lower.indexOf(term);
+        const s=Math.max(0,pos-140);
+        const e=Math.min(doc.text.length,pos+220);
+        let ex=doc.text.slice(s,e).replace(/[\r\n\t]+/g,' ').trim();
+        if(s>0)ex='…'+ex;
+        if(e<doc.text.length)ex+='…';
+        excerpts.push(ex);
+      }
+    });
+    return{...doc,score,excerpts:[...new Map(excerpts.map(e=>[e.slice(20,60),e])).values()].slice(0,3)};
+  })
+  .filter(d=>d.score>0)
+  .sort((a,b)=>b.score-a.score)
+  .slice(0,10);
+}
+
+function _coSend(){
+  const inp=document.getElementById('co-input');
+  const query=inp.value.trim();
+  if(!query) return;
+  inp.value='';
+  inp.style.height='';
+  _coRenderMsg('user',_coEscape(query));
+
+  if(!_coIndex.length){
+    _coRenderMsg('bot','<div class="co-empty">📁 Nenhuma pasta indexada ainda.<br>Clique em <strong>Selecionar Pasta OneDrive</strong> para começar.</div>');
+    return;
+  }
+
+  const loadEl=_coRenderLoading('Buscando nos '+_coIndex.length+' documentos…');
+  setTimeout(()=>{
+    const results=_coSearch(query);
+    loadEl.remove();
+    if(!results.length){
+      _coRenderMsg('bot','<div class="co-empty">🔍 Nenhum resultado encontrado para <em>"'+_coEscape(query)+'"</em> nos '+_coIndex.length+' documentos indexados.</div>');
+      return;
+    }
+    const html=`<div class="co-results-header">Encontrei <strong>${results.length}</strong> documento(s) com referências a "<em>${_coEscape(query)}</em>":</div>`+
+      results.map(r=>`
+        <div class="co-result">
+          <div class="co-result-hdr">
+            <i data-lucide="file-text" style="width:13px;height:13px;color:var(--navy);flex-shrink:0"></i>
+            <span class="co-result-name">${_coEscape(r.name)}</span>
+            <span class="co-result-path">${_coEscape(r.path)}</span>
+            <span class="co-result-score">${r.score} ocorrência(s)</span>
+          </div>
+          ${r.excerpts.map(ex=>`<div class="co-excerpt">${_coHighlight(ex,query)}</div>`).join('')}
+        </div>`).join('');
+    _coRenderMsg('bot',html);
+    _lcIcons();
+  },120);
+}
+
+function _coHighlight(text,query){
+  const terms=(query.toLowerCase().match(/\b\w{2,}\b/g)||[]);
+  let out=_coEscape(text);
+  terms.forEach(term=>{
+    const re=new RegExp('('+term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+    out=out.replace(re,'<mark>$1</mark>');
+  });
+  return out;
+}
+
+function _coEscape(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function _coRenderMsg(role,html){
+  const list=document.getElementById('co-messages');
+  if(!list) return null;
+  const div=document.createElement('div');
+  div.className='co-msg-'+(role==='user'?'user':role==='system'?'system':'bot');
+  div.innerHTML=html;
+  list.appendChild(div);
+  list.scrollTop=list.scrollHeight;
+  return div;
+}
+
+function _coRenderLoading(msg){
+  const list=document.getElementById('co-messages');
+  const div=document.createElement('div');
+  div.className='co-msg-loading';
+  div.innerHTML=`<div class="co-dot"></div><div class="co-dot"></div><div class="co-dot"></div><span style="font-size:12px;color:var(--text2);margin-left:6px">${msg}</span>`;
+  list.appendChild(div);
+  list.scrollTop=list.scrollHeight;
+  return div;
+}
+
+function _coSetStatus(msg){
+  const el=document.getElementById('co-status');
+  if(el) el.textContent=msg;
 }
 
 function renderDashboard(){
