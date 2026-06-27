@@ -152,6 +152,14 @@ input[type=file]{display:none;}
 .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
+/* ── DIAG BANNER ── */
+#diag-banner{background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px 18px;margin:0 0 20px;display:none;font-size:13px;color:#664d03;line-height:1.6;}
+#diag-banner strong{display:block;margin-bottom:6px;font-size:13.5px;}
+#diag-banner pre{background:rgba(0,0,0,.06);border-radius:5px;padding:10px 12px;font-size:11.5px;overflow-x:auto;margin-top:10px;white-space:pre-wrap;word-break:break-all;}
+#diag-banner .diag-err{color:#dc2626;font-weight:700;margin-top:6px;}
+#diag-banner .btn-copy-sql{background:#664d03;color:#fff;border:none;padding:6px 14px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;margin-top:10px;font-family:Arial,sans-serif;}
+#diag-banner .btn-copy-sql:hover{opacity:.85;}
+
 /* ── TOAST ── */
 #bl-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a2535;color:#fff;padding:12px 22px;border-radius:9px;font-size:13px;font-weight:600;box-shadow:0 8px 28px rgba(0,0,0,.3);z-index:900;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;}
 </style>
@@ -211,6 +219,7 @@ input[type=file]{display:none;}
 
   <!-- TAB: MODELOS -->
   <div class="tab-pane active" id="pane-modelos">
+    <div id="diag-banner"></div>
     <div class="sec-title"><i data-lucide="file-text" style="width:14px;height:14px"></i> Modelos Oficiais — clique em "Carregar" para adicionar ou substituir</div>
     <div class="tmpl-grid" id="tmpl-grid"></div>
     <div id="tmpl-file-inputs"></div>
@@ -337,6 +346,68 @@ async function _afterLogin(session){
   lucide.createIcons();
   _renderTemplates();
   _apRender();
+  _diagStorage();
+}
+
+// ── DIAGNÓSTICO DE STORAGE ───────────────────────────────
+const FIX_SQL = `-- Cole este SQL no Supabase → SQL Editor e execute:
+
+-- Permissão de LEITURA na pasta biblioteca/
+create policy "biblioteca_select"
+on storage.objects for select
+to authenticated
+using (bucket_id = 'relints' and (storage.foldername(name))[1] = 'biblioteca');
+
+-- Permissão de UPLOAD na pasta biblioteca/
+create policy "biblioteca_insert"
+on storage.objects for insert
+to authenticated
+with check (bucket_id = 'relints' and (storage.foldername(name))[1] = 'biblioteca');
+
+-- Permissão de SUBSTITUIÇÃO na pasta biblioteca/
+create policy "biblioteca_update"
+on storage.objects for update
+to authenticated
+using (bucket_id = 'relints' and (storage.foldername(name))[1] = 'biblioteca');
+
+-- Permissão de EXCLUSÃO na pasta biblioteca/
+create policy "biblioteca_delete"
+on storage.objects for delete
+to authenticated
+using (bucket_id = 'relints' and (storage.foldername(name))[1] = 'biblioteca');`;
+
+async function _diagStorage(){
+  const banner = document.getElementById('diag-banner');
+  banner.style.display = 'none';
+  // Tenta fazer upload de um arquivo de teste de 1 byte
+  const testPath = 'biblioteca/_diag_test.txt';
+  const blob = new Blob(['ok'],{type:'text/plain'});
+  const {error} = await _sbC().storage.from(SB_BUCKET).upload(testPath, blob, {upsert:true, contentType:'text/plain'});
+  if(!error){
+    // Limpa o arquivo de teste
+    try{ await _sbC().storage.from(SB_BUCKET).remove([testPath]); }catch(e){}
+    return; // tudo OK, não mostra banner
+  }
+  // Mostra erro e instruções
+  banner.innerHTML = `
+    <strong>⚠ Upload bloqueado — permissão necessária no Supabase Storage</strong>
+    Erro: <span class="diag-err">${_esc(error.message)}</span><br><br>
+    O bucket <code>relints</code> não tem política de escrita para a pasta <code>biblioteca/</code>.
+    Para corrigir, acesse <strong>supabase.com → seu projeto → SQL Editor</strong> e execute o SQL abaixo:
+    <pre id="fix-sql-pre">${_esc(FIX_SQL)}</pre>
+    <button class="btn-copy-sql" onclick="_copySql()">📋 Copiar SQL</button>
+    <span id="copy-ok" style="margin-left:10px;font-size:12px;color:#16a34a;display:none">✓ Copiado!</span>
+  `;
+  banner.style.display = '';
+  lucide.createIcons();
+}
+
+function _copySql(){
+  navigator.clipboard.writeText(FIX_SQL).then(()=>{
+    const ok = document.getElementById('copy-ok');
+    ok.style.display = '';
+    setTimeout(()=>{ ok.style.display='none'; }, 2500);
+  });
 }
 
 async function _logout(){
