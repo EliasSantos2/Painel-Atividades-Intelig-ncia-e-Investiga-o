@@ -376,7 +376,6 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
   <button onclick="switchTab('operacoes',this)"><i data-lucide="clipboard-list" style="width:14px;height:14px"></i> Operações</button>
   <button onclick="switchTab('tarefas',this)"><i data-lucide="check-square" style="width:14px;height:14px"></i> Tarefas</button>
   <button onclick="switchTab('agenda',this)"><i data-lucide="calendar" style="width:14px;height:14px"></i> Agenda</button>
-  <button onclick="switchTab('consulta',this)"><i data-lucide="search" style="width:14px;height:14px"></i> Consulta Oculta</button>
 </nav>
 
 <main>
@@ -1725,6 +1724,20 @@ updateOpSelects();
 renderDashboard();
 popularMunicipios();
 initAuth();
+// Abre aba via hash na URL (ex: #consulta vindo do index)
+(function(){
+  const hash=location.hash.replace('#','');
+  if(hash==='consulta'){
+    const btn=document.querySelector('nav button[onclick*="consulta"]');
+    if(btn){switchTab('consulta',btn);}
+    else{
+      // aba oculta: ativa direto sem botão de nav
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      const p=document.getElementById('tab-consulta');
+      if(p){p.classList.add('active');_lcIcons();}
+    }
+  }
+})();
 </script>
 
 <!-- ===== ADMIN SYSTEM ===== -->
