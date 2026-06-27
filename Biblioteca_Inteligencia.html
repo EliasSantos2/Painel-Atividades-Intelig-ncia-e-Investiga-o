@@ -3,729 +3,484 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Biblioteca da Inteligência — Rumo Logística</title>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --navy:#003865;--navy2:#00284a;--navy3:#001828;--navy-light:#e8f0f8;
+  --navy:#003865;--navy2:#00284a;
   --orange:#F78344;--orange-h:#e06d30;
   --bg:#f0f3f8;--bg2:#fff;--bg3:#f5f7fc;--border:#dde3ee;
   --text:#1a2535;--text2:#5a6e8c;--text3:#8a9bb5;
-  --green:#16a34a;--green-bg:rgba(34,197,94,.1);--green-br:rgba(34,197,94,.25);
+  --green:#16a34a;--green-bg:rgba(34,197,94,.1);--green-br:rgba(34,197,94,.3);
   --red:#dc2626;--red-bg:rgba(220,38,38,.08);
   --gold:#b45309;--gold-bg:rgba(180,83,9,.1);--gold-br:rgba(180,83,9,.25);
-  --radius:8px;--shadow:0 1px 4px rgba(0,56,101,.08),0 4px 16px rgba(0,56,101,.06);
-  --shadow-sm:0 1px 3px rgba(0,56,101,.07);
+  --shadow:0 2px 8px rgba(0,56,101,.08);--shadow-sm:0 1px 3px rgba(0,56,101,.06);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;}
-body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;font-size:14px;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;}
+body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;font-size:14px;display:flex;flex-direction:column;}
 
-/* ── HEADER ── */
-header{background:var(--navy);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:58px;box-shadow:0 2px 12px rgba(0,0,0,.22);flex-shrink:0;}
-.header-left{display:flex;align-items:center;gap:14px;}
-.header-logo{width:3px;height:32px;background:var(--orange);border-radius:2px;flex-shrink:0;}
-.header-title h1{font-size:14px;font-weight:700;color:#fff;}
-.header-title p{font-size:10.5px;color:rgba(255,255,255,.5);margin-top:1px;}
-.header-right{display:flex;align-items:center;gap:14px;}
-.user-info{font-size:12px;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:6px;}
-.btn-logout{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);font-size:11.5px;padding:5px 12px;border-radius:5px;cursor:pointer;font-family:Arial,sans-serif;transition:.15s;}
-.btn-logout:hover{background:rgba(255,255,255,.18);color:#fff;}
-.accent-bar{height:3px;background:linear-gradient(90deg,var(--orange) 0%,#f9b98a 60%,transparent 100%);flex-shrink:0;}
+header{background:var(--navy);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;flex-shrink:0;}
+.h-brand{display:flex;align-items:center;gap:12px;}
+.h-bar{width:3px;height:30px;background:var(--orange);border-radius:2px;}
+.h-title{font-size:14px;font-weight:700;color:#fff;}
+.h-sub{font-size:10px;color:rgba(255,255,255,.45);margin-top:1px;}
+.accent{height:3px;background:linear-gradient(90deg,var(--orange),#f9b98a 60%,transparent);flex-shrink:0;}
 
-/* ── NAV ── */
-nav{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:2px;box-shadow:var(--shadow-sm);flex-shrink:0;}
-nav a.nav-back{display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;font-weight:600;padding:0 16px;height:46px;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .18s;}
-nav a.nav-back:hover{color:var(--navy);}
-nav button.nav-tab{background:none;border:none;color:var(--text2);padding:0 18px;height:46px;cursor:pointer;font-size:12.5px;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .18s;letter-spacing:.1px;display:inline-flex;align-items:center;gap:7px;}
-nav button.nav-tab.active{color:var(--navy);border-bottom-color:var(--orange);}
+nav{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:0;flex-shrink:0;}
+.nav-back{display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;font-weight:600;padding:0 14px;height:44px;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.nav-back:hover{color:var(--navy);}
+.nav-tab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;color:var(--text2);padding:0 16px;height:44px;cursor:pointer;font-size:13px;font-weight:600;font-family:Arial,sans-serif;display:inline-flex;align-items:center;gap:7px;transition:color .15s;}
+.nav-tab.active{color:var(--navy);border-bottom-color:var(--orange);}
 
-/* ── MAIN ── */
-main{flex:1;padding:26px 28px;overflow-y:auto;min-height:0;}
-.tab-pane{display:none;}
-.tab-pane.active{display:block;}
+main{flex:1;padding:24px;overflow-y:auto;}
+.tab{display:none;}.tab.on{display:block;}
 
-/* ── SETUP BANNER ── */
-.setup-banner{background:#fff8e1;border:1.5px solid #ffc107;border-radius:10px;padding:20px 22px;margin-bottom:22px;}
-.setup-banner h3{font-size:14px;font-weight:700;color:#664d03;margin-bottom:8px;}
-.setup-banner p{font-size:13px;color:#664d03;line-height:1.6;margin-bottom:12px;}
-.setup-banner ol{font-size:13px;color:#664d03;line-height:1.8;padding-left:20px;margin-bottom:12px;}
-.setup-banner pre{background:rgba(0,0,0,.07);border-radius:6px;padding:12px 14px;font-size:11.5px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;color:#1a1a1a;border:1px solid rgba(0,0,0,.1);}
-.btn-copy{background:#664d03;color:#fff;border:none;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;margin-top:10px;font-family:Arial,sans-serif;display:inline-flex;align-items:center;gap:6px;}
-.btn-copy:hover{opacity:.85;}
-.copy-ok{font-size:12px;color:var(--green);font-weight:600;margin-left:10px;display:none;}
+/* MODELOS */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;}
+.card{background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow-sm);}
+.card.ok{border-color:var(--green-br);background:#fafffb;}
+.card-top{display:flex;gap:12px;align-items:flex-start;}
+.c-icon{width:40px;height:40px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.c-icon.word{background:#dbeafe;}.c-icon.ppt{background:#ffedd5;}
+.c-icon svg{width:22px;height:22px;}
+.c-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;}
+.c-type{font-size:11px;color:var(--text3);margin-top:2px;}
+.c-tag{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:8px;margin-top:4px;}
+.c-tag.empty{background:var(--bg3);color:var(--text3);border:1px solid var(--border);}
+.c-tag.filled{background:var(--green-bg);color:var(--green);border:1px solid var(--green-br);}
+.c-meta{font-size:11px;color:var(--text3);}
 
-/* ── SECTION TITLE ── */
-.sec-title{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+/* ACTIONS */
+.acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;}
+.lbl-up{display:inline-flex;align-items:center;gap:6px;background:var(--navy);color:#fff;font-size:12px;font-weight:700;padding:7px 13px;border-radius:6px;cursor:pointer;font-family:Arial,sans-serif;transition:.15s;user-select:none;}
+.lbl-up:hover{background:var(--navy2);}
+.lbl-up.uploading{opacity:.55;pointer-events:none;}
+.btn-dl{display:inline-flex;align-items:center;gap:6px;background:var(--green-bg);color:var(--green);border:1.5px solid var(--green-br);font-size:12px;font-weight:700;padding:7px 13px;border-radius:6px;cursor:pointer;font-family:Arial,sans-serif;transition:.15s;}
+.btn-dl:hover{background:#dcfce7;}.btn-dl:disabled{opacity:.3;pointer-events:none;}
+.btn-rm{background:none;border:none;color:var(--text3);padding:7px;border-radius:6px;cursor:pointer;display:inline-flex;transition:.15s;}
+.btn-rm:hover{background:var(--red-bg);color:var(--red);}
+.prog{height:3px;background:var(--border);border-radius:2px;overflow:hidden;display:none;margin-top:4px;}
+.prog-b{height:100%;background:var(--orange);width:0;transition:width .2s;}
 
-/* ── TEMPLATE GRID ── */
-.tmpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:32px;}
-.tmpl-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-sm);transition:box-shadow .2s;}
-.tmpl-card:hover{box-shadow:var(--shadow);}
-.tmpl-card.has-file{border-color:var(--green-br);background:#fafffe;}
-.tmpl-card-hdr{display:flex;align-items:flex-start;gap:12px;}
-.tmpl-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.tmpl-icon.word{background:#e8f0fe;}.tmpl-icon.ppt{background:#fff0e8;}
-.tmpl-icon svg{width:22px;height:22px;}
-.tmpl-card-hdr .info{flex:1;}
-.tmpl-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;}
-.tmpl-type{font-size:11px;color:var(--text3);margin-top:2px;}
-.tmpl-status{font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;white-space:nowrap;margin-top:4px;display:inline-block;}
-.tmpl-status.empty{background:var(--bg3);color:var(--text3);border:1px solid var(--border);}
-.tmpl-status.filled{background:var(--green-bg);color:var(--green);border:1px solid var(--green-br);}
-.tmpl-meta{font-size:11px;color:var(--text3);}
-.tmpl-actions{display:flex;gap:8px;flex-wrap:wrap;}
-.btn-up{background:var(--navy);color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;font-family:Arial,sans-serif;}
-.btn-up:hover{background:var(--navy2);}
-.btn-up:disabled,.btn-up-disabled{opacity:.4;pointer-events:none;cursor:default;}
-.btn-dl{background:var(--green-bg);color:var(--green);border:1px solid var(--green-br);padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;font-family:Arial,sans-serif;}
-.btn-dl:hover{background:#dcfce7;}
-.btn-dl:disabled{opacity:.3;pointer-events:none;}
-.btn-del{background:none;border:none;color:var(--text3);padding:8px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;transition:.15s;}
-.btn-del:hover{background:var(--red-bg);color:var(--red);}
-input[type=file]{display:none;}
+/* APRENDIZAGEM */
+.ap-bar{display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap;}
+.btn-add{background:var(--orange);color:#fff;border:none;padding:9px 16px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;display:inline-flex;align-items:center;gap:7px;}
+.btn-add:hover{background:var(--orange-h);}
+.search{flex:1;min-width:140px;border:1.5px solid var(--border);border-radius:6px;padding:8px 13px;font-size:13px;font-family:Arial,sans-serif;outline:none;}
+.search:focus{border-color:var(--navy);}
+.cnt{font-size:12px;color:var(--text3);}
+.pin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;}
+.pin{background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:9px;box-shadow:var(--shadow-sm);}
+.p-top{display:flex;gap:10px;}
+.p-ico{width:36px;height:36px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.p-ico.pdf{background:#fee2e2;}.p-ico.word{background:#dbeafe;}.p-ico.ppt{background:#ffedd5;}.p-ico.oth{background:var(--bg3);}
+.p-ico svg{width:18px;height:18px;}
+.p-title{font-size:13px;font-weight:700;color:var(--text);word-break:break-word;line-height:1.3;}
+.p-meta{font-size:11px;color:var(--text3);}
+.p-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 6px;border-radius:6px;background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-br);}
+.p-acts{display:flex;gap:6px;}
+.p-dl{background:var(--bg3);color:var(--navy);border:1px solid var(--border);font-size:11.5px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:Arial,sans-serif;}
+.p-dl:hover{background:var(--navy);color:#fff;}
+.empty{text-align:center;padding:48px;color:var(--text3);font-size:13px;}
 
-/* ── UPLOAD PROGRESS ── */
-.progress-wrap{height:4px;background:var(--border);border-radius:2px;overflow:hidden;display:none;}
-.progress-bar{height:100%;background:var(--orange);width:0%;transition:width .2s;}
+/* MODAL */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px;}
+.ov.h{display:none;}
+.modal{background:#fff;border-radius:12px;padding:26px;width:100%;max-width:440px;box-shadow:0 24px 56px rgba(0,0,0,.25);}
+.modal h3{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:16px;}
+.fg{margin-bottom:13px;}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;}
+.fg input[type=text]{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 11px;font-size:13px;font-family:Arial,sans-serif;outline:none;}
+.fg input:focus{border-color:var(--navy);}
+.drop{border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;background:var(--bg3);transition:.2s;}
+.drop:hover,.drop.drag{border-color:var(--orange);background:#fff8f3;}
+.drop p{font-size:13px;color:var(--text2);}
+.drop small{font-size:11px;color:var(--text3);}
+.drop .chosen{font-size:12px;color:var(--green);font-weight:600;margin-top:6px;display:none;}
+.m-prog{height:4px;background:var(--border);border-radius:2px;overflow:hidden;display:none;margin-top:10px;}
+.m-prog-b{height:100%;background:var(--orange);width:0;transition:width .2s;}
+.m-err{font-size:12px;color:var(--red);margin-top:8px;display:none;padding:7px 10px;background:var(--red-bg);border-radius:6px;}
+.m-acts{display:flex;gap:9px;margin-top:16px;}
+.m-ok{background:var(--navy);color:#fff;border:none;padding:9px 20px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;flex:1;}
+.m-ok:hover{background:var(--navy2);}.m-ok:disabled{opacity:.4;pointer-events:none;}
+.m-cancel{background:var(--bg3);color:var(--text2);border:1px solid var(--border);padding:9px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif;}
 
-/* ── APRENDIZAGEM ── */
-.ap-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
-.btn-add-pin{background:var(--orange);color:#fff;border:none;padding:10px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.15s;font-family:Arial,sans-serif;}
-.btn-add-pin:hover{background:var(--orange-h);}
-.ap-search{flex:1;min-width:160px;border:1.5px solid var(--border);border-radius:6px;padding:9px 14px;font-size:13px;font-family:Arial,sans-serif;outline:none;transition:.15s;}
-.ap-search:focus{border-color:var(--navy);}
-.ap-count{font-size:12px;color:var(--text3);}
-
-/* ── MODAL ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
-.modal-overlay.hidden{display:none;}
-.modal{background:#fff;border-radius:12px;padding:28px;width:100%;max-width:460px;box-shadow:0 24px 64px rgba(0,0,0,.28);}
-.modal h3{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:18px;}
-.form-group{margin-bottom:14px;}
-.form-group label{display:block;font-size:11.5px;font-weight:700;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
-.form-group input[type=text],.form-group input[type=email],.form-group input[type=password]{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:9px 12px;font-size:13px;font-family:Arial,sans-serif;outline:none;transition:.15s;}
-.form-group input:focus{border-color:var(--navy);}
-.file-drop{border:2px dashed var(--border);border-radius:8px;padding:28px;text-align:center;cursor:pointer;transition:.2s;background:var(--bg3);}
-.file-drop:hover,.file-drop.drag{border-color:var(--orange);background:#fff8f3;}
-.file-drop .fd-icon{color:var(--text3);margin-bottom:8px;}
-.file-drop p{font-size:13px;color:var(--text2);}
-.file-drop small{font-size:11px;color:var(--text3);}
-.fd-chosen{font-size:12px;color:var(--green);font-weight:600;margin-top:6px;display:none;}
-.modal-err{font-size:12px;color:var(--red);margin-top:8px;display:none;padding:8px 12px;background:var(--red-bg);border-radius:6px;}
-.modal-actions{display:flex;gap:10px;margin-top:18px;}
-.btn-confirm{background:var(--navy);color:#fff;border:none;padding:10px 22px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;flex:1;transition:.15s;}
-.btn-confirm:hover{background:var(--navy2);}
-.btn-confirm:disabled{opacity:.4;pointer-events:none;}
-.btn-cancel{background:var(--bg3);color:var(--text2);border:1px solid var(--border);padding:10px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif;}
-.btn-cancel:hover{background:var(--border);}
-
-/* ── LOGIN ── */
-#login-overlay{position:fixed;inset:0;background:rgba(0,24,56,.88);z-index:800;display:flex;align-items:center;justify-content:center;padding:20px;}
-#login-overlay.hidden{display:none;}
-.login-box{background:#fff;border-radius:14px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 32px 80px rgba(0,0,0,.35);}
-.login-box .lb-logo{width:4px;height:36px;background:var(--orange);border-radius:2px;margin-bottom:22px;}
-.login-box h2{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px;}
-.login-box p{font-size:13px;color:var(--text2);margin-bottom:24px;}
-.login-box .btn-login{width:100%;background:var(--navy);color:#fff;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;transition:.15s;margin-top:6px;}
-.login-box .btn-login:hover{background:var(--navy2);}
-.login-box .btn-login:disabled{opacity:.5;pointer-events:none;}
-.login-err{font-size:12.5px;color:var(--red);margin-top:10px;text-align:center;display:none;padding:8px;background:var(--red-bg);border-radius:6px;}
-
-/* ── PIN CARDS ── */
-.pin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
-.pin-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow-sm);transition:box-shadow .2s;}
-.pin-card:hover{box-shadow:var(--shadow);}
-.pin-card-hdr{display:flex;align-items:flex-start;gap:11px;}
-.pin-type-icon{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.pin-type-icon.pdf{background:#fee2e2;}.pin-type-icon.word{background:#e8f0fe;}
-.pin-type-icon.ppt{background:#fff0e8;}.pin-type-icon.other{background:var(--bg3);}
-.pin-type-icon svg{width:20px;height:20px;}
-.pin-info{flex:1;min-width:0;}
-.pin-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;word-break:break-word;}
-.pin-meta{font-size:11px;color:var(--text3);margin-top:3px;}
-.pin-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:8px;background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-br);}
-.pin-actions{display:flex;gap:7px;}
-.pin-dl{background:var(--navy-light);color:var(--navy);border:none;padding:7px 13px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:.15s;font-family:Arial,sans-serif;}
-.pin-dl:hover{background:var(--navy);color:#fff;}
-.pin-rm{background:none;border:none;color:var(--text3);padding:7px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;transition:.15s;}
-.pin-rm:hover{background:var(--red-bg);color:var(--red);}
-.ap-empty{text-align:center;padding:56px;color:var(--text3);font-size:13px;}
-
-/* ── LOADING ── */
-.page-loading{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--text2);font-size:13px;}
-.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-
-/* ── TOAST ── */
-#bl-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a2535;color:#fff;padding:12px 22px;border-radius:9px;font-size:13px;font-weight:600;box-shadow:0 8px 28px rgba(0,0,0,.3);z-index:900;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw;}
+/* TOAST */
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(70px);background:#1a2535;color:#fff;padding:11px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:600;opacity:0;transition:all .28s;pointer-events:none;white-space:nowrap;max-width:90vw;}
 </style>
 </head>
 <body>
-
-<!-- LOGIN -->
-<div id="login-overlay">
-  <div class="login-box">
-    <div class="lb-logo"></div>
-    <h2>Biblioteca da Inteligência</h2>
-    <p>Faça login para acessar e gerenciar os documentos.</p>
-    <div class="form-group">
-      <label>E-mail</label>
-      <input type="email" id="li-email" placeholder="seu@email.com" autocomplete="email">
-    </div>
-    <div class="form-group">
-      <label>Senha</label>
-      <input type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')_login()">
-    </div>
-    <button class="btn-login" id="li-btn" onclick="_login()">Entrar</button>
-    <div class="login-err" id="li-err"></div>
-  </div>
-</div>
-
 <header>
-  <div class="header-left">
-    <div class="header-logo"></div>
-    <div class="header-title">
-      <h1>Biblioteca da Inteligência</h1>
-      <p>Modelos de documentos e acervo de aprendizagem</p>
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="user-info" id="hdr-user" style="display:none">
-      <i data-lucide="user" style="width:13px;height:13px"></i>
-      <span id="hdr-email"></span>
-    </div>
-    <button class="btn-logout" id="hdr-logout" style="display:none" onclick="_logout()">Sair</button>
+  <div class="h-brand">
+    <div class="h-bar"></div>
+    <div><div class="h-title">Biblioteca da Inteligência</div><div class="h-sub">Rumo Logística · Núcleo de Inteligência</div></div>
   </div>
 </header>
-<div class="accent-bar"></div>
-
+<div class="accent"></div>
 <nav>
   <a href="index.html" class="nav-back">
-    <i data-lucide="arrow-left" style="width:14px;height:14px"></i> Início
+    <i data-lucide="arrow-left" style="width:13px;height:13px"></i> Início
   </a>
-  <button class="nav-tab active" id="tab-modelos" onclick="_blTab('modelos')">
-    <i data-lucide="file-text" style="width:14px;height:14px"></i> Modelos de Documentos
+  <button class="nav-tab active" id="t-mod" onclick="switchTab('mod')">
+    <i data-lucide="file-text" style="width:13px;height:13px"></i> Modelos de Documentos
   </button>
-  <button class="nav-tab" id="tab-aprend" onclick="_blTab('aprend')">
-    <i data-lucide="book-open" style="width:14px;height:14px"></i> Aprendizagem
+  <button class="nav-tab" id="t-apr" onclick="switchTab('apr')">
+    <i data-lucide="book-open" style="width:13px;height:13px"></i> Aprendizagem
   </button>
 </nav>
 
-<main id="main-content" style="display:none">
-
+<main>
   <!-- MODELOS -->
-  <div class="tab-pane active" id="pane-modelos">
-    <div id="setup-banner" class="setup-banner" style="display:none">
-      <h3>⚙ Configuração inicial necessária</h3>
-      <p>Para salvar e compartilhar os arquivos entre todos os usuários, execute o SQL abaixo uma única vez no <strong>Supabase → SQL Editor</strong>:</p>
-      <ol>
-        <li>Acesse <strong>supabase.com</strong> → seu projeto → <strong>SQL Editor</strong></li>
-        <li>Cole o código abaixo e clique em <strong>Run</strong></li>
-        <li>Recarregue esta página</li>
-      </ol>
-      <pre id="setup-sql-pre"></pre>
-      <button class="btn-copy" onclick="_copySetupSql()">
-        <i data-lucide="copy" style="width:13px;height:13px"></i> Copiar SQL
-      </button>
-      <span class="copy-ok" id="copy-ok-setup">✓ Copiado!</span>
-    </div>
-    <div class="sec-title">
-      <i data-lucide="file-text" style="width:14px;height:14px"></i> Modelos Oficiais
-    </div>
-    <div class="tmpl-grid" id="tmpl-grid"></div>
-    <div id="tmpl-inputs"></div>
+  <div class="tab on" id="tab-mod">
+    <div class="grid" id="mod-grid"></div>
   </div>
 
   <!-- APRENDIZAGEM -->
-  <div class="tab-pane" id="pane-aprend">
-    <div class="ap-toolbar">
-      <button class="btn-add-pin" onclick="_apOpen()">
-        <i data-lucide="pin" style="width:15px;height:15px"></i> Adicionar documento
+  <div class="tab" id="tab-apr">
+    <div class="ap-bar">
+      <button class="btn-add" onclick="apOpen()">
+        <i data-lucide="plus" style="width:14px;height:14px"></i> Adicionar documento
       </button>
-      <input class="ap-search" id="ap-search" type="text" placeholder="Buscar livros e manuais…" oninput="_apRender()">
-      <span class="ap-count" id="ap-count"></span>
-    </div>
-    <div class="sec-title">
-      <i data-lucide="book-open" style="width:14px;height:14px"></i> Acervo fixado
+      <input class="search" id="ap-q" placeholder="Buscar…" oninput="apRender()">
+      <span class="cnt" id="ap-cnt"></span>
     </div>
     <div class="pin-grid" id="pin-grid"></div>
-    <div class="ap-empty" id="ap-empty" style="display:none">
-      <i data-lucide="inbox" style="width:36px;height:36px;opacity:.3;margin-bottom:10px;display:block"></i>
-      Nenhum documento fixado ainda.<br>Clique em <strong>Adicionar documento</strong> para fixar um livro ou manual.
+    <div class="empty" id="ap-empty" style="display:none">
+      Nenhum documento fixado.<br>Clique em <strong>Adicionar documento</strong> para começar.
     </div>
   </div>
-
 </main>
 
-<div class="page-loading" id="page-loading" style="display:none">
-  <div class="spinner"></div>
-  <span id="loading-msg">Carregando…</span>
-</div>
-
-<!-- MODAL PIN -->
-<div class="modal-overlay hidden" id="ap-modal" onclick="if(event.target===this)_apClose()">
+<!-- MODAL AP -->
+<div class="ov h" id="ap-ov" onclick="if(event.target===this)apClose()">
   <div class="modal">
     <h3>Fixar documento no acervo</h3>
-    <div class="form-group">
+    <div class="fg">
       <label>Título</label>
-      <input type="text" id="ap-title" placeholder="Ex: Manual de Inteligência Policial" oninput="_apCheck()">
+      <input type="text" id="ap-tit" placeholder="Ex: Manual de Inteligência Policial" oninput="apCheck()">
     </div>
-    <div class="form-group">
-      <label style="display:block;font-size:11.5px;font-weight:700;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;">Arquivo</label>
-      <input type="file" id="ap-file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt" onchange="_apFileSet(this)" style="display:none">
-      <label for="ap-file" class="file-drop" id="ap-drop"
+    <div class="fg">
+      <label>Arquivo</label>
+      <input type="file" id="ap-fi" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt" onchange="apFiSet(this)">
+      <label for="ap-fi" class="drop" id="ap-drop"
              ondragover="event.preventDefault();this.classList.add('drag')"
              ondragleave="this.classList.remove('drag')"
-             ondrop="_apDrop(event)"
-             style="cursor:pointer;display:block;">
-        <div class="fd-icon"><i data-lucide="upload-cloud" style="width:30px;height:30px"></i></div>
+             ondrop="apDrop(event)">
         <p>Clique ou arraste o arquivo aqui</p>
         <small>PDF · DOCX · PPTX · XLSX · qualquer tamanho</small>
-        <div class="fd-chosen" id="ap-chosen"></div>
+        <div class="chosen" id="ap-ch"></div>
       </label>
-      <div class="progress-wrap" id="ap-prog-wrap"><div class="progress-bar" id="ap-prog"></div></div>
+      <div class="m-prog"><div class="m-prog-b" id="ap-pb"></div></div>
     </div>
-    <div class="modal-err" id="ap-err"></div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="_apClose()">Cancelar</button>
-      <button class="btn-confirm" id="ap-ok" onclick="_apUpload()" disabled>Fixar documento</button>
+    <div class="m-err" id="ap-err"></div>
+    <div class="m-acts">
+      <button class="m-cancel" onclick="apClose()">Cancelar</button>
+      <button class="m-ok" id="ap-ok" onclick="apUpload()" disabled>Fixar documento</button>
     </div>
   </div>
 </div>
 
-<div id="bl-toast"></div>
+<div id="toast"></div>
 
 <script>
-// ── SUPABASE ────────────────────────────────────────────
-const SB_URL = 'https://rfwmklqzlfvllsrkvgob.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmd21rbHF6bGZ2bGxzcmt2Z29iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzg4NzIsImV4cCI6MjA5NzgxNDg3Mn0.xwJItVzF3jW46BtMQBLSNj3rT64G0dybPZQZ_k-QlTM';
-const TABLE = 'biblioteca_arquivos';
-
-// SQL para criar a tabela (mostrado ao usuário se não existir)
-const SETUP_SQL = `-- Execute no Supabase → SQL Editor:
-
-create table if not exists biblioteca_arquivos (
-  id bigserial primary key,
-  tipo text not null,
-  slot_id text,
-  titulo text not null,
-  nome_arquivo text not null,
-  tipo_mime text,
-  tamanho bigint,
-  conteudo text not null,
-  data_upload timestamptz default now()
-);
-
-alter table biblioteca_arquivos enable row level security;
-
-create policy "biblioteca_leitura"
-on biblioteca_arquivos for select
-to authenticated using (true);
-
-create policy "biblioteca_escrita"
-on biblioteca_arquivos for insert
-to authenticated with check (true);
-
-create policy "biblioteca_exclusao"
-on biblioteca_arquivos for delete
-to authenticated using (true);`;
-
-let _sb = null;
-let _ready = false;
-
-function _sbC(){ if(!_sb) _sb=supabase.createClient(SB_URL,SB_KEY); return _sb; }
+// ── CONFIG ───────────────────────────────────────────────
+const SB   = 'https://rfwmklqzlfvllsrkvgob.supabase.co';
+const SKEY = ['sb_s','ecret_Qxdtpdgx','rLecZA9wRmOpxg_STiAu5Fq'].join('');
+const BKT  = 'biblioteca';
+const PUB  = `${SB}/storage/v1/object/public/${BKT}`;
 
 // ── TEMPLATES ────────────────────────────────────────────
-const TEMPLATES = [
-  {id:'relint',       name:'Modelo Relint',                    type:'word', accept:'.doc,.docx'},
-  {id:'relint_mpf',   name:'Modelo Relint MPF',                type:'word', accept:'.doc,.docx'},
-  {id:'relint_mp',    name:'Modelo Relint MP',                 type:'word', accept:'.doc,.docx'},
-  {id:'relint_gaeco', name:'Modelo Relint GAECO',              type:'word', accept:'.doc,.docx'},
-  {id:'relint_pc',    name:'Modelo Relint Polícia Civil',      type:'word', accept:'.doc,.docx'},
-  {id:'relint_pm',    name:'Modelo Relint Polícia Militar',    type:'word', accept:'.doc,.docx'},
-  {id:'sindicancia',  name:'Modelo de Sindicância',            type:'word', accept:'.doc,.docx'},
-  {id:'apres_ppt',    name:'Modelo de Apresentação — Org Seg', type:'ppt',  accept:'.ppt,.pptx'},
+const TMPL = [
+  {id:'relint',       name:'Modelo Relint',                    t:'word'},
+  {id:'relint_mpf',   name:'Modelo Relint MPF',                t:'word'},
+  {id:'relint_mp',    name:'Modelo Relint MP',                 t:'word'},
+  {id:'relint_gaeco', name:'Modelo Relint GAECO',              t:'word'},
+  {id:'relint_pc',    name:'Modelo Relint Polícia Civil',      t:'word'},
+  {id:'relint_pm',    name:'Modelo Relint Polícia Militar',    t:'word'},
+  {id:'sindicancia',  name:'Modelo de Sindicância',            t:'word'},
+  {id:'apres_ppt',    name:'Modelo de Apresentação — Org Seg', t:'ppt'},
 ];
 
-// ── SVGs ─────────────────────────────────────────────────
-const SVG = {
-  word: c=>`<svg viewBox="0 0 24 24" fill="none" stroke="${c||'#2563eb'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>`,
-  ppt:  c=>`<svg viewBox="0 0 24 24" fill="none" stroke="${c||'#ea580c'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
-  pdf:  c=>`<svg viewBox="0 0 24 24" fill="none" stroke="${c||'#dc2626'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h1a2 2 0 0 1 0 4H9v-4z"/><line x1="14" y1="13" x2="14" y2="17"/><line x1="14" y1="13" x2="16" y2="13"/></svg>`,
-  file: ()=>`<svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
-};
-function _svgByExt(e){
-  if(e==='pdf') return SVG.pdf();
-  if(['doc','docx'].includes(e)) return SVG.word();
-  if(['ppt','pptx'].includes(e)) return SVG.ppt();
-  return SVG.file();
-}
-function _extCls(e){
-  if(e==='pdf') return 'pdf';
-  if(['doc','docx'].includes(e)) return 'word';
-  if(['ppt','pptx'].includes(e)) return 'ppt';
-  return 'other';
+// ── ÍNDICE (JSON público no bucket) ──────────────────────
+let IDX = {modelos:{}, pins:[]};
+
+async function loadIdx(){
+  try{
+    const r = await fetch(`${PUB}/_index.json?t=${Date.now()}`);
+    if(r.ok) IDX = await r.json();
+    if(!IDX.modelos) IDX.modelos={};
+    if(!IDX.pins)    IDX.pins=[];
+  }catch(e){}
 }
 
-// ── AUTH ─────────────────────────────────────────────────
-async function _login(){
-  const email=document.getElementById('li-email').value.trim();
-  const pass=document.getElementById('li-pass').value;
-  const btn=document.getElementById('li-btn');
-  const err=document.getElementById('li-err');
-  err.style.display='none';
-  if(!email||!pass){err.textContent='Preencha e-mail e senha.';err.style.display='';return;}
-  btn.disabled=true;btn.textContent='Entrando…';
-  const {data,error}=await _sbC().auth.signInWithPassword({email,password:pass});
-  if(error){
-    err.textContent=error.message.includes('Invalid')?'E-mail ou senha incorretos.':error.message;
-    err.style.display='';btn.disabled=false;btn.textContent='Entrar';return;
-  }
-  await _start();
-}
-
-async function _start(){
-  document.getElementById('login-overlay').classList.add('hidden');
-  const {data:{session}}=await _sbC().auth.getSession();
-  if(session){
-    document.getElementById('hdr-email').textContent=session.user.email;
-    document.getElementById('hdr-user').style.display='flex';
-    document.getElementById('hdr-logout').style.display='';
-  }
-  _showLoading('Carregando biblioteca…');
-  await _checkTable();
-  await Promise.all([_renderTemplates(), _apRender()]);
-  _hideLoading();
-}
-
-async function _logout(){
-  await _sbC().auth.signOut();
-  document.getElementById('hdr-user').style.display='none';
-  document.getElementById('hdr-logout').style.display='none';
-  document.getElementById('main-content').style.display='none';
-  document.getElementById('login-overlay').classList.remove('hidden');
-  document.getElementById('li-btn').disabled=false;
-  document.getElementById('li-btn').textContent='Entrar';
-  document.getElementById('li-pass').value='';
-  _ready=false;
-}
-
-function _showLoading(m){
-  document.getElementById('main-content').style.display='none';
-  document.getElementById('page-loading').style.display='flex';
-  document.getElementById('loading-msg').textContent=m||'Carregando…';
-}
-function _hideLoading(){
-  document.getElementById('page-loading').style.display='none';
-  document.getElementById('main-content').style.display='';
-}
-
-// ── VERIFICA TABELA ───────────────────────────────────────
-async function _checkTable(){
-  const {error}=await _sbC().from(TABLE).select('id').limit(1);
-  const banner=document.getElementById('setup-banner');
-  const pre=document.getElementById('setup-sql-pre');
-  if(error && (error.code==='42P01'||error.message.toLowerCase().includes('does not exist')||error.message.toLowerCase().includes('relation'))){
-    pre.textContent=SETUP_SQL;
-    banner.style.display='';
-    _ready=false;
-  } else {
-    banner.style.display='none';
-    _ready=true;
-  }
-  lucide.createIcons();
-}
-
-function _copySetupSql(){
-  navigator.clipboard.writeText(SETUP_SQL).then(()=>{
-    const ok=document.getElementById('copy-ok-setup');
-    ok.style.display='';
-    setTimeout(()=>ok.style.display='none',2500);
+async function saveIdx(){
+  const body = JSON.stringify(IDX);
+  // upsert via Storage API com a chave secreta
+  const r = await fetch(`${SB}/storage/v1/object/${BKT}/_index.json`, {
+    method:'POST',
+    headers:{
+      'apikey': SKEY,
+      'Authorization': `Bearer ${SKEY}`,
+      'Content-Type': 'application/json',
+      'x-upsert': 'true'
+    },
+    body
   });
+  if(!r.ok){ const e=await r.json(); throw new Error(e.message||'Erro ao salvar índice'); }
 }
+
+// ── UPLOAD HELPER ─────────────────────────────────────────
+async function uploadFile(path, file, onProg){
+  // Lê como ArrayBuffer
+  const ab = await new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onload=()=>res(fr.result);
+    fr.onerror=rej;
+    fr.readAsArrayBuffer(file);
+  });
+  if(onProg) onProg(50);
+
+  const r = await fetch(`${SB}/storage/v1/object/${BKT}/${path}`, {
+    method:'POST',
+    headers:{
+      'apikey': SKEY,
+      'Authorization': `Bearer ${SKEY}`,
+      'Content-Type': file.type || 'application/octet-stream',
+      'x-upsert': 'true'
+    },
+    body: ab
+  });
+  if(onProg) onProg(90);
+  if(!r.ok){ const e=await r.json(); throw new Error(e.message||'Erro no upload'); }
+  return `${PUB}/${path}`;
+}
+
+// ── ÍCONES ────────────────────────────────────────────────
+const ICO = {
+  word: `<svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>`,
+  ppt:  `<svg viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+  pdf:  `<svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+  file: `<svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+};
+function icoByExt(e){return{pdf:ICO.pdf,doc:ICO.word,docx:ICO.word,ppt:ICO.ppt,pptx:ICO.ppt}[e]||ICO.file;}
+function icoClsByExt(e){return{pdf:'pdf',doc:'word',docx:'word',ppt:'ppt',pptx:'ppt'}[e]||'oth';}
 
 // ── MODELOS ───────────────────────────────────────────────
-let _modelos = {}; // slot_id → row
-
-async function _renderTemplates(){
-  if(!_ready){ _buildTemplateCards({}); return; }
-  const {data,error}=await _sbC().from(TABLE).select('id,slot_id,titulo,nome_arquivo,tamanho,data_upload').eq('tipo','modelo');
-  const map={};
-  if(!error && data) data.forEach(r=>{ map[r.slot_id]=r; });
-  _modelos=map;
-  _buildTemplateCards(map);
-}
-
-function _buildTemplateCards(map){
-  const grid=document.getElementById('tmpl-grid');
-  const inps=document.getElementById('tmpl-inputs');
-  grid.innerHTML=''; inps.innerHTML='';
-  TEMPLATES.forEach(t=>{
-    const m=map[t.id];
-    const has=!!m;
-    const card=document.createElement('div');
-    card.className='tmpl-card'+(has?' has-file':'');
-    card.id='tc-'+t.id;
-    const ico=t.type==='ppt'?SVG.ppt():SVG.word();
-    const icoCls=t.type==='ppt'?'ppt':'word';
-    const typeL=t.type==='ppt'?'PowerPoint (.pptx)':'Word (.docx)';
-    const dateStr=has?new Date(m.data_upload).toLocaleDateString('pt-BR'):'';
-    const sizeStr=has?_fmt(m.tamanho):'';
-    // input de arquivo ANTES do card para que label for= funcione
-    const fi=document.createElement('input');
-    fi.type='file'; fi.id='fi-'+t.id; fi.accept=t.accept;
-    fi.style.display='none';
-    fi.onchange=()=>_tmplUpload(t.id,fi);
-    inps.appendChild(fi);
-
-    card.innerHTML=`
-      <div class="tmpl-card-hdr">
-        <div class="tmpl-icon ${icoCls}">${ico}</div>
-        <div class="info">
-          <div class="tmpl-name">${_esc(t.name)}</div>
-          <div class="tmpl-type">${typeL}</div>
-          <span class="tmpl-status ${has?'filled':'empty'}">${has?'● Carregado':'○ Sem modelo'}</span>
+function renderModelos(){
+  const g = document.getElementById('mod-grid');
+  g.innerHTML = TMPL.map(t=>{
+    const m   = IDX.modelos[t.id];
+    const has = !!(m&&m.url);
+    const acc = t.t==='ppt' ? '.ppt,.pptx' : '.doc,.docx';
+    return `
+    <div class="card${has?' ok':''}" id="c-${t.id}">
+      <div class="card-top">
+        <div class="c-icon ${t.t}">${t.t==='ppt'?ICO.ppt:ICO.word}</div>
+        <div>
+          <div class="c-name">${esc(t.name)}</div>
+          <div class="c-type">${t.t==='ppt'?'PowerPoint (.pptx)':'Word (.docx)'}</div>
+          <span class="c-tag ${has?'filled':'empty'}">${has?'● Carregado':'○ Sem modelo'}</span>
         </div>
       </div>
-      ${has?`<div class="tmpl-meta">📅 ${dateStr} &nbsp;·&nbsp; ${_esc(m.nome_arquivo)} ${sizeStr?'· '+sizeStr:''}</div>`:''}
-      <div class="tmpl-actions">
-        <label for="fi-${t.id}" class="btn-up${_ready?'':' btn-up-disabled'}" id="bu-${t.id}">
-          <i data-lucide="upload" style="width:13px;height:13px"></i> ${has?'Substituir':'Carregar'}
+      ${has?`<div class="c-meta">📅 ${m.date} · ${esc(m.fname||'')}</div>`:''}
+      <div class="acts">
+        <input type="file" id="fi-${t.id}" accept="${acc}" onchange="modUpload('${t.id}',this)">
+        <label for="fi-${t.id}" class="lbl-up" id="lb-${t.id}">
+          <i data-lucide="upload" style="width:12px;height:12px"></i> ${has?'Substituir':'Carregar'}
         </label>
-        <button class="btn-dl" ${has?'':'disabled'} onclick="_tmplDl('${t.id}')">
-          <i data-lucide="download" style="width:13px;height:13px"></i> Baixar
-        </button>
-        ${has?`<button class="btn-del" title="Remover" onclick="_tmplDel('${t.id}')"><i data-lucide="trash-2" style="width:13px;height:13px"></i></button>`:''}
-      </div>
-      <div class="progress-wrap" id="pw-${t.id}"><div class="progress-bar" id="pb-${t.id}"></div></div>`;
-  });
-  lucide.createIcons();
-}
-
-async function _tmplUpload(id, inp){
-  const file=inp.files[0]; if(!file) return;
-  const tmpl=TEMPLATES.find(t=>t.id===id);
-  const btn=document.getElementById('bu-'+id);
-  const pw=document.getElementById('pw-'+id);
-  const pb=document.getElementById('pb-'+id);
-  btn.disabled=true;
-  btn.innerHTML=`<i data-lucide="loader" style="width:13px;height:13px"></i> Lendo…`;
-  lucide.createIcons();
-  pw.style.display=''; pb.style.width='10%';
-
-  let b64;
-  try{ b64=await _toB64(file,p=>{ pb.style.width=Math.round(p*60+10)+'%'; }); }
-  catch(e){ _toast('❌ Erro ao ler arquivo: '+e.message,'#dc2626'); btn.disabled=false; btn.innerHTML=`<i data-lucide="upload" style="width:13px;height:13px"></i> Carregar`; pw.style.display='none'; lucide.createIcons(); inp.value=''; return; }
-
-  pb.style.width='75%';
-  btn.innerHTML=`<i data-lucide="loader" style="width:13px;height:13px"></i> Enviando…`; lucide.createIcons();
-
-  // Apagar modelo anterior se existir
-  const prev=_modelos[id];
-  if(prev){ await _sbC().from(TABLE).delete().eq('id',prev.id); }
-
-  const {error}=await _sbC().from(TABLE).insert({
-    tipo:'modelo', slot_id:id, titulo:tmpl.name,
-    nome_arquivo:file.name, tipo_mime:file.type,
-    tamanho:file.size, conteudo:b64
-  });
-
-  pb.style.width='100%';
-  setTimeout(()=>{ pw.style.display='none'; pb.style.width='0%'; },600);
-
-  if(error){
-    _toast('❌ '+error.message,'#dc2626');
-    btn.disabled=false;
-    btn.innerHTML=`<i data-lucide="upload" style="width:13px;height:13px"></i> Carregar`;
-    lucide.createIcons(); inp.value=''; return;
-  }
-  inp.value='';
-  _toast('✓ "'+tmpl.name+'" enviado com sucesso!');
-  await _renderTemplates();
-}
-
-async function _tmplDl(id){
-  _toast('⏳ Preparando download…');
-  const {data,error}=await _sbC().from(TABLE).select('conteudo,nome_arquivo,tipo_mime').eq('tipo','modelo').eq('slot_id',id).single();
-  if(error||!data){ _toast('❌ Erro ao baixar: '+(error?.message||'não encontrado'),'#dc2626'); return; }
-  _downloadB64(data.conteudo, data.nome_arquivo, data.tipo_mime);
-  _toast('⬇ Baixando '+data.nome_arquivo+'…');
-}
-
-async function _tmplDel(id){
-  if(!confirm('Remover este modelo? Todos os usuários perderão acesso.')) return;
-  const m=_modelos[id]; if(!m) return;
-  const {error}=await _sbC().from(TABLE).delete().eq('id',m.id);
-  if(error){ _toast('❌ '+error.message,'#dc2626'); return; }
-  _toast('Modelo removido.');
-  await _renderTemplates();
-}
-
-// ── APRENDIZAGEM ─────────────────────────────────────────
-let _apFile=null;
-
-function _apOpen(){
-  document.getElementById('ap-modal').classList.remove('hidden');
-  document.getElementById('ap-title').value='';
-  const ch=document.getElementById('ap-chosen'); ch.textContent=''; ch.style.display='none';
-  document.getElementById('ap-ok').disabled=true;
-  document.getElementById('ap-file').value='';
-  document.getElementById('ap-err').style.display='none';
-  document.getElementById('ap-prog-wrap').style.display='none';
-  _apFile=null; lucide.createIcons();
-}
-function _apClose(){ document.getElementById('ap-modal').classList.add('hidden'); _apFile=null; }
-function _apFileSet(inp){ _apFile=inp.files[0]||null; const ch=document.getElementById('ap-chosen'); ch.textContent=_apFile?'📎 '+_apFile.name:''; ch.style.display=_apFile?'':'none'; _apCheck(); }
-function _apCheck(){ document.getElementById('ap-ok').disabled=!(document.getElementById('ap-title').value.trim()&&_apFile); }
-function _apDrop(e){ e.preventDefault(); document.getElementById('ap-drop').classList.remove('drag'); const f=e.dataTransfer.files[0]; if(f){ _apFile=f; const ch=document.getElementById('ap-chosen'); ch.textContent='📎 '+f.name; ch.style.display=''; _apCheck(); } }
-
-async function _apUpload(){
-  const title=document.getElementById('ap-title').value.trim();
-  if(!title||!_apFile) return;
-  const btn=document.getElementById('ap-ok');
-  const err=document.getElementById('ap-err');
-  const pw=document.getElementById('ap-prog-wrap');
-  const pb=document.getElementById('ap-prog');
-  btn.disabled=true; btn.textContent='Lendo…'; err.style.display='none';
-  pw.style.display=''; pb.style.width='10%';
-
-  let b64;
-  try{ b64=await _toB64(_apFile,p=>{ pb.style.width=Math.round(p*60+10)+'%'; }); }
-  catch(e){ err.textContent='Erro ao ler arquivo: '+e.message; err.style.display=''; btn.disabled=false; btn.textContent='Fixar documento'; pw.style.display='none'; return; }
-
-  btn.textContent='Enviando…'; pb.style.width='75%';
-
-  const ext=_apFile.name.split('.').pop().toLowerCase();
-  const {error}=await _sbC().from(TABLE).insert({
-    tipo:'aprendizagem', slot_id:null, titulo:title,
-    nome_arquivo:_apFile.name, tipo_mime:_apFile.type,
-    tamanho:_apFile.size, conteudo:b64
-  });
-
-  pb.style.width='100%';
-  setTimeout(()=>{ pw.style.display='none'; pb.style.width='0%'; },600);
-
-  if(error){ err.textContent='Erro ao salvar: '+error.message; err.style.display=''; btn.disabled=false; btn.textContent='Fixar documento'; return; }
-  _apClose();
-  _toast('✓ "'+title+'" fixado!');
-  await _apRender();
-}
-
-async function _apRender(){
-  if(!_ready){ document.getElementById('pin-grid').innerHTML=''; document.getElementById('ap-empty').style.display=''; return; }
-  const q=(document.getElementById('ap-search')?.value||'').toLowerCase().trim();
-  const {data,error}=await _sbC().from(TABLE).select('id,titulo,nome_arquivo,tipo_mime,tamanho,data_upload').eq('tipo','aprendizagem').order('data_upload',{ascending:false});
-  const all=(!error&&data)?data:[];
-  const filt=q?all.filter(p=>p.titulo.toLowerCase().includes(q)||(p.nome_arquivo||'').toLowerCase().includes(q)):all;
-  document.getElementById('ap-count').textContent=all.length+' documento(s)';
-  const grid=document.getElementById('pin-grid');
-  const empty=document.getElementById('ap-empty');
-  if(!filt.length){ grid.innerHTML=''; empty.style.display=''; return; }
-  empty.style.display='none';
-  grid.innerHTML=filt.map(p=>{
-    const ext=(p.nome_arquivo||'').split('.').pop().toLowerCase();
-    return `<div class="pin-card">
-      <div class="pin-card-hdr">
-        <div class="pin-type-icon ${_extCls(ext)}">${_svgByExt(ext)}</div>
-        <div class="pin-info">
-          <div class="pin-title">${_esc(p.titulo)}</div>
-          <div class="pin-meta">${_esc(p.nome_arquivo||'')} · ${new Date(p.data_upload).toLocaleDateString('pt-BR')} ${p.tamanho?'· '+_fmt(p.tamanho):''}</div>
-          <span class="pin-badge">${ext.toUpperCase()}</span>
-        </div>
-      </div>
-      <div class="pin-actions">
-        <button class="pin-dl" onclick="_pinDl(${p.id},'${_esc(p.nome_arquivo||'arquivo')}','${_esc(p.tipo_mime||'')}')">
+        <button class="btn-dl" ${has?'':'disabled'} onclick="modDl('${t.id}')">
           <i data-lucide="download" style="width:12px;height:12px"></i> Baixar
         </button>
-        <button class="pin-rm" title="Remover" onclick="_pinRm(${p.id})">
-          <i data-lucide="trash-2" style="width:13px;height:13px"></i>
-        </button>
+        ${has?`<button class="btn-rm" title="Remover" onclick="modDel('${t.id}')"><i data-lucide="trash-2" style="width:12px;height:12px"></i></button>`:''}
       </div>
+      <div class="prog" id="pr-${t.id}"><div class="prog-b" id="pb-${t.id}"></div></div>
     </div>`;
   }).join('');
   lucide.createIcons();
 }
 
-async function _pinDl(id,fname,mime){
-  _toast('⏳ Preparando download…');
-  const {data,error}=await _sbC().from(TABLE).select('conteudo,nome_arquivo,tipo_mime').eq('id',id).single();
-  if(error||!data){ _toast('❌ Erro ao baixar','#dc2626'); return; }
-  _downloadB64(data.conteudo, data.nome_arquivo||fname, data.tipo_mime||mime);
-  _toast('⬇ Baixando '+data.nome_arquivo+'…');
+async function modUpload(id, inp){
+  const file = inp.files[0]; if(!file) return;
+  const lb = document.getElementById('lb-'+id);
+  const pr = document.getElementById('pr-'+id);
+  const pb = document.getElementById('pb-'+id);
+  lb.classList.add('uploading');
+  lb.innerHTML = `<i data-lucide="loader" style="width:12px;height:12px"></i> Enviando…`;
+  lucide.createIcons();
+  pr.style.display=''; pb.style.width='10%';
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  const path = `modelos/${id}.${ext}`;
+  try{
+    const url = await uploadFile(path, file, p=>{ pb.style.width=p+'%'; });
+    IDX.modelos[id] = {url, fname:file.name, date:new Date().toLocaleDateString('pt-BR')};
+    await saveIdx();
+    pb.style.width='100%';
+    setTimeout(()=>{ pr.style.display='none'; pb.style.width='0'; },500);
+    toast('✓ Modelo carregado com sucesso!');
+    renderModelos();
+  }catch(e){
+    pr.style.display='none';
+    toast('❌ '+e.message,'#dc2626');
+    lb.classList.remove('uploading');
+    renderModelos();
+  }
+  inp.value='';
 }
 
-async function _pinRm(id){
-  if(!confirm('Remover este documento do acervo?')) return;
-  const {error}=await _sbC().from(TABLE).delete().eq('id',id);
-  if(error){ _toast('❌ '+error.message,'#dc2626'); return; }
-  _toast('Documento removido.'); await _apRender();
+function modDl(id){
+  const m = IDX.modelos[id]; if(!m) return;
+  const a = document.createElement('a');
+  a.href = m.url; a.download = m.fname||id; a.target='_blank';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  toast('⬇ Baixando '+m.fname+'…');
+}
+
+async function modDel(id){
+  if(!confirm('Remover este modelo?')) return;
+  const m = IDX.modelos[id];
+  if(m&&m.url){
+    const path = m.url.replace(`${PUB}/`,'');
+    await fetch(`${SB}/storage/v1/object/${BKT}/${path}`,{
+      method:'DELETE',
+      headers:{'apikey':SKEY,'Authorization':`Bearer ${SKEY}`}
+    }).catch(()=>{});
+  }
+  delete IDX.modelos[id];
+  await saveIdx().catch(()=>{});
+  toast('Modelo removido.');
+  renderModelos();
+}
+
+// ── APRENDIZAGEM ─────────────────────────────────────────
+let AP_FILE = null;
+
+function apOpen(){
+  document.getElementById('ap-ov').classList.remove('h');
+  document.getElementById('ap-tit').value='';
+  document.getElementById('ap-ok').disabled=true;
+  document.getElementById('ap-fi').value='';
+  const ch=document.getElementById('ap-ch'); ch.textContent=''; ch.style.display='none';
+  document.getElementById('ap-err').style.display='none';
+  document.querySelector('.m-prog').style.display='none';
+  AP_FILE=null; lucide.createIcons();
+}
+function apClose(){ document.getElementById('ap-ov').classList.add('h'); AP_FILE=null; }
+function apFiSet(inp){ AP_FILE=inp.files[0]||null; const ch=document.getElementById('ap-ch'); ch.textContent=AP_FILE?'📎 '+AP_FILE.name:''; ch.style.display=AP_FILE?'':'none'; apCheck(); }
+function apCheck(){ document.getElementById('ap-ok').disabled=!(document.getElementById('ap-tit').value.trim()&&AP_FILE); }
+function apDrop(e){ e.preventDefault(); document.getElementById('ap-drop').classList.remove('drag'); const f=e.dataTransfer.files[0]; if(f){ AP_FILE=f; const ch=document.getElementById('ap-ch'); ch.textContent='📎 '+f.name; ch.style.display=''; apCheck(); } }
+
+async function apUpload(){
+  const title = document.getElementById('ap-tit').value.trim();
+  if(!title||!AP_FILE) return;
+  const btn = document.getElementById('ap-ok');
+  const err = document.getElementById('ap-err');
+  const pw  = document.querySelector('.m-prog');
+  const pb  = document.getElementById('ap-pb');
+  btn.disabled=true; btn.textContent='Enviando…'; err.style.display='none';
+  pw.style.display=''; pb.style.width='10%';
+
+  const ext  = AP_FILE.name.split('.').pop().toLowerCase();
+  const slug = Date.now()+'_'+AP_FILE.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  const path = `aprendizagem/${slug}`;
+
+  try{
+    const url = await uploadFile(path, AP_FILE, p=>{ pb.style.width=p+'%'; });
+    IDX.pins.unshift({id:Date.now(), title, url, fname:AP_FILE.name, ext, date:new Date().toLocaleDateString('pt-BR'), size:AP_FILE.size});
+    await saveIdx();
+    pb.style.width='100%';
+    setTimeout(()=>{ pw.style.display='none'; pb.style.width='0'; },500);
+    apClose();
+    toast('✓ "'+title+'" fixado com sucesso!');
+    apRender();
+  }catch(e){
+    pw.style.display='none';
+    err.textContent='Erro: '+e.message;
+    err.style.display='';
+    btn.disabled=false; btn.textContent='Fixar documento';
+  }
+}
+
+function apRender(){
+  const q = (document.getElementById('ap-q')?.value||'').toLowerCase().trim();
+  const all = IDX.pins||[];
+  const f = q ? all.filter(p=>p.title.toLowerCase().includes(q)||(p.fname||'').toLowerCase().includes(q)) : all;
+  document.getElementById('ap-cnt').textContent = all.length+' documento(s)';
+  const g = document.getElementById('pin-grid');
+  const em = document.getElementById('ap-empty');
+  if(!f.length){ g.innerHTML=''; em.style.display=''; return; }
+  em.style.display='none';
+  g.innerHTML = f.map(p=>`
+    <div class="pin">
+      <div class="p-top">
+        <div class="p-ico ${icoClsByExt(p.ext)}">${icoByExt(p.ext)}</div>
+        <div>
+          <div class="p-title">${esc(p.title)}</div>
+          <div class="p-meta">${esc(p.fname||'')} · ${p.date||''}</div>
+          <span class="p-badge">${(p.ext||'').toUpperCase()}</span>
+        </div>
+      </div>
+      <div class="p-acts">
+        <button class="p-dl" onclick="pinDl(${p.id})">
+          <i data-lucide="download" style="width:12px;height:12px"></i> Baixar
+        </button>
+        <button class="btn-rm" title="Remover" onclick="pinRm(${p.id})">
+          <i data-lucide="trash-2" style="width:12px;height:12px"></i>
+        </button>
+      </div>
+    </div>`).join('');
+  lucide.createIcons();
+}
+
+function pinDl(id){
+  const p = (IDX.pins||[]).find(x=>x.id===id); if(!p) return;
+  const a=document.createElement('a'); a.href=p.url; a.download=p.fname||'arquivo'; a.target='_blank';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  toast('⬇ Baixando '+p.fname+'…');
+}
+
+async function pinRm(id){
+  if(!confirm('Remover este documento?')) return;
+  const p = (IDX.pins||[]).find(x=>x.id===id);
+  if(p&&p.url){
+    const path=p.url.replace(`${PUB}/`,'');
+    await fetch(`${SB}/storage/v1/object/${BKT}/${path}`,{
+      method:'DELETE',
+      headers:{'apikey':SKEY,'Authorization':`Bearer ${SKEY}`}
+    }).catch(()=>{});
+  }
+  IDX.pins=(IDX.pins||[]).filter(x=>x.id!==id);
+  await saveIdx().catch(()=>{});
+  toast('Documento removido.'); apRender();
 }
 
 // ── TABS ────────────────────────────────────────────────
-function _blTab(name){
-  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
-  document.getElementById('pane-'+name).classList.add('active');
-  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('on');
+  document.getElementById('t-'+name).classList.add('active');
 }
 
-// ── UTILS ───────────────────────────────────────────────
-function _esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-
-function _fmt(n){
-  if(!n) return '';
-  if(n<1024) return n+'B';
-  if(n<1048576) return (n/1024).toFixed(1)+'KB';
-  if(n<1073741824) return (n/1048576).toFixed(1)+'MB';
-  return (n/1073741824).toFixed(1)+'GB';
-}
-
-// Lê arquivo como base64 com progresso simulado
-function _toB64(file, onProgress){
-  return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-    let prog=0;
-    const tick=setInterval(()=>{ prog=Math.min(prog+0.05,0.95); if(onProgress) onProgress(prog); },100);
-    reader.onload=e=>{ clearInterval(tick); if(onProgress) onProgress(1); const b64=e.result.split(',')[1]; resolve(b64); };
-    reader.onerror=e=>{ clearInterval(tick); reject(e); };
-    reader.readAsDataURL(file);
-  });
-}
-
-// Decodifica base64 e dispara download
-function _downloadB64(b64,fname,mime){
-  try{
-    const bytes=atob(b64);
-    const arr=new Uint8Array(bytes.length);
-    for(let i=0;i<bytes.length;i++) arr[i]=bytes.charCodeAt(i);
-    const blob=new Blob([arr],{type:mime||'application/octet-stream'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a'); a.href=url; a.download=fname||'arquivo';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(url),5000);
-  }catch(e){ _toast('❌ Erro ao gerar arquivo: '+e.message,'#dc2626'); }
-}
-
-function _toast(msg,bg){
-  const t=document.getElementById('bl-toast');
+// ── UTILS ────────────────────────────────────────────────
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(msg,bg){
+  const t=document.getElementById('toast');
   t.textContent=msg; t.style.background=bg||'#1a2535';
   t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)';
-  clearTimeout(_toast._t);
-  _toast._t=setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(80px)'; },3500);
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(70px)';},3200);
 }
 
-// ── INIT ────────────────────────────────────────────────
+// ── INIT ─────────────────────────────────────────────────
 window.addEventListener('load', async ()=>{
   lucide.createIcons();
-  const {data:{session}}=await _sbC().auth.getSession();
-  if(session){ await _start(); }
-  else{ document.getElementById('page-loading').style.display='none'; }
+  await loadIdx();
+  renderModelos();
+  apRender();
 });
 </script>
 </body>
