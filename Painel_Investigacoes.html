@@ -666,7 +666,7 @@ let editingOpId=null,editingTaskId=null,editingAgId=null;
 let opSearchVal='',opStatusFilter='';
 
 const getOp=id=>db.operacoes.find(o=>o.id===id);
-const getOpName=id=>{const o=getOp(id);return o?o.nome:'—';};
+const getOpName=id=>{if(id===0)return'Outros';const o=getOp(id);return o?o.nome:'—';};
 function statusBadge(s){const m={'Em andamento':'badge-blue','Fase inicial':'badge-yellow','Planejamento':'badge-orange','Concluído':'badge-green','Encerrado':'badge-gray','Pendente':'badge-gray','Realizado':'badge-green','Cancelado':'badge-red'};return`<span class="badge ${m[s]||'badge-gray'}">${s}</span>`;}
 function prioBadge(p){return`<span class="${{Alta:'prio-alta',Média:'prio-media',Baixa:'prio-baixa'}[p]||''}">${p}</span>`;}
 function progressBar(pct){const c=pct>=80?'#2e9e57':pct>=40?'#d97706':'#003865';return`<div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${c}"></div></div><span class="progress-pct">${pct}%</span></div>`;}
@@ -1038,7 +1038,10 @@ function deleteOp(id){
 
 function updateOpSelects(){
   const opts=db.operacoes.map(o=>`<option value="${o.id}">${o.nome}</option>`).join('');
-  ['task-op','ag-op'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+  const taskOp=document.getElementById('task-op');
+  if(taskOp)taskOp.innerHTML=`<option value="0">Outros</option>`+opts;
+  const agOp=document.getElementById('ag-op');
+  if(agOp)agOp.innerHTML=opts;
   const f=document.getElementById('task-filter-op');
   if(f)f.innerHTML=`<option value="">Todas as operações</option>`+opts;
 }
@@ -1115,7 +1118,7 @@ function openTaskModal(id){
 function saveTask(notify=false){
   const nome=document.getElementById('task-nome').value.trim();
   const opId=parseInt(document.getElementById('task-op').value);
-  if(!nome||!opId){toast('Preencha os campos obrigatórios','error');return;}
+  if(!nome||isNaN(opId)){toast('Preencha os campos obrigatórios','error');return;}
   const waNum=document.getElementById('task-wa').value.replace(/\D/g,'');
   const data={nome,opId,tipo:document.getElementById('task-tipo').value,responsavel:document.getElementById('task-resp').value.trim(),whatsapp:waNum,prioridade:document.getElementById('task-prio').value,status:document.getElementById('task-status').value,prazo:document.getElementById('task-prazo').value,obs:document.getElementById('task-obs').value.trim()};
   if(editingTaskId)Object.assign(db.tarefas.find(t=>t.id===editingTaskId),data);
