@@ -529,6 +529,15 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
   <div class="modal-body"><div class="form-grid">
     <div class="form-group full"><label>Tarefa / Atividade *</label><input id="task-nome" placeholder="Descreva a tarefa…"></div>
     <div class="form-group"><label>Operação *</label><select id="task-op"></select></div>
+    <div class="form-group"><label>Tipo de Demanda</label>
+      <select id="task-tipo">
+        <option value="">— Selecionar —</option>
+        <option>Demanda Fixa</option>
+        <option>Demanda Temporária</option>
+        <option>Agenda Corporativa</option>
+        <option>Reunião</option>
+      </select>
+    </div>
     <div class="form-group"><label>Responsável</label>
       <select id="task-resp">
         <option value="">— Não atribuído —</option>
@@ -1085,6 +1094,7 @@ function openTaskModal(id){
     document.getElementById('task-op').value=t.opId;
     document.getElementById('task-resp').value=t.responsavel||'';
     document.getElementById('task-wa').value=t.whatsapp||'';
+    document.getElementById('task-tipo').value=t.tipo||'';
     document.getElementById('task-prio').value=t.prioridade;
     document.getElementById('task-status').value=t.status;
     document.getElementById('task-prazo').value=t.prazo||'';
@@ -1092,6 +1102,7 @@ function openTaskModal(id){
     previewWA(t.whatsapp||'');
   }else{
     ['task-nome','task-resp','task-wa','task-obs'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('task-tipo').value='';
     document.getElementById('task-prio').value='Média';
     document.getElementById('task-status').value='Pendente';
     document.getElementById('task-prazo').value='';
@@ -1105,7 +1116,7 @@ function saveTask(notify=false){
   const opId=parseInt(document.getElementById('task-op').value);
   if(!nome||!opId){toast('Preencha os campos obrigatórios','error');return;}
   const waNum=document.getElementById('task-wa').value.replace(/\D/g,'');
-  const data={nome,opId,responsavel:document.getElementById('task-resp').value.trim(),whatsapp:waNum,prioridade:document.getElementById('task-prio').value,status:document.getElementById('task-status').value,prazo:document.getElementById('task-prazo').value,obs:document.getElementById('task-obs').value.trim()};
+  const data={nome,opId,tipo:document.getElementById('task-tipo').value,responsavel:document.getElementById('task-resp').value.trim(),whatsapp:waNum,prioridade:document.getElementById('task-prio').value,status:document.getElementById('task-status').value,prazo:document.getElementById('task-prazo').value,obs:document.getElementById('task-obs').value.trim()};
   if(editingTaskId)Object.assign(db.tarefas.find(t=>t.id===editingTaskId),data);
   else{data.id=nextId('task');db.tarefas.push(data);}
   saveData();closeModal('task-modal');renderTasks();renderDashboard();
