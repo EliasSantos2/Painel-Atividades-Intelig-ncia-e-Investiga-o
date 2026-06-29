@@ -540,7 +540,7 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
       </select>
     </div>
     <div class="form-group"><label>Responsável</label>
-      <select id="task-resp">
+      <select id="task-resp" onchange="_autoFillWA(this.value)">
         <option value="">— Não atribuído —</option>
         <option>Elias</option>
         <option>Gabriel</option>
@@ -1052,6 +1052,63 @@ function previewWA(val){
   if(clean.length>=10){el.textContent='✓ Número válido: +55 '+clean;if(btn)btn.style.display='inline-flex';}
   else{el.textContent=clean.length>0?'⚠ Digite o DDD + número (mín. 10 dígitos)':'';if(btn)btn.style.display='none';}
 }
+
+// ── NÚMEROS FIXOS POR RESPONSÁVEL ───────────────────────
+const _WA_NUMS={
+  'Elias':   '11991724467',
+  'Gabriel': '19994885957',
+  'Delgado': '11932737105',
+  'Bruxo':   '19991147147',
+  'Leandro': '19920103228'
+};
+function _autoFillWA(nome){
+  const num=_WA_NUMS[nome]||'';
+  const inp=document.getElementById('task-wa');
+  if(inp){inp.value=num;previewWA(num);}
+}
+
+// ── LEMBRETE: TAREFAS COM PRAZO AMANHÃ ──────────────────
+function _checkPrazosAmanha(){
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const amanha=new Date(hoje); amanha.setDate(amanha.getDate()+1);
+  const amanhaStr=amanha.toISOString().split('T')[0];
+  const pendentes=db.tarefas.filter(t=>
+    t.prazo===amanhaStr &&
+    t.status!=='Concluído' &&
+    t.whatsapp &&
+    t.whatsapp.length>=10
+  );
+  if(!pendentes.length) return;
+  // Exibe painel de lembretes no topo da página
+  const wrap=document.createElement('div');
+  wrap.id='remind-bar';
+  wrap.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#003865;color:#fff;'+
+    'font-family:Arial,sans-serif;font-size:13px;padding:10px 18px;box-shadow:0 2px 12px rgba(0,0,0,.35);'+
+    'display:flex;flex-direction:column;gap:8px;';
+  const header=document.createElement('div');
+  header.style.cssText='display:flex;align-items:center;justify-content:space-between;';
+  header.innerHTML=`<strong>⏰ ${pendentes.length} tarefa(s) com prazo AMANHÃ — envie o lembrete:</strong>`+
+    `<button onclick="document.getElementById('remind-bar').remove()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;line-height:1">×</button>`;
+  wrap.appendChild(header);
+  pendentes.forEach(t=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap;';
+    const msg=encodeURIComponent(
+      `Olá${t.responsavel?' '+t.responsavel.split('/')[0].trim():''}! 👋\n\n`+
+      `🔔 *Lembrete:* Você tem uma tarefa com prazo para *AMANHÃ*.\n\n`+
+      `📋 *Tarefa:* ${t.nome}\n`+
+      `🔍 *Operação:* ${getOpName(t.opId)}\n`+
+      `⚡ *Prioridade:* ${t.prioridade}\n`+
+      `📅 *Prazo:* ${formatDate(t.prazo)}\n\n`+
+      `Por favor, conclua ou atualize o status no painel.\n\nAtenciosamente,\nEquipe de Investigações Rumo 🚂`
+    );
+    const link=`https://wa.me/55${t.whatsapp}?text=${msg}`;
+    row.innerHTML=`<span style="font-size:12px;opacity:.85">${t.nome} → <strong>${t.responsavel}</strong></span>`+
+      `<a href="${link}" target="_blank" style="background:#25D366;color:#fff;padding:5px 14px;border-radius:5px;text-decoration:none;font-size:12px;font-weight:700;white-space:nowrap">📲 Enviar lembrete</a>`;
+    wrap.appendChild(row);
+  });
+  document.body.prepend(wrap);
+}
 function renderTasks(){
   const search=(document.getElementById('task-search')?.value||'').toLowerCase();
   const fOp=document.getElementById('task-filter-op')?.value;
@@ -1467,6 +1524,7 @@ updateOpSelects();
 renderDashboard();
 popularMunicipios();
 initAuth();
+setTimeout(_checkPrazosAmanha, 1500);
 </script>
 
 <!-- ===== ADMIN SYSTEM ===== -->
