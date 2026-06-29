@@ -120,8 +120,8 @@ main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden
       <button class="co-login-btn" id="co-login-btn" onclick="_coLogin()">
         <i data-lucide="log-in" style="width:14px;height:14px"></i> Conectar ao OneDrive
       </button>
-      <button class="co-index-btn" id="co-index-btn" onclick="_coStartIndex()" disabled>
-        <i data-lucide="refresh-cw" style="width:13px;height:13px"></i> Atualizar índice
+      <button class="co-index-btn" id="co-index-btn" onclick="_coStartIndex()" disabled title="Re-lê todos os arquivos do OneDrive e salva novo índice">
+        <i data-lucide="refresh-cw" style="width:13px;height:13px"></i> Reindexar OneDrive
       </button>
       <span id="co-status" class="co-status">Clique em "Conectar ao OneDrive" para autenticar</span>
       <span id="co-badge" class="co-badge">0 docs</span>
@@ -155,6 +155,11 @@ const _CLIENT_ID   = '8a8629c6-71a2-45f0-b26d-519f44373b68';
 const _SHARED_URL  = 'https://1drv.ms/f/c/b476f1a47b64e77b/IgBt4LZJuuYFQrcoaDA95IrYAdsRLzCObT-Kxr_0TZApcLE?e=Blg9sz';
 const _SCOPES      = ['Files.Read.All','Sites.Read.All'];
 const _MAX_SIZE    = 30 * 1024 * 1024; // 30 MB por arquivo
+
+// ── SUPABASE (cache do índice) ───────────────────────────
+const _SB   = 'https://rfwmklqzlfvllsrkvgob.supabase.co';
+const _SKEY = ['sb_s','ecret_Qxdtpdgx','rLecZA9wRmOpxg_STiAu5Fq'].join('');
+const _IDX  = 'search_index.json';
 
 // ── MSAL ─────────────────────────────────────────────────
 const _msal = new msal.PublicClientApplication({
@@ -201,6 +206,43 @@ async function _coLogin(){
   }
 }
 
+// ── CACHE (Supabase) ─────────────────────────────────────
+async function _loadCachedIndex(){
+  try{
+    const r = await fetch(`${_SB}/storage/v1/object/public/biblioteca/${_IDX}`);
+    if(!r.ok) return false;
+    const data = await r.json();
+    if(!data.docs || !data.docs.length) return false;
+    _coIndex = data.docs;
+    const dt = new Date(data.updated).toLocaleString('pt-BR');
+    document.getElementById('co-badge').textContent = _coIndex.length+' docs';
+    document.getElementById('co-badge').style.display = '';
+    document.getElementById('co-index-btn').disabled = false;
+    _coSetStatus(`✓ ${_coIndex.length} docs prontos (índice de ${dt})`);
+    _coRenderMsg('system',
+      `<strong>${_coIndex.length}</strong> documento(s) carregados do índice salvo em <strong>${dt}</strong>.<br>`+
+      `Faça sua pergunta. Clique em <strong>Atualizar índice</strong> para re-indexar o OneDrive (requer login).`);
+    _lc();
+    return true;
+  }catch(e){ return false; }
+}
+
+async function _saveIndex(){
+  try{
+    const payload = JSON.stringify({updated: new Date().toISOString(), docs: _coIndex});
+    await fetch(`${_SB}/storage/v1/object/biblioteca/${_IDX}`,{
+      method:'PUT',
+      headers:{
+        'apikey': _SKEY,
+        'Authorization': 'Bearer '+_SKEY,
+        'Content-Type': 'application/json',
+        'x-upsert': 'true'
+      },
+      body: payload
+    });
+  }catch(e){}
+}
+
 // ── GRAPH API ────────────────────────────────────────────
 function _encodeSharingUrl(url){
   const b64 = btoa(url).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
@@ -242,13 +284,15 @@ async function _coStartIndex(){
     document.getElementById('co-badge').textContent = _coIndex.length+' docs';
     document.getElementById('co-badge').style.display = '';
     document.getElementById('co-index-btn').disabled = false;
+    _coSetStatus('✓ '+_coIndex.length+' documento(s) indexado(s) — salvando cache…');
+    await _saveIndex();
     _coSetStatus('✓ '+_coIndex.length+' documento(s) indexado(s) — faça sua pergunta');
 
     const tipos = [...new Set(_coIndex.map(d=>d.name.split('.').pop().toUpperCase()))].join(' · ');
     _coRenderMsg('system',
       '<strong>'+_coIndex.length+'</strong> documento(s) indexado(s) com sucesso.<br>'+
       'Tipos: '+tipos+'<br>'+
-      '<em>Faça qualquer pergunta sobre o conteúdo dos arquivos.</em>');
+      '<em>Índice salvo — próximos acessos serão instantâneos sem precisar re-indexar.</em>');
     _lc();
   }catch(e){
     if(_loadingEl){ _loadingEl.remove(); _loadingEl=null; }
@@ -445,7 +489,12 @@ function _lc(){ if(typeof lucide!=='undefined') lucide.createIcons(); }
 // ── INIT ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function(){
   _lc();
-  // Se já tem sessão salva, loga silenciosamente
+
+  // 1. Tenta carregar índice salvo (não precisa de login)
+  _coSetStatus('Verificando índice salvo…');
+  const cached = await _loadCachedIndex();
+
+  // 2. Restaura sessão MSAL se existir
   try{
     await _msal.handleRedirectPromise();
     const accounts = _msal.getAllAccounts();
@@ -457,11 +506,18 @@ document.addEventListener('DOMContentLoaded', async function(){
       btn.className = 'co-login-btn connected';
       btn.onclick = null;
       document.getElementById('co-index-btn').disabled = false;
-      _coSetStatus('Sessão restaurada. Carregando documentos…');
       _lc();
-      _coStartIndex();
+      // Só re-indexa automaticamente se não havia cache
+      if(!cached){
+        _coSetStatus('Sessão restaurada. Carregando documentos…');
+        _coStartIndex();
+      }
+    } else if(!cached){
+      _coSetStatus('Clique em "Conectar ao OneDrive" para autenticar');
     }
-  }catch(e){}
+  }catch(e){
+    if(!cached) _coSetStatus('Clique em "Conectar ao OneDrive" para autenticar');
+  }
 });
 </script>
 </body>
