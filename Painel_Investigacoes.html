@@ -765,6 +765,7 @@ function renderDashboard(){
       <td style="font-size:12px;color:var(--text2)">${formatDate(t.prazo)}</td>
     </tr>`).join('');
   document.getElementById('last-updated').textContent='Salvo: '+new Date().toLocaleString('pt-BR');
+  renderCotacoes();
   _lcIcons();
 }
 
