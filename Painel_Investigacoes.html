@@ -371,6 +371,16 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
         <table><thead><tr><th>Tarefa</th><th>Operação</th><th>Responsável</th><th>WhatsApp</th><th>Prazo</th></tr></thead>
         <tbody id="high-prio-body"></tbody></table>
       </div>
+      <!-- COTAÇÕES -->
+      <div class="card" id="cotacoes-card">
+        <div class="card-header">
+          <h2>Cotações de Commodities</h2>
+          <span id="cotacoes-ts" style="font-size:10.5px;color:var(--text3)"></span>
+        </div>
+        <div style="padding:12px 16px" id="cotacoes-body">
+          <div style="color:var(--text3);font-size:12px;text-align:center;padding:12px">Carregando cotações…</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1520,8 +1530,45 @@ function popularMunicipios(){
     })
     .catch(function(e){ console.warn('IBGE municipios falhou',e); });
 }
+// ── COTAÇÕES DE COMMODITIES ──────────────────────────────
+const _COTACOES_URL = 'https://rfwmklqzlfvllsrkvgob.supabase.co/storage/v1/object/public/biblioteca/cotacoes.json';
+const _UNID = {soja:'kg',milho:'kg',farelo:'kg',diesel:'L',gasolina:'L',etanol:'L'};
+const _LABEL = {soja:'Soja',milho:'Milho',farelo:'Farelo de Soja',diesel:'Diesel',gasolina:'Gasolina',etanol:'Etanol'};
+const _ICONE = {soja:'🌱',milho:'🌽',farelo:'🟤',diesel:'⛽',gasolina:'🔴',etanol:'🟢'};
+
+async function renderCotacoes(){
+  const body = document.getElementById('cotacoes-body');
+  const ts   = document.getElementById('cotacoes-ts');
+  if(!body) return;
+  try{
+    const r = await fetch(_COTACOES_URL + '?t=' + Date.now());
+    if(!r.ok) throw new Error('sem dados');
+    const c = await r.json();
+    if(ts) ts.textContent = 'Atualizado em ' + (c.atualizado||'—') + ' · Dólar R$ ' + (c.dolar||'—');
+    const itens = ['soja','milho','farelo','diesel','gasolina','etanol'];
+    body.innerHTML =
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">` +
+      itens.map(k => {
+        const v = c[k];
+        if(!v) return '';
+        return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:12px;color:var(--text2)">${_ICONE[k]} ${_LABEL[k]}</span>
+          <strong style="font-size:13px;color:var(--navy)">R$ ${v.toFixed(2)}/${_UNID[k]}</strong>
+        </div>`;
+      }).join('') +
+      `</div>` +
+      `<div style="font-size:10px;color:var(--text3);border-top:1px solid var(--border);padding-top:8px;line-height:1.5">
+        ${c.fonte||'Futuros CBOT/NYMEX convertidos pelo dólar'}<br>
+        <em>Valor estimado = quantidade apreendida × cotação</em>
+      </div>`;
+  }catch(e){
+    body.innerHTML = '<div style="color:var(--text3);font-size:12px;text-align:center;padding:8px">Cotações ainda não disponíveis.<br><span style="font-size:10.5px">Execute o script de atualização para buscar os dados.</span></div>';
+  }
+}
+
 updateOpSelects();
 renderDashboard();
+renderCotacoes();
 popularMunicipios();
 initAuth();
 setTimeout(_checkPrazosAmanha, 1500);
