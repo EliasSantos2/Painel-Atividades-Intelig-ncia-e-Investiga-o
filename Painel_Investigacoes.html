@@ -1031,7 +1031,7 @@ function openOpModal(id){
     document.getElementById('op-relint-url').value=(op.relint&&op.relint.url)||'';
     document.getElementById('op-relint-name').value=(op.relint&&op.relint.name)||'';
   }else{
-    const maxN=db.operacoes.reduce((m,o)=>{const n=o.opIdStr?parseInt(o.opIdStr.replace('I-',''),10):0;return isNaN(n)?m:Math.max(m,n);},0);
+    const maxN=db.operacoes.reduce((m,o)=>{const n=o.opIdStr?parseInt(o.opIdStr.replace('I-',''),10):0;return isNaN(n)?m:Math.max(m,n);},54);
     const nextN=maxN+1;
     document.getElementById('op-id-num').value=nextN;
     document.getElementById('op-id-preview').textContent='I-'+nextN;
