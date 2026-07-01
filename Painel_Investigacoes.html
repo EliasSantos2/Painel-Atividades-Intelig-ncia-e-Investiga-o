@@ -9,6 +9,7 @@
 <title>Painel de Investigações — Rumo Logística</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 <style>
   :root {
     --navy:#003865;--navy2:#00284a;--navy-light:#e8f0f8;
@@ -1030,8 +1031,10 @@ function openOpModal(id){
     document.getElementById('op-relint-url').value=(op.relint&&op.relint.url)||'';
     document.getElementById('op-relint-name').value=(op.relint&&op.relint.name)||'';
   }else{
-    document.getElementById('op-id-num').value='';
-    document.getElementById('op-id-preview').textContent='';
+    const maxN=db.operacoes.reduce((m,o)=>{const n=o.opIdStr?parseInt(o.opIdStr.replace('I-',''),10):0;return isNaN(n)?m:Math.max(m,n);},0);
+    const nextN=maxN+1;
+    document.getElementById('op-id-num').value=nextN;
+    document.getElementById('op-id-preview').textContent='I-'+nextN;
     document.getElementById('op-fonte').value='';
     ['op-nome','op-local','op-localidade','op-inicio','op-previsao','op-marco','op-objetivo','op-entregas','op-relint-url','op-relint-name'].forEach(x=>document.getElementById(x).value='');
     document.getElementById('op-status').value='Em andamento';
@@ -1054,9 +1057,14 @@ function saveOp(){
   if(relUrl){target.relint={url:relUrl,name:relName||'RELINT Final'};}
   else if(target.relint&&target.relint.path){/* mantém o arquivo enviado */}
   else{delete target.relint;}
+  const isNew=!editingOpId;
   saveData();closeModal('op-modal');renderOps();renderDashboard();
   toast(editingOpId?'Operação atualizada!':'Operação adicionada!');
   updateOpSelects();
+  if(isNew&&opIdStr){
+    const nomePasta=(opIdStr+' '+nome).toUpperCase();
+    _odCriarPasta(nomePasta);
+  }
 }
 function deleteOp(id){
   if(!confirm('Excluir esta operação e todas as suas tarefas?'))return;
@@ -1064,6 +1072,56 @@ function deleteOp(id){
   db.tarefas=db.tarefas.filter(t=>t.opId!==id);
   saveData();renderOps();renderDashboard();updateOpSelects();
   toast('Operação excluída','info');
+}
+
+// ── OneDrive: criação automática de pasta ─────────────────────────────────────
+const _OD_CLIENT_ID = '8a8629c6-71a2-45f0-b26d-519f44373b68';
+const _OD_SCOPES    = ['Files.ReadWrite','Files.Read.All'];
+const _OD_SHARE_URL = 'https://1drv.ms/f/c/b476f1a47b64e77b/IgAsZwV-qmdUQ7-MMMdCL8XWAWnpNa2GCGP5DJzJR8dZG1s?e=hKylRc';
+let _odMsal = null;
+
+function _getOdMsal(){
+  if(_odMsal) return _odMsal;
+  if(typeof msal==='undefined') return null;
+  _odMsal = new msal.PublicClientApplication({
+    auth:{ clientId:_OD_CLIENT_ID, authority:'https://login.microsoftonline.com/common', redirectUri:location.origin+location.pathname },
+    cache:{ cacheLocation:'localStorage', storeAuthStateInCookie:false }
+  });
+  return _odMsal;
+}
+
+async function _odGetToken(){
+  const m = _getOdMsal();
+  if(!m) throw new Error('MSAL não disponível');
+  const accounts = m.getAllAccounts();
+  if(accounts.length){
+    try{ const r=await m.acquireTokenSilent({scopes:_OD_SCOPES,account:accounts[0]}); return r.accessToken; }catch(e){}
+  }
+  const r = await m.loginPopup({scopes:_OD_SCOPES});
+  return r.accessToken;
+}
+
+async function _odCriarPasta(nomePasta){
+  try{
+    const token = await _odGetToken();
+    // Codifica a URL de compartilhamento como shareId do Graph
+    const shareId = 'u!' + btoa(_OD_SHARE_URL).replace(/=/g,'').replace(/\//g,'_').replace(/\+/g,'-');
+    // Resolve o item da pasta compartilhada
+    const meta = await fetch(`https://graph.microsoft.com/v1.0/shares/${shareId}/driveItem`,
+      {headers:{Authorization:'Bearer '+token}}).then(r=>r.json());
+    if(!meta.id) throw new Error('Pasta base não encontrada');
+    // Cria a subpasta
+    const res = await fetch(
+      `https://graph.microsoft.com/v1.0/drives/${meta.parentReference.driveId}/items/${meta.id}/children`,
+      { method:'POST', headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+        body: JSON.stringify({name:nomePasta, folder:{}, '@microsoft.graph.conflictBehavior':'rename'}) }
+    );
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    toast('Pasta "'+nomePasta+'" criada no OneDrive ✓','success');
+  }catch(e){
+    console.warn('OneDrive pasta:',e);
+    toast('Operação salva. Pasta OneDrive não criada: '+e.message,'info');
+  }
 }
 
 function updateOpSelects(){
