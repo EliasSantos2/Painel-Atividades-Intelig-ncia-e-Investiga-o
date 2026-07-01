@@ -389,7 +389,7 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
   </div>
   <div class="card">
     <table><thead><tr>
-      <th>#</th><th>Operação</th><th>Empresa</th><th>Localidade</th>
+      <th>#</th><th>ID</th><th>Operação</th><th>Fonte</th><th>Empresa</th><th>Localidade</th>
       <th>Status</th><th>% Conc.</th><th>Pend.</th><th>Próximo Marco</th><th>RELINT</th><th></th>
     </tr></thead><tbody id="ops-table-body"></tbody></table>
   </div>
@@ -495,6 +495,22 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
 <div class="modal">
   <div class="modal-header"><h3 id="op-modal-title">Nova Operação</h3><button class="close-btn" onclick="closeModal('op-modal')">×</button></div>
   <div class="modal-body"><div class="form-grid">
+    <div class="form-group"><label>ID da Operação</label>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-weight:700;color:var(--navy);font-size:14px">I-</span>
+        <input id="op-id-num" type="number" min="1" placeholder="Ex: 38" style="width:100px" oninput="document.getElementById('op-id-preview').textContent=this.value?'I-'+this.value:''">
+        <span id="op-id-preview" style="font-size:12px;color:var(--text2);font-weight:600"></span>
+      </div>
+    </div>
+    <div class="form-group"><label>Fonte</label>
+      <select id="op-fonte">
+        <option value="">— Selecionar —</option>
+        <option>Compliance</option>
+        <option>Jurídico</option>
+        <option>Operação</option>
+        <option>Informante</option>
+      </select>
+    </div>
     <div class="form-group"><label>Nome da Operação *</label><input id="op-nome" placeholder="Ex: Ponto Cego"></div>
     <div class="form-group"><label>Empresa *</label><input id="op-local" placeholder="Ex: RUMO"></div>
     <div class="form-group"><label>Localidade (Município - UF)</label><input id="op-localidade" list="municipios-list" placeholder="Digite o município…" autocomplete="off"><datalist id="municipios-list"></datalist></div>
@@ -799,9 +815,12 @@ function renderOps(){
   const _opOrd={'Em andamento':0,'Fase inicial':1,'Planejamento':2,'Encerrado':3,'Concluído':4};
   ops=ops.slice().sort((a,b)=>(_opOrd[a.status]??2)-(_opOrd[b.status]??2));
   const tbody=document.getElementById('ops-table-body');
-  if(!ops.length){tbody.innerHTML=`<tr><td colspan="10" class="empty"><div class="empty-icon">${ic('search',36)}</div>Nenhuma operação encontrada</td></tr>`;_lcIcons();return;}
+  if(!ops.length){tbody.innerHTML=`<tr><td colspan="12" class="empty"><div class="empty-icon">${ic('search',36)}</div>Nenhuma operação encontrada</td></tr>`;_lcIcons();return;}
   tbody.innerHTML=ops.map((op,i)=>{const s=getOpStats(op.id);return`<tr>
-    <td style="color:var(--text2)">${i+1}</td><td><strong>${op.nome}</strong></td>
+    <td style="color:var(--text2)">${i+1}</td>
+    <td style="font-size:12px;font-weight:700;color:var(--navy);white-space:nowrap">${op.opIdStr||'—'}</td>
+    <td><strong>${op.nome}</strong></td>
+    <td style="font-size:12px;color:var(--text2)">${op.fonte||'—'}</td>
     <td style="color:var(--text2);font-size:12px">${op.local}</td>
     <td style="font-size:12px;color:var(--text2)">${op.localidade||'—'}</td>
     <td>${statusBadge(op.status)}</td><td style="min-width:120px">${progressBar(op.status==='Concluído'?100:s.pct)}</td>
@@ -999,6 +1018,10 @@ function openOpModal(id){
   editingOpId=id||null;
   document.getElementById('op-modal-title').textContent=id?'Editar Operação':'Nova Operação';
   if(id){const op=getOp(id);
+    const idNum=op.opId||(op.opIdStr?op.opIdStr.replace('I-',''):'');
+    document.getElementById('op-id-num').value=idNum;
+    document.getElementById('op-id-preview').textContent=idNum?'I-'+idNum:'';
+    document.getElementById('op-fonte').value=op.fonte||'';
     document.getElementById('op-nome').value=op.nome;document.getElementById('op-local').value=op.local;
     document.getElementById('op-localidade').value=op.localidade||'';document.getElementById('op-status').value=op.status;
     document.getElementById('op-inicio').value=op.inicio||'';document.getElementById('op-previsao').value=op.previsao||'';
@@ -1007,6 +1030,9 @@ function openOpModal(id){
     document.getElementById('op-relint-url').value=(op.relint&&op.relint.url)||'';
     document.getElementById('op-relint-name').value=(op.relint&&op.relint.name)||'';
   }else{
+    document.getElementById('op-id-num').value='';
+    document.getElementById('op-id-preview').textContent='';
+    document.getElementById('op-fonte').value='';
     ['op-nome','op-local','op-localidade','op-inicio','op-previsao','op-marco','op-objetivo','op-entregas','op-relint-url','op-relint-name'].forEach(x=>document.getElementById(x).value='');
     document.getElementById('op-status').value='Em andamento';
   }
@@ -1016,7 +1042,9 @@ function saveOp(){
   const nome=document.getElementById('op-nome').value.trim();
   const local=document.getElementById('op-local').value.trim();
   if(!nome||!local){toast('Preencha os campos obrigatórios','error');return;}
-  const data={nome,local,localidade:document.getElementById('op-localidade').value.trim(),status:document.getElementById('op-status').value,inicio:document.getElementById('op-inicio').value,previsao:document.getElementById('op-previsao').value,marco:document.getElementById('op-marco').value.trim(),objetivo:document.getElementById('op-objetivo').value.trim(),entregas:document.getElementById('op-entregas').value.trim()};
+  const idNum=document.getElementById('op-id-num').value.trim();
+  const opIdStr=idNum?'I-'+idNum:'';
+  const data={nome,local,opIdStr,fonte:document.getElementById('op-fonte').value,localidade:document.getElementById('op-localidade').value.trim(),status:document.getElementById('op-status').value,inicio:document.getElementById('op-inicio').value,previsao:document.getElementById('op-previsao').value,marco:document.getElementById('op-marco').value.trim(),objetivo:document.getElementById('op-objetivo').value.trim(),entregas:document.getElementById('op-entregas').value.trim()};
   const relUrl=document.getElementById('op-relint-url').value.trim();
   const relName=document.getElementById('op-relint-name').value.trim();
   let target;
