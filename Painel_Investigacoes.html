@@ -1104,23 +1104,36 @@ async function _odGetToken(){
 async function _odCriarPasta(nomePasta){
   try{
     const token = await _odGetToken();
-    // Codifica a URL de compartilhamento como shareId do Graph
     const shareId = 'u!' + btoa(_OD_SHARE_URL).replace(/=/g,'').replace(/\//g,'_').replace(/\+/g,'-');
-    // Resolve o item da pasta compartilhada
-    const meta = await fetch(`https://graph.microsoft.com/v1.0/shares/${shareId}/driveItem`,
-      {headers:{Authorization:'Bearer '+token}}).then(r=>r.json());
-    if(!meta.id) throw new Error('Pasta base não encontrada');
-    // Cria a subpasta
-    const res = await fetch(
-      `https://graph.microsoft.com/v1.0/drives/${meta.parentReference.driveId}/items/${meta.id}/children`,
+
+    // Passo 1: resolve o driveItem da pasta compartilhada
+    const metaRes = await fetch(`https://graph.microsoft.com/v1.0/shares/${shareId}/driveItem`,
+      {headers:{Authorization:'Bearer '+token}});
+    const meta = await metaRes.json();
+    if(!metaRes.ok){
+      const msg=(meta.error&&meta.error.message)||'HTTP '+metaRes.status;
+      throw new Error('Resolver pasta: '+msg);
+    }
+
+    const driveId = meta.parentReference&&meta.parentReference.driveId ? meta.parentReference.driveId : meta.remoteItem&&meta.remoteItem.parentReference&&meta.remoteItem.parentReference.driveId;
+    const itemId  = meta.id;
+    if(!driveId||!itemId) throw new Error('driveId/itemId não encontrados na resposta');
+
+    // Passo 2: cria a subpasta
+    const crRes = await fetch(
+      `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/children`,
       { method:'POST', headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
         body: JSON.stringify({name:nomePasta, folder:{}, '@microsoft.graph.conflictBehavior':'rename'}) }
     );
-    if(!res.ok) throw new Error('HTTP '+res.status);
+    const crJson = await crRes.json();
+    if(!crRes.ok){
+      const msg=(crJson.error&&crJson.error.message)||'HTTP '+crRes.status;
+      throw new Error('Criar pasta: '+msg);
+    }
     toast('Pasta "'+nomePasta+'" criada no OneDrive ✓','success');
   }catch(e){
     console.warn('OneDrive pasta:',e);
-    toast('Operação salva. Pasta OneDrive não criada: '+e.message,'info');
+    toast('Pasta OneDrive não criada: '+e.message,'info');
   }
 }
 
