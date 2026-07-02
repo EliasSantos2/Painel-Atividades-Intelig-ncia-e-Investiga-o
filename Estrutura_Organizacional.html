@@ -33,10 +33,29 @@ header{position:fixed;top:0;left:0;right:0;z-index:400;height:58px;display:flex;
 .hero-title{font-size:22px;font-weight:700;color:#fff;}
 .hero-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
 
-/* ── TOOLBAR ── */
-.toolbar{background:var(--white);border-bottom:1px solid var(--gray2);padding:0 36px;display:flex;align-items:center;gap:8px;height:52px;position:sticky;top:58px;z-index:300;box-shadow:0 1px 6px rgba(0,0,0,.06);}
-.tb-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-right:4px;}
-.tb-sep{width:1px;height:28px;background:var(--gray2);margin:0 4px;}
+/* ── MENU HAMBÚRGUER ── */
+.menu-wrap{position:fixed;top:13px;right:130px;z-index:500;}
+.menu-btn{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;width:36px;height:36px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:6px;cursor:pointer;transition:background .2s;padding:0;}
+.menu-btn:hover{background:rgba(255,255,255,.2);}
+.menu-btn span{display:block;width:16px;height:2px;background:#fff;border-radius:2px;transition:all .25s;}
+.menu-btn.open span:nth-child(1){transform:translateY(6px) rotate(45deg);}
+.menu-btn.open span:nth-child(2){opacity:0;transform:scaleX(0);}
+.menu-btn.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg);}
+.dropdown{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border:1px solid var(--gray2);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.18);min-width:220px;overflow:hidden;opacity:0;pointer-events:none;transform:translateY(-6px) scale(.97);transform-origin:top right;transition:opacity .2s,transform .2s;}
+.dropdown.open{opacity:1;pointer-events:all;transform:translateY(0) scale(1);}
+.dd-header{padding:10px 14px 8px;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;border-bottom:1px solid var(--gray2);}
+.dd-item{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:background .15s;border:none;background:none;width:100%;text-align:left;}
+.dd-item:hover{background:var(--gray);}
+.dd-item .dd-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.dd-item.dd-add .dd-icon{background:#e8f0ff;color:var(--navy2);}
+.dd-item.dd-edit .dd-icon{background:#fef3c7;color:#92400e;}
+.dd-item.dd-atrib .dd-icon{background:#ecfdf5;color:var(--green);}
+.dd-item.dd-reset .dd-icon{background:#fee2e2;color:var(--red);}
+.dd-sep{height:1px;background:var(--gray2);margin:4px 0;}
+.dd-item.dd-edit.active .dd-icon{background:#fbbf24;color:#fff;}
+.dd-counter{margin-left:auto;font-size:10px;font-weight:700;color:var(--text3);background:var(--gray);border-radius:10px;padding:2px 7px;}
+
+/* btn base (para modais) */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .18s;white-space:nowrap;}
 .btn-primary{background:var(--navy);color:#fff;}
 .btn-primary:hover{background:var(--navy2);}
@@ -48,11 +67,6 @@ header{position:fixed;top:0;left:0;right:0;z-index:400;height:58px;display:flex;
 .btn-danger:hover{background:#b91c1c;}
 .btn-green{background:var(--green);color:#fff;}
 .btn-green:hover{background:#15803d;}
-.btn-edit-mode{background:transparent;color:var(--text2);border:1px solid var(--gray2);}
-.btn-edit-mode.active{background:#fef3c7;color:#92400e;border-color:#f59e0b;}
-.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
-.tb-counter{font-size:11px;color:var(--text3);}
-.tb-counter strong{color:var(--text);font-weight:700;}
 
 /* ── ORG AREA ── */
 .org-area{padding:32px 36px 60px;overflow-x:auto;}
@@ -180,17 +194,31 @@ svg.lines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:n
   <div class="hero-sub">Núcleo de Inteligência Corporativa · Julho de 2026 · Clique em qualquer card para ver o perfil completo</div>
 </div>
 
-<!-- TOOLBAR -->
-<div class="toolbar">
-  <span class="tb-label">Gerenciar</span>
-  <button class="btn btn-primary" onclick="openAdd()"><i data-lucide="user-plus" style="width:13px;height:13px;"></i> Nova Pessoa</button>
-  <div class="tb-sep"></div>
-  <button class="btn btn-edit-mode" id="btn-edit-mode" onclick="toggleEditMode()"><i data-lucide="pencil" style="width:13px;height:13px;"></i> Modo Edição</button>
-  <div class="tb-sep"></div>
-  <button class="btn btn-ghost" onclick="openManageAtrib()"><i data-lucide="list-checks" style="width:13px;height:13px;"></i> Atribuições</button>
-  <div class="tb-right">
-    <button class="btn btn-ghost" onclick="resetData()" title="Restaurar dados originais"><i data-lucide="rotate-ccw" style="width:12px;height:12px;"></i> Restaurar</button>
-    <span class="tb-counter" id="tb-counter"></span>
+<!-- MENU HAMBÚRGUER -->
+<div class="menu-wrap">
+  <button class="menu-btn" id="menu-btn" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="dropdown" id="dropdown">
+    <div class="dd-header">Gerenciar Organograma</div>
+    <button class="dd-item dd-add" onclick="openAdd();closeMenu()">
+      <div class="dd-icon"><i data-lucide="user-plus" style="width:14px;height:14px;"></i></div>
+      Nova Pessoa
+    </button>
+    <button class="dd-item dd-edit" id="dd-edit-btn" onclick="toggleEditMode()">
+      <div class="dd-icon"><i data-lucide="pencil" style="width:14px;height:14px;"></i></div>
+      Modo Edição
+      <span class="dd-counter" id="tb-counter"></span>
+    </button>
+    <button class="dd-item dd-atrib" onclick="openManageAtrib();closeMenu()">
+      <div class="dd-icon"><i data-lucide="list-checks" style="width:14px;height:14px;"></i></div>
+      Atribuições
+    </button>
+    <div class="dd-sep"></div>
+    <button class="dd-item dd-reset" onclick="resetData();closeMenu()">
+      <div class="dd-icon"><i data-lucide="rotate-ccw" style="width:14px;height:14px;"></i></div>
+      Restaurar padrão
+    </button>
   </div>
 </div>
 
@@ -588,17 +616,35 @@ function openEditFromPanel(){
   if(currentViewId) openEdit(currentViewId);
 }
 
+// ── MENU HAMBÚRGUER ──
+function toggleMenu(){
+  const btn=document.getElementById('menu-btn');
+  const dd=document.getElementById('dropdown');
+  const open=dd.classList.toggle('open');
+  btn.classList.toggle('open',open);
+}
+function closeMenu(){
+  document.getElementById('menu-btn').classList.remove('open');
+  document.getElementById('dropdown').classList.remove('open');
+}
+document.addEventListener('click',e=>{
+  const wrap=document.querySelector('.menu-wrap');
+  if(wrap&&!wrap.contains(e.target)) closeMenu();
+});
+
 // ── EDIT MODE ──
 function toggleEditMode(){
   editMode=!editMode;
   document.getElementById('org').classList.toggle('edit-mode',editMode);
-  const btn=document.getElementById('btn-edit-mode');
-  btn.classList.toggle('active',editMode);
-  btn.innerHTML=editMode
-    ? '<i data-lucide="check" style="width:13px;height:13px;"></i> Sair da Edição'
-    : '<i data-lucide="pencil" style="width:13px;height:13px;"></i> Modo Edição';
+  const ddBtn=document.getElementById('dd-edit-btn');
+  ddBtn.classList.toggle('active',editMode);
+  ddBtn.querySelector('.dd-icon').innerHTML=editMode
+    ? '<i data-lucide="check" style="width:14px;height:14px;"></i>'
+    : '<i data-lucide="pencil" style="width:14px;height:14px;"></i>';
   lucide.createIcons();
+  closeMenu();
   if(editMode) toast('Modo edição ativo — clique em um card para editar.','✎');
+  else toast('Modo edição desativado.');
 }
 
 // ── ADD / EDIT MODAL ──
