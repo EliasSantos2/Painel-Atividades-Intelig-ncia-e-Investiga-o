@@ -8,531 +8,383 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --navy:#003865;--navy2:#002a4d;--navy3:#001828;
-  --orange:#F78344;--teal:#0e7c6a;
-  --white:#fff;--bg:#eef2f7;
+  --navy:#1e3a5f;--navy2:#2b4f82;--navy3:#0d1f35;
+  --gray-card:#c8d4e4;--light-card:#f0f4f8;
+  --orange:#F78344;--white:#fff;--bg:#e8edf4;
   --text:#1a2535;--text2:#556070;--text3:#8a96a8;
-  --line:#b8cce0;--card-shadow:0 2px 12px rgba(0,56,101,.10);
+  --line:#8fa8c8;
 }
 html{scroll-behavior:smooth;}
 body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
 /* HEADER */
 header{
-  position:fixed;top:0;left:0;right:0;z-index:300;
-  height:62px;display:flex;align-items:center;justify-content:space-between;
-  padding:0 44px;background:var(--navy3);
-  border-bottom:1px solid rgba(255,255,255,.08);
+  position:fixed;top:0;left:0;right:0;z-index:300;height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 40px;background:var(--navy3);
+  border-bottom:1px solid rgba(255,255,255,.07);
 }
-.hbrand{display:flex;align-items:center;gap:14px;}
-.hlogo-dot{width:8px;height:8px;border-radius:50%;background:var(--orange);}
-.hname{font-size:13px;font-weight:700;color:#fff;letter-spacing:.2px;}
-.hsub{font-size:10px;color:rgba(255,255,255,.45);margin-top:1px;}
-.hright{display:flex;align-items:center;gap:10px;}
-.hmod{
-  font-size:10px;font-weight:700;color:var(--orange);
-  background:rgba(247,131,68,.12);border:1px solid rgba(247,131,68,.3);
-  border-radius:4px;padding:3px 9px;letter-spacing:.8px;text-transform:uppercase;
-}
-.hback{
-  display:flex;align-items:center;gap:5px;
-  color:rgba(255,255,255,.6);font-size:12px;font-weight:500;
-  text-decoration:none;padding:6px 13px;border-radius:5px;
-  border:1px solid rgba(255,255,255,.15);transition:all .2s;
-}
+.hbrand{display:flex;align-items:center;gap:10px;}
+.hname{font-size:13px;font-weight:700;color:#fff;}
+.hsub{font-size:10px;color:rgba(255,255,255,.4);}
+.hmod{font-size:10px;font-weight:700;color:var(--orange);background:rgba(247,131,68,.12);border:1px solid rgba(247,131,68,.28);border-radius:4px;padding:3px 9px;letter-spacing:.8px;text-transform:uppercase;}
+.hback{display:flex;align-items:center;gap:5px;color:rgba(255,255,255,.6);font-size:12px;font-weight:500;text-decoration:none;padding:6px 12px;border-radius:5px;border:1px solid rgba(255,255,255,.14);transition:all .2s;margin-left:8px;}
 .hback:hover{background:rgba(255,255,255,.08);color:#fff;}
 
-/* HERO STRIP */
-.hero-strip{
-  margin-top:62px;background:var(--navy);
-  padding:32px 44px 28px;
-  display:flex;align-items:flex-end;justify-content:space-between;
-  border-bottom:3px solid var(--orange);
-}
-.hs-left{}
-.hs-eyebrow{
-  font-size:10px;font-weight:700;color:var(--orange);
-  letter-spacing:1.8px;text-transform:uppercase;margin-bottom:7px;
-  display:flex;align-items:center;gap:6px;
-}
-.hs-eyebrow::before{content:'';width:16px;height:2px;background:var(--orange);border-radius:2px;}
-.hs-title{font-size:26px;font-weight:700;color:#fff;margin-bottom:4px;}
-.hs-sub{font-size:13px;color:rgba(255,255,255,.5);}
-.hs-stats{display:flex;gap:28px;}
-.hs-stat{text-align:right;}
-.hs-stat-n{font-size:22px;font-weight:700;color:#fff;line-height:1;}
-.hs-stat-l{font-size:10px;color:rgba(255,255,255,.45);margin-top:3px;letter-spacing:.5px;text-transform:uppercase;}
+/* HERO */
+.hero{margin-top:60px;background:var(--navy);padding:28px 40px 22px;border-bottom:3px solid var(--orange);}
+.hero-ey{font-size:10px;font-weight:700;color:var(--orange);letter-spacing:1.8px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.hero-ey::before{content:'';width:14px;height:2px;background:var(--orange);border-radius:2px;}
+.hero-title{font-size:24px;font-weight:700;color:#fff;}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.45);margin-top:3px;}
 
-/* LEGEND */
-.legend-bar{
-  background:var(--white);border-bottom:1px solid #dde5f0;
-  padding:10px 44px;display:flex;align-items:center;gap:24px;
-}
-.leg-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-right:4px;}
-.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);}
-.leg-pip{width:10px;height:10px;border-radius:2px;}
-.lp-exec{background:var(--navy3);}
-.lp-coord{background:var(--navy);}
-.lp-spec{background:var(--teal);}
-.lp-anal{background:var(--orange);}
+/* MAIN */
+.main{padding:36px 40px 60px;overflow-x:auto;}
 
-/* ORG AREA */
-.org-area{padding:40px 44px 60px;overflow-x:auto;}
-.org-canvas{
-  min-width:960px;
-  display:flex;flex-direction:column;align-items:center;gap:0;
-  position:relative;
+/* ORG WRAPPER */
+.org{display:flex;flex-direction:column;align-items:center;gap:0;position:relative;min-width:900px;}
+
+/* CARD - horizontal style */
+.card{
+  display:flex;align-items:center;gap:0;
+  border-radius:6px;overflow:hidden;cursor:pointer;
+  box-shadow:0 2px 10px rgba(0,0,0,.18);
+  transition:transform .18s,box-shadow .18s;
+  text-decoration:none;
 }
+.card:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(0,0,0,.28);}
+
+/* Photo circle wrapper */
+.card-photo-wrap{
+  width:70px;height:70px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:10px;
+}
+.card-photo{
+  width:50px;height:50px;border-radius:50%;overflow:hidden;
+  border:2px solid rgba(255,255,255,.35);flex-shrink:0;
+  background:#4a6fa5;display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:700;color:#fff;
+}
+.card-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.card-info{padding:10px 16px 10px 4px;flex:1;}
+.card-name{font-size:13px;font-weight:700;letter-spacing:.3px;}
+.card-role{font-size:11px;margin-top:2px;line-height:1.35;}
+
+/* Dark variant (lv1, lv2, lv3-spec) */
+.card.dark{background:var(--navy2);}
+.card.dark .card-name{color:#fff;}
+.card.dark .card-role{color:rgba(255,255,255,.6);}
+.card.dark .card-photo-wrap{background:rgba(0,0,0,.15);}
+
+/* Gray variant (lv3-secondary = Douglas) */
+.card.gray{background:var(--gray-card);}
+.card.gray .card-name{color:var(--navy3);}
+.card.gray .card-role{color:#4a5e74;}
+
+/* Light variant (lv4) */
+.card.light{background:var(--light-card);border:1px solid #c8d4e4;}
+.card.light .card-name{color:var(--text);}
+.card.light .card-role{color:var(--text2);}
+.card.light .card-photo-wrap{background:#dce6f0;}
+.card.light .card-photo{background:#6b8db5;border-color:rgba(0,56,101,.2);}
+
+/* Sizes */
+.card.lg{width:340px;} /* top 2 */
+.card.lg .card-photo-wrap{width:76px;height:76px;}
+.card.lg .card-photo{width:54px;height:54px;}
+.card.lg .card-name{font-size:14px;}
+.card.lg .card-role{font-size:11px;}
+
+.card.md{width:280px;} /* lv3 */
+.card.sm{width:160px;flex-direction:column;text-align:center;padding:14px 8px;gap:8px;} /* lv4 */
+.card.sm .card-photo-wrap{width:auto;height:auto;padding:0;}
+.card.sm .card-photo{width:48px;height:48px;margin:0 auto;}
+.card.sm .card-info{padding:0;width:100%;}
+.card.sm .card-name{font-size:11px;}
+.card.sm .card-role{font-size:10px;}
+
+/* CONNECTOR LINES (SVG) */
+svg.lines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;}
+svg.lines line,svg.lines polyline{stroke:var(--line);stroke-width:1.8px;fill:none;}
 
 /* LEVEL ROWS */
-.lvl{display:flex;align-items:flex-start;justify-content:center;position:relative;}
+.lvl{display:flex;justify-content:center;align-items:flex-start;position:relative;}
+.conn-v{width:1.8px;background:var(--line);margin:0 auto;}
 
-/* CONNECTOR */
-.conn-v{width:2px;height:30px;background:var(--line);margin:0 auto;}
-.conn-h-wrap{position:relative;display:flex;justify-content:center;width:100%;}
-/* drawn by JS */
-
-/* NODE */
-.node{
-  background:var(--white);
-  border-radius:8px;
-  box-shadow:var(--card-shadow);
-  border:1px solid #dde5f0;
-  border-top:3px solid var(--navy);
-  padding:16px 18px 14px;
-  text-align:center;
-  cursor:pointer;
-  transition:transform .2s, box-shadow .2s, border-color .2s;
-  position:relative;
-  width:180px;
-}
-.node:hover{
-  transform:translateY(-3px);
-  box-shadow:0 8px 28px rgba(0,56,101,.18);
-  border-color:#b8cce0;
-  border-top-color:var(--orange);
-}
-.node.lv1{border-top-color:var(--navy3);background:var(--navy3);width:200px;}
-.node.lv2{border-top-color:var(--navy);background:var(--navy);width:210px;}
-.node.lv3{border-top-color:var(--teal);}
-.node.lv4{border-top-color:var(--orange);}
-
-.node-av{
-  width:44px;height:44px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:15px;font-weight:700;color:#fff;
-  margin:0 auto 11px;
-  background:rgba(255,255,255,.18);
-  border:2px solid rgba(255,255,255,.25);
-}
-.node.lv3 .node-av{background:var(--teal);border-color:rgba(14,124,106,.3);}
-.node.lv4 .node-av{background:var(--orange);border-color:rgba(247,131,68,.3);}
-
-.node-name{
-  font-size:12px;font-weight:700;color:#fff;
-  line-height:1.3;margin-bottom:5px;
-}
-.node.lv3 .node-name,.node.lv4 .node-name{color:var(--text);}
-.node-role{
-  font-size:10px;color:rgba(255,255,255,.6);
-  line-height:1.4;
-}
-.node.lv3 .node-role,.node.lv4 .node-role{color:var(--text2);}
-.node-cta{
-  display:inline-flex;align-items:center;gap:3px;
-  margin-top:10px;font-size:9px;font-weight:700;letter-spacing:.5px;
-  color:rgba(255,255,255,.45);text-transform:uppercase;
-  transition:color .2s;
-}
-.node.lv3 .node-cta,.node.lv4 .node-cta{color:var(--text3);}
-.node:hover .node-cta{color:var(--orange);}
-.node.lv1:hover,.node.lv2:hover{box-shadow:0 8px 28px rgba(0,24,40,.35);}
-
-/* SM NODE (nível 4 compacto) */
-.node.sm{width:140px;padding:13px 12px 11px;}
-.node.sm .node-av{width:36px;height:36px;font-size:12px;margin-bottom:8px;}
-.node.sm .node-name{font-size:11px;}
-.node.sm .node-role{font-size:9px;}
-
-/* SVG CONNECTORS */
-svg.connectors{position:absolute;top:0;left:0;pointer-events:none;overflow:visible;}
-
-/* ────────────────── DETAIL PANEL ────────────────── */
-.overlay{
-  position:fixed;inset:0;z-index:500;
-  background:rgba(0,18,40,.55);backdrop-filter:blur(4px);
-  opacity:0;pointer-events:none;transition:opacity .28s;
-}
+/* ---- DETAIL PANEL ---- */
+.overlay{position:fixed;inset:0;z-index:500;background:rgba(0,18,40,.5);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .25s;}
 .overlay.open{opacity:1;pointer-events:all;}
-
-.panel{
-  position:fixed;top:0;right:0;bottom:0;z-index:501;
-  width:480px;max-width:95vw;
-  background:var(--white);
-  box-shadow:-12px 0 48px rgba(0,0,0,.22);
-  transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1);
-  display:flex;flex-direction:column;overflow:hidden;
-}
+.panel{position:fixed;top:0;right:0;bottom:0;z-index:501;width:470px;max-width:95vw;background:#fff;box-shadow:-10px 0 40px rgba(0,0,0,.2);transform:translateX(110%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;}
 .overlay.open .panel{transform:translateX(0);}
-
-.panel-hd{
-  background:var(--navy);padding:26px 26px 22px;flex-shrink:0;
-  position:relative;
-}
-.panel-close{
-  position:absolute;top:16px;right:16px;
-  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
-  border-radius:6px;width:30px;height:30px;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;color:#fff;transition:background .2s;
-}
-.panel-close:hover{background:rgba(255,255,255,.2);}
-.panel-av{
-  width:54px;height:54px;border-radius:50%;
-  background:var(--orange);display:flex;align-items:center;justify-content:center;
-  font-size:20px;font-weight:700;color:#fff;margin-bottom:13px;
-  border:3px solid rgba(247,131,68,.4);
-}
-.panel-name{font-size:19px;font-weight:700;color:#fff;margin-bottom:6px;}
-.panel-badge{
-  display:inline-block;font-size:9px;font-weight:700;
-  color:var(--orange);background:rgba(247,131,68,.15);
-  border:1px solid rgba(247,131,68,.3);
-  border-radius:3px;padding:3px 9px;letter-spacing:.8px;text-transform:uppercase;
-}
-
-.panel-body{flex:1;overflow-y:auto;padding:22px 26px 32px;}
-.ps{margin-bottom:22px;}
-.ps-title{
-  font-size:9px;font-weight:700;color:var(--orange);
-  letter-spacing:1.5px;text-transform:uppercase;
-  margin-bottom:10px;padding-bottom:7px;
-  border-bottom:1px solid #eef2f7;
-}
+.p-hd{background:var(--navy);padding:24px 24px 20px;flex-shrink:0;position:relative;}
+.p-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:5px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;transition:background .2s;}
+.p-close:hover{background:rgba(255,255,255,.2);}
+.p-photo{width:60px;height:60px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,.3);margin-bottom:12px;background:#4a6fa5;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;}
+.p-photo img{width:100%;height:100%;object-fit:cover;}
+.p-name{font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;}
+.p-badge{display:inline-block;font-size:9px;font-weight:700;color:var(--orange);background:rgba(247,131,68,.15);border:1px solid rgba(247,131,68,.3);border-radius:3px;padding:3px 9px;letter-spacing:.8px;text-transform:uppercase;}
+.p-body{flex:1;overflow-y:auto;padding:20px 24px 28px;}
+.ps{margin-bottom:20px;}
+.ps-t{font-size:9px;font-weight:700;color:var(--orange);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid #eef2f7;}
 .ps-desc{font-size:13px;color:var(--text);line-height:1.7;}
-.ps-list{list-style:none;display:flex;flex-direction:column;gap:8px;}
-.ps-list li{
-  display:flex;align-items:flex-start;gap:9px;
-  font-size:12px;color:var(--text);line-height:1.6;
-  padding:8px 10px;background:#f7fafd;border-radius:5px;
-  border-left:3px solid var(--line);
-}
+.ps-list{list-style:none;display:flex;flex-direction:column;gap:7px;}
+.ps-list li{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text);line-height:1.6;padding:7px 10px;background:#f5f8fc;border-radius:5px;border-left:3px solid #c8d4e4;}
 .ps-list li:hover{border-left-color:var(--orange);}
-.ps-list li i{flex-shrink:0;color:var(--orange);margin-top:2px;}
-
-@media(max-width:680px){
-  .hero-strip{flex-direction:column;gap:16px;padding:22px 20px 18px;}
-  .hs-stats{gap:16px;}
-  .legend-bar{padding:10px 20px;gap:14px;flex-wrap:wrap;}
-  .org-area{padding:24px 16px 40px;}
-  .panel{width:100vw;}
-  header{padding:0 20px;}
-}
+.ps-list li svg{flex-shrink:0;color:var(--orange);margin-top:2px;}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
   <div class="hbrand">
-    <div class="hlogo-dot"></div>
-    <div>
-      <div class="hname">Núcleo de Inteligência Corporativa</div>
-      <div class="hsub">Rumo Logística</div>
-    </div>
+    <div><div class="hname">Núcleo de Inteligência Corporativa</div><div class="hsub">Rumo Logística</div></div>
   </div>
-  <div class="hright">
+  <div style="display:flex;align-items:center;">
     <span class="hmod">Módulo 05</span>
     <a class="hback" href="index.html"><i data-lucide="arrow-left" style="width:13px;height:13px;"></i> Início</a>
   </div>
 </header>
 
-<!-- HERO STRIP -->
-<div class="hero-strip">
-  <div class="hs-left">
-    <div class="hs-eyebrow">Estrutura da Equipe</div>
-    <div class="hs-title">Estrutura Organizacional</div>
-    <div class="hs-sub">Núcleo de Inteligência Corporativa · Julho de 2026</div>
-  </div>
-  <div class="hs-stats">
-    <div class="hs-stat">
-      <div class="hs-stat-n">9</div>
-      <div class="hs-stat-l">Membros</div>
-    </div>
-    <div class="hs-stat">
-      <div class="hs-stat-n">4</div>
-      <div class="hs-stat-l">Níveis</div>
-    </div>
-    <div class="hs-stat">
-      <div class="hs-stat-n">3</div>
-      <div class="hs-stat-l">Áreas</div>
-    </div>
-  </div>
+<div class="hero">
+  <div class="hero-ey">Estrutura da Equipe</div>
+  <div class="hero-title">Estrutura Organizacional</div>
+  <div class="hero-sub">Núcleo de Inteligência Corporativa · Julho de 2026 · Clique em qualquer card para ver o perfil completo</div>
 </div>
 
-<!-- LEGEND -->
-<div class="legend-bar">
-  <span class="leg-label">Legenda</span>
-  <div class="leg-item"><div class="leg-pip lp-exec"></div> Gerência Sênior</div>
-  <div class="leg-item"><div class="leg-pip lp-coord"></div> Coordenação</div>
-  <div class="leg-item"><div class="leg-pip lp-spec"></div> Especialistas</div>
-  <div class="leg-item"><div class="leg-pip lp-anal"></div> Analistas / Supervisores / Assistente</div>
-  <span style="margin-left:auto;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;">
-    <i data-lucide="mouse-pointer-click" style="width:13px;height:13px;"></i>
-    Clique em qualquer card para ver o perfil
-  </span>
-</div>
+<div class="main">
+<div class="org" id="org">
 
-<!-- ORG TREE -->
-<div class="org-area">
-  <div class="org-canvas" id="org-canvas">
-
-    <!-- L1: VITOR -->
-    <div class="lvl" id="l1">
-      <div class="node lv1" onclick="abrirPerfil('vitor')" id="n-vitor">
-        <div class="node-av">V</div>
-        <div class="node-name">VITOR</div>
-        <div class="node-role">Ger. Segurança Patrimonial<br>e Investigação</div>
-        <div class="node-cta">Ver perfil <i data-lucide="arrow-right" style="width:9px;height:9px;"></i></div>
-      </div>
+  <!-- LV1: VITOR -->
+  <div class="lvl" id="lv1">
+    <div class="card dark lg" onclick="open_('vitor')" id="n-vitor">
+      <div class="card-photo-wrap"><div class="card-photo"><img src="img/equipe/vitor.png" alt="Vitor" onerror="this.style.display='none'"></div></div>
+      <div class="card-info"><div class="card-name">VITOR</div><div class="card-role">Ger. Segurança Patrimonial e Investigação</div></div>
     </div>
+  </div>
 
-    <div class="conn-v" id="cv1"></div>
+  <div class="conn-v" id="cv1" style="height:32px;"></div>
 
-    <!-- L2: ELIAS -->
-    <div class="lvl" id="l2">
-      <div class="node lv2" onclick="abrirPerfil('elias')" id="n-elias">
-        <div class="node-av">ES</div>
-        <div class="node-name">ELIAS DOS SANTOS</div>
-        <div class="node-role">Coordenador de Investigação</div>
-        <div class="node-cta">Ver perfil <i data-lucide="arrow-right" style="width:9px;height:9px;"></i></div>
-      </div>
+  <!-- LV2: ELIAS -->
+  <div class="lvl" id="lv2">
+    <div class="card dark lg" onclick="open_('elias')" id="n-elias">
+      <div class="card-photo-wrap"><div class="card-photo"><img src="img/equipe/elias.png" alt="Elias" onerror="this.style.display='none'"></div></div>
+      <div class="card-info"><div class="card-name">ELIAS DOS SANTOS</div><div class="card-role">Coordenador de Investigação</div></div>
     </div>
+  </div>
 
-    <div class="conn-v" id="cv2"></div>
+  <div class="conn-v" id="cv2" style="height:32px;"></div>
 
-    <!-- L3: GABRIEL · DELGADO · LEANDRO -->
-    <div class="lvl" id="l3" style="gap:32px;">
-      <div style="display:flex;flex-direction:column;align-items:center;" id="col-gabriel">
-        <div class="node lv3" onclick="abrirPerfil('gabriel')" id="n-gabriel">
-          <div class="node-av">GZ</div>
-          <div class="node-name">GABRIEL ZANELATO</div>
-          <div class="node-role">Especialista de Investigação</div>
-          <div class="node-cta">Ver perfil <i data-lucide="arrow-right" style="width:9px;height:9px;"></i></div>
+  <!-- LV3: GABRIEL · DOUGLAS · BRUNO -->
+  <div class="lvl" id="lv3" style="gap:28px;align-items:flex-start;">
+
+    <!-- GABRIEL col -->
+    <div style="display:flex;flex-direction:column;align-items:center;" id="col-g">
+      <div class="card dark md" onclick="open_('gabriel')" id="n-gabriel">
+        <div class="card-photo-wrap"><div class="card-photo"><img src="img/equipe/gabriel.png" alt="Gabriel" onerror="this.style.display='none'"></div></div>
+        <div class="card-info"><div class="card-name">GABRIEL ZANELATO</div><div class="card-role">Especialista de Investigação</div></div>
+      </div>
+      <div class="conn-v" style="height:28px;"></div>
+      <div style="display:flex;gap:12px;position:relative;" id="sub-g">
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div class="card light sm" onclick="open_('victor')" id="n-victor">
+            <div class="card-photo-wrap"><div class="card-photo"><img src="img/equipe/victor.png" alt="Victor" onerror="this.style.display='none'"></div></div>
+            <div class="card-info"><div class="card-name">VICTOR</div><div class="card-role">Analista de Investigação</div></div>
+          </div>
         </div>
-        <div class="conn-v"></div>
-        <!-- L4 under GABRIEL -->
-        <div style="display:flex;gap:16px;position:relative;" id="sub-gabriel">
-          <div style="display:flex;flex-direction:column;align-items:center;">
-            <div class="node lv4 sm" onclick="abrirPerfil('douglas')" id="n-douglas">
-              <div class="node-av">DN</div>
-              <div class="node-name">DOUGLAS N.</div>
-              <div class="node-role">Secondment Jurídico</div>
-              <div class="node-cta">Ver <i data-lucide="arrow-right" style="width:8px;height:8px;"></i></div>
-            </div>
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div class="card light sm" onclick="open_('rafael')" id="n-rafael">
+            <div class="card-photo-wrap"><div class="card-photo"><img src="img/equipe/rafael.png" alt="Rafael" onerror="this.style.display='none'"></div></div>
+            <div class="card-info"><div class="card-name">RAFAEL</div><div class="card-role">Analista de Investigação</div></div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:center;">
-            <div class="node lv4 sm" onclick="abrirPerfil('victor')" id="n-victor">
-              <div class="node-av">VB</div>
-              <div class="node-name">VICTOR</div>
-              <div class="node-role">Analista SR. 0–2</div>
-              <div class="node-cta">Ver <i data-lucide="arrow-right" style="width:8px;height:8px;"></i></div>
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:center;">
-            <div class="node lv4 sm" onclick="abrirPerfil('rafael')" id="n-rafael">
-              <div class="node-av">R</div>
-              <div class="node-name">RAFAEL</div>
-              <div class="node-role">Analista SR. 3–6</div>
-              <div class="node-cta">Ver <i data-lucide="arrow-right" style="width:8px;height:8px;"></i></div>
-            </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div class="card light sm" onclick="open_('leandro')" id="n-leandro">
+            <div class="card-photo-wrap"><div class="card-photo"><img src="img/equipe/leandro.png" alt="Leandro" onerror="this.style.display='none'"></div></div>
+            <div class="card-info"><div class="card-name">LEANDRO</div><div class="card-role">Assistente Administrativo</div></div>
           </div>
         </div>
       </div>
+    </div>
 
-      <div style="display:flex;flex-direction:column;align-items:center;" id="col-delgado">
-        <div class="node lv3" onclick="abrirPerfil('delgado')" id="n-delgado">
-          <div class="node-av">BD</div>
-          <div class="node-name">BRUNO DELGADO</div>
-          <div class="node-role">Especialista de Operações</div>
-          <div class="node-cta">Ver perfil <i data-lucide="arrow-right" style="width:9px;height:9px;"></i></div>
-        </div>
-        <div class="conn-v"></div>
-        <div class="node lv4" onclick="abrirPerfil('alex')" id="n-alex">
-          <div class="node-av">A</div>
-          <div class="node-name">ALEX</div>
-          <div class="node-role">Supervisor de Operações</div>
-          <div class="node-cta">Ver perfil <i data-lucide="arrow-right" style="width:9px;height:9px;"></i></div>
-        </div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;align-items:center;" id="col-leandro">
-        <div class="node lv4" onclick="abrirPerfil('leandro')" id="n-leandro">
-          <div class="node-av">L</div>
-          <div class="node-name">LEANDRO</div>
-          <div class="node-role">Assistente Administrativo</div>
-          <div class="node-cta">Ver perfil <i data-lucide="arrow-right" style="width:9px;height:9px;"></i></div>
-        </div>
+    <!-- DOUGLAS col -->
+    <div style="display:flex;flex-direction:column;align-items:center;" id="col-d">
+      <div class="card gray md" onclick="open_('douglas')" id="n-douglas">
+        <div class="card-photo-wrap" style="background:rgba(0,0,0,.08);"><div class="card-photo" style="border-color:rgba(0,56,101,.25);background:#6b8db5;"><img src="img/equipe/douglas.png" alt="Douglas" onerror="this.style.display='none'"></div></div>
+        <div class="card-info"><div class="card-name">DOUGLAS NORKEVICIUS</div><div class="card-role">Secondment Jurídico</div></div>
       </div>
     </div>
 
-  </div>
-</div>
+    <!-- BRUNO col -->
+    <div style="display:flex;flex-direction:column;align-items:center;" id="col-b">
+      <div class="card dark md" onclick="open_('delgado')" id="n-delgado">
+        <div class="card-photo-wrap"><div class="card-photo"><img src="img/equipe/delgado.png" alt="Delgado" onerror="this.style.display='none'"></div></div>
+        <div class="card-info"><div class="card-name">BRUNO DELGADO</div><div class="card-role">Especialista de Operações</div></div>
+      </div>
+      <div class="conn-v" style="height:28px;"></div>
+      <div class="card light sm" onclick="open_('alex')" id="n-alex">
+        <div class="card-photo-wrap"><div class="card-photo"><img src="img/equipe/alex.png" alt="Alex" onerror="this.style.display='none'"></div></div>
+        <div class="card-info"><div class="card-name">ALEX</div><div class="card-role">Supervisor de Operações</div></div>
+      </div>
+    </div>
 
-<!-- OVERLAY -->
-<div class="overlay" id="overlay" onclick="fecharPerfil(event)">
+  </div><!-- /lv3 -->
+
+  <svg class="lines" id="svg-lines"></svg>
+</div><!-- /org -->
+</div><!-- /main -->
+
+<!-- OVERLAY + PANEL -->
+<div class="overlay" id="overlay" onclick="closePanel(event)">
   <div class="panel" id="panel">
-    <div class="panel-hd">
-      <button class="panel-close" onclick="fecharPerfil(null,true)">
-        <i data-lucide="x" style="width:15px;height:15px;"></i>
-      </button>
-      <div class="panel-av" id="pav"></div>
-      <div class="panel-name" id="pname"></div>
-      <span class="panel-badge" id="pbadge"></span>
+    <div class="p-hd">
+      <button class="p-close" onclick="closePanel(null,true)"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+      <div class="p-photo" id="pp"><img id="pp-img" src="" alt="" onerror="this.style.display='none'"></div>
+      <div class="p-name" id="pn"></div>
+      <span class="p-badge" id="pb"></span>
     </div>
-    <div class="panel-body" id="pbody"></div>
+    <div class="p-body" id="pbody"></div>
   </div>
 </div>
 
 <script>
-const PERFIS={
-  vitor:{nome:'VITOR',ini:'V',cargo:'GER. SEGURANÇA PATRIMONIAL E INVESTIGAÇÃO',
+const DATA={
+  vitor:{nome:'VITOR',foto:'vitor',cargo:'GER. SEGURANÇA PATRIMONIAL E INVESTIGAÇÃO',
     desc:'Responsável pela gestão estratégica da segurança patrimonial e das atividades investigativas da companhia, supervisionando o Núcleo de Inteligência Corporativa e garantindo alinhamento com os objetivos organizacionais.',
     resp:['Supervisionar estrategicamente o Núcleo de Inteligência Corporativa','Alinhar as atividades de investigação com a alta gestão da companhia','Garantir recursos e suporte institucional às operações do núcleo','Responder perante a diretoria pelos resultados das investigações','Autorizar operações de maior complexidade e risco'],
     papel:['Interface entre a alta gestão e o núcleo operacional de inteligência','Garantir governança e conformidade nas atividades investigativas','Apoiar decisões estratégicas com base em produtos de inteligência']},
-  elias:{nome:'ELIAS DOS SANTOS',ini:'ES',cargo:'COORDENADOR DE INVESTIGAÇÃO',
+  elias:{nome:'ELIAS DOS SANTOS',foto:'elias',cargo:'COORDENADOR DE INVESTIGAÇÃO',
     desc:'Coordena o Núcleo de Investigação Corporativa, atuando como elo entre a alta gestão, as equipes técnicas e os órgãos públicos, garantindo eficiência, governança e integração das atividades de inteligência e investigação.',
-    resp:['Coordenar as operações do Núcleo de Inteligência Corporativa','Integrar as áreas de análise, investigação de campo e suporte','Supervisionar e padronizar os processos de inteligência','Validar e apresentar relatórios técnicos aos órgãos competentes','Manter relacionamento institucional com órgãos de segurança pública e agências de inteligência'],
+    resp:['Coordenar as operações do Núcleo de Inteligência Corporativa','Integrar as áreas de análise, investigação de campo e suporte','Supervisionar e padronizar os processos de inteligência','Validar e apresentar relatórios técnicos aos órgãos competentes','Manter relacionamento institucional com órgãos de segurança pública'],
     papel:['Integrar estratégia e execução das atividades de inteligência','Garantir que demandas da gestão sejam transformadas em ações operacionais','Consolidar produtos de inteligência para apoiar a tomada de decisão corporativa']},
-  gabriel:{nome:'GABRIEL ZANELATO',ini:'GZ',cargo:'ESPECIALISTA DE INVESTIGAÇÃO',
-    desc:'Gestão técnica da equipe de Analistas de Investigação, coordenando a produção e qualidade dos relatórios e o alinhamento das demandas com o secondment jurídico, garantindo integração e eficiência do ciclo de investigação.',
+  gabriel:{nome:'GABRIEL ZANELATO',foto:'gabriel',cargo:'ESPECIALISTA DE INVESTIGAÇÃO',
+    desc:'Gestão técnica da equipe de Analistas de Investigação, coordenando a produção e qualidade dos relatórios e o alinhamento das demandas com o secondment jurídico.',
     resp:['Coordenar tecnicamente a equipe de Analistas de Investigação','Supervisionar a produção, revisão e validação dos relatórios de investigação','Gerenciar o fluxo de demandas e o alinhamento com o secondment jurídico','Gerenciar a integração com fornecedores especializados e parceiros técnicos','Orientar metodologicamente as atividades de análise e investigação'],
     papel:['Integrar o planejamento estratégico à execução das atividades de investigação','Assegurar qualidade, rastreabilidade e padronização dos produtos','Garantir a eficiência do fluxo operacional e o cumprimento dos padrões técnicos']},
-  delgado:{nome:'BRUNO DELGADO',ini:'BD',cargo:'ESPECIALISTA DE OPERAÇÕES',
-    desc:'Gestão da equipe de campo, coordenando os levantamentos de informações em ambiente operacional e a execução de operações conjuntas decorrentes das investigações, garantindo eficiência, segurança e padronização.',
-    resp:['Coordenar operacionalmente a equipe de campo','Supervisionar a coleta, revisão e validação das informações obtidas em campo','Planejar e coordenar operações conjuntas decorrentes de investigações','Orientar metodologicamente as atividades de coleta e produção de evidências','Assegurar o cumprimento dos procedimentos operacionais, normas de segurança e cadeia de custódia'],
+  delgado:{nome:'BRUNO DELGADO',foto:'delgado',cargo:'ESPECIALISTA DE OPERAÇÕES',
+    desc:'Gestão da equipe de campo, coordenando os levantamentos de informações em ambiente operacional e a execução de operações conjuntas decorrentes das investigações.',
+    resp:['Coordenar operacionalmente a equipe de campo','Supervisionar a coleta, revisão e validação das informações obtidas em campo','Planejar e coordenar operações conjuntas decorrentes de investigações','Orientar metodologicamente as atividades de coleta e produção de evidências','Assegurar o cumprimento dos procedimentos operacionais e cadeia de custódia'],
     papel:['Integrar o planejamento operacional à execução das atividades de campo','Coordenar e sincronizar as ações operacionais com as demandas do núcleo','Garantir qualidade, confiabilidade e rastreabilidade das informações coletadas']},
-  douglas:{nome:'DOUGLAS NORKEVICIUS',ini:'DN',cargo:'SECONDMENT JURÍDICO',
-    desc:'Apoio técnico-jurídico às atividades de investigação corporativa, assessorando as equipes nas demandas legais, garantindo conformidade normativa, segurança jurídica e suporte a procedimentos administrativos e judiciais.',
+  douglas:{nome:'DOUGLAS NORKEVICIUS',foto:'douglas',cargo:'SECONDMENT JURÍDICO',
+    desc:'Apoio técnico-jurídico às atividades de investigação corporativa, assessorando as equipes nas demandas legais, garantindo conformidade normativa e segurança jurídica.',
     resp:['Prestar suporte jurídico às equipes de investigação durante os casos','Analisar e revisar relatórios de investigação sob o aspecto jurídico','Apoiar a elaboração de documentos destinados a autoridades e órgãos competentes','Atuar em ocorrências de flagrante, prestando orientação jurídica','Acompanhar processos judiciais ativos relacionados às investigações'],
-    papel:['Garantir que as investigações sejam conduzidas em conformidade legal e normativa','Assegurar o alinhamento entre a equipe de investigação e o jurídico da companhia','Apoiar ocorrências de flagrante e o acompanhamento de processos judiciais']},
-  victor:{nome:'VICTOR BROCENSCHI',ini:'VB',cargo:'ANALISTA SR. DE INVESTIGAÇÃO – TRECHOS 0 A 2',
-    desc:'Processamento, análise e consolidação das informações do Núcleo de Inteligência Corporativa, com foco na mitigação de riscos nos trechos ferroviários classificados de 0 a 2.',
+    papel:['Garantir que as investigações sejam conduzidas em conformidade legal','Assegurar o alinhamento entre a equipe de investigação e o jurídico da companhia','Apoiar ocorrências de flagrante e o acompanhamento de processos judiciais']},
+  victor:{nome:'VICTOR BROCENSCHI',foto:'victor',cargo:'ANALISTA SR. DE INVESTIGAÇÃO – TRECHOS 0 A 2',
+    desc:'Processamento, análise e consolidação das informações do Núcleo com foco na mitigação de riscos nos trechos ferroviários classificados de 0 a 2.',
     resp:['Processar e analisar informações provenientes de campo e demais fontes','Elaborar relatórios de investigação, notas técnicas e briefings','Integrar informações coletadas pelos Supervisores de Segurança (VSPP)','Consolidar evidências e garantir a cadeia de custódia','Monitorar ocorrências e riscos nos trechos ferroviários 0 a 2'],
     papel:['Transformar informações em produtos de investigação','Garantir qualidade, padronização e rastreabilidade dos produtos','Contribuir para a gestão de riscos nos trechos ferroviários 0 a 2']},
-  rafael:{nome:'RAFAEL',ini:'R',cargo:'ANALISTA SR. DE INVESTIGAÇÃO – TRECHOS 3 A 6',
-    desc:'Processamento, análise e consolidação das informações do Núcleo de Inteligência Corporativa, com foco na mitigação de riscos nos trechos ferroviários classificados de 3 a 6.',
+  rafael:{nome:'RAFAEL',foto:'rafael',cargo:'ANALISTA SR. DE INVESTIGAÇÃO – TRECHOS 3 A 6',
+    desc:'Processamento, análise e consolidação das informações do Núcleo com foco na mitigação de riscos nos trechos ferroviários classificados de 3 a 6.',
     resp:['Processar e analisar informações provenientes de campo e demais fontes','Elaborar relatórios de investigação, notas técnicas e briefings','Integrar informações coletadas pelos Supervisores de Segurança (VSPP)','Consolidar evidências e garantir a cadeia de custódia','Monitorar ocorrências e riscos nos trechos ferroviários 3 a 6'],
     papel:['Transformar informações em produtos de investigação','Garantir qualidade, padronização e rastreabilidade dos produtos','Contribuir para a gestão de riscos nos trechos ferroviários 3 a 6']},
-  alex:{nome:'ALEX',ini:'A',cargo:'SUPERVISOR DE OPERAÇÕES',
-    desc:'Execução das atividades de campo do Núcleo, coordenando diligências, levantamentos operacionais e a coleta de informações e evidências, garantindo integridade, rastreabilidade e conformidade técnica e legal.',
-    resp:['Executar diligências, levantamentos de campo e reconhecimento de áreas','Realizar entrevistas técnicas e coleta de informações de interesse investigativo','Identificar, coletar, preservar e documentar evidências, assegurando a cadeia de custódia','Elaborar relatórios circunstanciados, atas de diligência e demais documentos técnicos','Apoiar operações conjuntas com equipes internas e órgãos públicos'],
+  alex:{nome:'ALEX',foto:'alex',cargo:'SUPERVISOR DE OPERAÇÕES',
+    desc:'Execução das atividades de campo do Núcleo, coordenando diligências, levantamentos operacionais e coleta de informações e evidências.',
+    resp:['Executar diligências, levantamentos de campo e reconhecimento de áreas','Realizar entrevistas técnicas e coleta de informações de interesse investigativo','Identificar, coletar, preservar e documentar evidências, assegurando a cadeia de custódia','Elaborar relatórios circunstanciados, atas de diligência e documentos técnicos','Apoiar operações conjuntas com equipes internas e órgãos públicos'],
     papel:['Executar as ações operacionais de campo que suportam as investigações','Assegurar a manutenção da cadeia de custódia até a entrega ao núcleo','Atuar como elo entre as atividades de campo e a produção de inteligência']},
-  leandro:{nome:'LEANDRO',ini:'L',cargo:'ASSISTENTE ADMINISTRATIVO – GESTÃO DOCUMENTAL',
-    desc:'Organização, controle e gestão dos registros, documentos e evidências do Núcleo de Inteligência Corporativa, garantindo integridade, rastreabilidade e confidencialidade das informações.',
+  leandro:{nome:'LEANDRO',foto:'leandro',cargo:'ASSISTENTE ADMINISTRATIVO – GESTÃO DOCUMENTAL',
+    desc:'Organização, controle e gestão dos registros, documentos e evidências do Núcleo de Inteligência Corporativa.',
     resp:['Registrar, acompanhar e encerrar ocorrências na plataforma PerformanceLab','Elaborar, vincular e arquivar boletins de ocorrência','Gerenciar o armazenamento de vídeos, imagens e demais evidências','Manter atualizada a base de dados no SIC (Sistema Integrado de Controle)','Organizar e controlar relatórios conforme os níveis de confidencialidade'],
     papel:['Assegurar a governança e a rastreabilidade das informações do núcleo','Garantir a organização, integridade e disponibilidade dos registros e evidências','Apoiar as atividades de inteligência por meio da gestão documental']}
 };
 
-function abrirPerfil(id){
-  const p=PERFIS[id];if(!p)return;
-  document.getElementById('pav').textContent=p.ini;
-  document.getElementById('pname').textContent=p.nome;
-  document.getElementById('pbadge').textContent=p.cargo;
+function open_(id){
+  const d=DATA[id];if(!d)return;
+  const img=document.getElementById('pp-img');
+  img.src='img/equipe/'+d.foto+'.png';
+  img.style.display='';
+  document.getElementById('pn').textContent=d.nome;
+  document.getElementById('pb').textContent=d.cargo;
   document.getElementById('pbody').innerHTML=`
-    <div class="ps">
-      <div class="ps-title">Sobre o Cargo</div>
-      <p class="ps-desc">${p.desc}</p>
-    </div>
-    <div class="ps">
-      <div class="ps-title">Principais Responsabilidades</div>
-      <ul class="ps-list">${p.resp.map(r=>`<li><i data-lucide="check-circle" style="width:13px;height:13px;flex-shrink:0;"></i>${r}</li>`).join('')}</ul>
-    </div>
-    <div class="ps">
-      <div class="ps-title">Papel Organizacional</div>
-      <ul class="ps-list">${p.papel.map(r=>`<li><i data-lucide="arrow-right-circle" style="width:13px;height:13px;flex-shrink:0;"></i>${r}</li>`).join('')}</ul>
-    </div>`;
+    <div class="ps"><div class="ps-t">Sobre o Cargo</div><p class="ps-desc">${d.desc}</p></div>
+    <div class="ps"><div class="ps-t">Principais Responsabilidades</div>
+      <ul class="ps-list">${d.resp.map(r=>`<li><i data-lucide="check-circle" style="width:12px;height:12px;"></i>${r}</li>`).join('')}</ul></div>
+    <div class="ps"><div class="ps-t">Papel Organizacional</div>
+      <ul class="ps-list">${d.papel.map(r=>`<li><i data-lucide="arrow-right-circle" style="width:12px;height:12px;"></i>${r}</li>`).join('')}</ul></div>`;
   document.getElementById('overlay').classList.add('open');
   lucide.createIcons();
 }
-function fecharPerfil(e,force){
+function closePanel(e,force){
   if(force||!e||e.target===document.getElementById('overlay'))
     document.getElementById('overlay').classList.remove('open');
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('overlay').classList.remove('open');});
 
-// Draw horizontal connector lines via SVG
+// Draw SVG connector lines
 function drawLines(){
-  const canvas=document.getElementById('org-canvas');
-  const old=canvas.querySelector('svg.conn-svg');
-  if(old)old.remove();
+  const svg=document.getElementById('svg-lines');
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+  const org=document.getElementById('org');
+  const ob=org.getBoundingClientRect();
 
-  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.classList.add('conn-svg');
-  svg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;';
+  function mx(el){const r=el.getBoundingClientRect();return r.left+r.width/2-ob.left;}
+  function bot(el){const r=el.getBoundingClientRect();return r.bottom-ob.top;}
+  function top_(el){const r=el.getBoundingClientRect();return r.top-ob.top;}
+  function right_(el){const r=el.getBoundingClientRect();return r.right-ob.left;}
+  function left_(el){const r=el.getBoundingClientRect();return r.left-ob.left;}
 
-  function midX(el){const r=el.getBoundingClientRect(),cr=canvas.getBoundingClientRect();return r.left+r.width/2-cr.left;}
-  function botY(el){const r=el.getBoundingClientRect(),cr=canvas.getBoundingClientRect();return r.bottom-cr.top;}
-  function topY(el){const r=el.getBoundingClientRect(),cr=canvas.getBoundingClientRect();return r.top-cr.top;}
-
-  function line(x1,y1,x2,y2){
+  function ln(x1,y1,x2,y2){
     const p=document.createElementNS('http://www.w3.org/2000/svg','polyline');
-    p.setAttribute('points',`${x1},${y1} ${x1},${y1+(y2-y1)/2} ${x2},${y1+(y2-y1)/2} ${x2},${y2}`);
-    p.setAttribute('fill','none');p.setAttribute('stroke','#b8cce0');p.setAttribute('stroke-width','2');
+    const my=y1+(y2-y1)/2;
+    p.setAttribute('points',`${x1},${y1} ${x1},${my} ${x2},${my} ${x2},${y2}`);
+    p.setAttribute('fill','none');p.setAttribute('stroke','var(--line)');p.setAttribute('stroke-width','1.8');
     svg.appendChild(p);
   }
-  function hline(x1,x2,y){
+  function hln(x1,x2,y){
     const l=document.createElementNS('http://www.w3.org/2000/svg','line');
     l.setAttribute('x1',x1);l.setAttribute('y1',y);l.setAttribute('x2',x2);l.setAttribute('y2',y);
-    l.setAttribute('stroke','#b8cce0');l.setAttribute('stroke-width','2');
-    svg.appendChild(l);
+    l.setAttribute('stroke','var(--line)');l.setAttribute('stroke-width','1.8');svg.appendChild(l);
   }
-  function vline(x,y1,y2){
+  function vln(x,y1,y2){
     const l=document.createElementNS('http://www.w3.org/2000/svg','line');
     l.setAttribute('x1',x);l.setAttribute('y1',y1);l.setAttribute('x2',x);l.setAttribute('y2',y2);
-    l.setAttribute('stroke','#b8cce0');l.setAttribute('stroke-width','2');
-    svg.appendChild(l);
+    l.setAttribute('stroke','var(--line)');l.setAttribute('stroke-width','1.8');svg.appendChild(l);
   }
 
-  // VITOR → ELIAS (vertical, handled by conn-v div)
-  // ELIAS → L3 nodes
   const elias=document.getElementById('n-elias');
   const gabriel=document.getElementById('n-gabriel');
-  const delgado=document.getElementById('n-delgado');
-  const leandro=document.getElementById('n-leandro');
-
-  const eBot=botY(elias), eMid=midX(elias);
-  const gTop=topY(gabriel), gMid=midX(gabriel);
-  const dTop=topY(delgado), dMid=midX(delgado);
-  const lTop=topY(leandro), lMid=midX(leandro);
-
-  const midY=eBot+15;
-  vline(eMid,eBot,midY);
-  hline(Math.min(gMid,lMid),Math.max(gMid,lMid),midY);
-  vline(gMid,midY,gTop);
-  vline(dMid,midY,dTop);
-  vline(lMid,midY,lTop);
-
-  // GABRIEL → sub nodes
   const douglas=document.getElementById('n-douglas');
+  const delgado=document.getElementById('n-delgado');
   const victor=document.getElementById('n-victor');
   const rafael=document.getElementById('n-rafael');
-  // conn-v between gabriel and sub is already in DOM; draw H line
-  const dgBot=botY(document.getElementById('n-gabriel'));
-  const subMidY=dgBot+30+15;
-  const dougTop=topY(douglas),dougMid=midX(douglas);
-  const vicTop=topY(victor),vicMid=midX(victor);
-  const rafTop=topY(rafael),rafMid=midX(rafael);
-  hline(dougMid,rafMid,subMidY);
-  vline(dougMid,subMidY,dougTop);
-  vline(vicMid,subMidY,vicTop);
-  vline(rafMid,subMidY,rafTop);
+  const leandro=document.getElementById('n-leandro');
+  const alex=document.getElementById('n-alex');
 
-  canvas.appendChild(svg);
+  // ELIAS → branch Y
+  const eBot=bot(elias), eMx=mx(elias);
+  const gTop=top_(gabriel), gMx=mx(gabriel);
+  const dTop=top_(douglas), dMx=mx(douglas);
+  const bTop=top_(delgado), bMx=mx(delgado);
+  const branchY=eBot+16;
+  vln(eMx,eBot,branchY);
+  hln(Math.min(gMx,bMx),Math.max(gMx,bMx),branchY);
+  vln(gMx,branchY,gTop);
+  vln(dMx,branchY,dTop);
+  vln(bMx,branchY,bTop);
+
+  // GABRIEL → sub branch
+  const gBot=bot(gabriel), gMx2=mx(gabriel);
+  const vTop=top_(victor), vMx=mx(victor);
+  const rTop=top_(rafael), rMx=mx(rafael);
+  const lTop=top_(leandro), lMx=mx(leandro);
+  const subY=gBot+14;
+  vln(gMx2,gBot,subY);
+  hln(Math.min(vMx,lMx),Math.max(vMx,lMx),subY);
+  vln(vMx,subY,vTop);
+  vln(rMx,subY,rTop);
+  vln(lMx,subY,lTop);
+
+  // DOUGLAS dashed line from GABRIEL (peer, shown as dashed)
+  const glr=right_(gabriel), dls=left_(douglas);
+  const midDY=top_(gabriel)+35;
+  const dl=document.createElementNS('http://www.w3.org/2000/svg','line');
+  dl.setAttribute('x1',glr);dl.setAttribute('y1',midDY);dl.setAttribute('x2',dls);dl.setAttribute('y2',midDY);
+  dl.setAttribute('stroke','var(--line)');dl.setAttribute('stroke-width','1.5');
+  dl.setAttribute('stroke-dasharray','5,4');
+  svg.appendChild(dl);
 }
 
 lucide.createIcons();
-window.addEventListener('load',drawLines);
+window.addEventListener('load',()=>{setTimeout(drawLines,80);});
 window.addEventListener('resize',drawLines);
 </script>
 </body>
