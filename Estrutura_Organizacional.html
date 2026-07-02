@@ -69,8 +69,8 @@ header{position:fixed;top:0;left:0;right:0;z-index:400;height:58px;display:flex;
 .btn-green:hover{background:#15803d;}
 
 /* ── ORG AREA ── */
-.org-area{padding:32px 36px 60px;overflow-x:auto;}
-.org{display:flex;flex-direction:column;align-items:center;gap:0;position:relative;min-width:860px;}
+.org-area{padding:40px 36px 70px;overflow-x:auto;display:flex;justify-content:center;}
+.org{display:inline-flex;flex-direction:column;align-items:center;gap:0;position:relative;min-width:900px;}
 svg.lines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;}
 .conn-v{width:2px;background:var(--line);margin:0 auto;}
 
@@ -104,18 +104,22 @@ svg.lines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:n
 .card.light .card-photo-wrap{background:#dce6f0;}
 .card.light .card-photo{background:#6b8db5;border-color:rgba(0,56,101,.2);}
 /* sizes */
-.card.sz-lg{width:320px;}
-.card.sz-lg .card-photo-wrap{width:72px;height:72px;}
-.card.sz-lg .card-photo{width:52px;height:52px;}
-.card.sz-md{width:260px;}
-.card.sz-md .card-photo-wrap{width:64px;height:64px;}
-.card.sz-md .card-photo{width:44px;height:44px;}
-.card.sz-sm{width:150px;flex-direction:column;text-align:center;padding:12px 8px;gap:6px;}
+.card.sz-lg{width:370px;}
+.card.sz-lg .card-photo-wrap{width:82px;height:82px;}
+.card.sz-lg .card-photo{width:60px;height:60px;}
+.card.sz-lg .card-name{font-size:15px;}
+.card.sz-lg .card-role{font-size:11px;}
+.card.sz-md{width:300px;}
+.card.sz-md .card-photo-wrap{width:74px;height:74px;}
+.card.sz-md .card-photo{width:52px;height:52px;}
+.card.sz-md .card-name{font-size:14px;}
+.card.sz-md .card-role{font-size:10.5px;}
+.card.sz-sm{width:175px;flex-direction:column;text-align:center;padding:14px 10px;gap:6px;}
 .card.sz-sm .card-photo-wrap{width:auto;height:auto;padding:0;background:transparent!important;}
-.card.sz-sm .card-photo{width:44px;height:44px;margin:0 auto;font-size:14px;}
+.card.sz-sm .card-photo{width:52px;height:52px;margin:0 auto;font-size:16px;}
 .card.sz-sm .card-info{padding:0;width:100%;}
-.card.sz-sm .card-name{font-size:11px;white-space:normal;}
-.card.sz-sm .card-role{font-size:9px;}
+.card.sz-sm .card-name{font-size:12px;white-space:normal;}
+.card.sz-sm .card-role{font-size:10px;}
 /* edit mode overlay */
 .edit-mode .card::after{content:'✎';position:absolute;top:4px;right:6px;font-size:12px;color:rgba(255,200,0,.9);background:rgba(0,0,0,.3);border-radius:3px;padding:1px 5px;}
 .edit-mode .card:hover::after{background:var(--orange);}
@@ -213,6 +217,10 @@ svg.lines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:n
     <button class="dd-item dd-atrib" onclick="openManageAtrib();closeMenu()">
       <div class="dd-icon"><i data-lucide="list-checks" style="width:14px;height:14px;"></i></div>
       Atribuições
+    </button>
+    <button class="dd-item" style="--icon-bg:#ede9fe;--icon-color:#7c3aed;" onclick="openModalConex();closeMenu()">
+      <div class="dd-icon" style="background:#ede9fe;color:#7c3aed;"><i data-lucide="git-branch" style="width:14px;height:14px;"></i></div>
+      Editar Conexões
     </button>
     <div class="dd-sep"></div>
     <button class="dd-item dd-reset" onclick="resetData();closeMenu()">
@@ -360,6 +368,24 @@ svg.lines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:n
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModalAtrib()">Cancelar</button>
       <button class="btn btn-green" onclick="saveAtrib()"><i data-lucide="save" style="width:12px;height:12px;"></i> Salvar Atribuições</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR CONEXÕES -->
+<div class="modal-bg" id="modal-conex">
+  <div class="modal" style="width:540px;">
+    <div class="modal-hd">
+      <h3>Editar Conexões</h3>
+      <button class="modal-close" onclick="closeModalConex()"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:16px;">Selecione cada pessoa e defina a quem ela se reporta (superior hierárquico). A linha de conexão no organograma será atualizada automaticamente.</p>
+      <div id="conex-list"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModalConex()">Fechar</button>
+      <button class="btn btn-orange" onclick="saveConex()"><i data-lucide="save" style="width:12px;height:12px;"></i> Salvar Conexões</button>
     </div>
   </div>
 </div>
@@ -801,6 +827,37 @@ function saveAtrib(){
 }
 function closeModalAtrib(){ document.getElementById('modal-atrib').classList.remove('open'); }
 
+// ── CONEXÕES ──
+function openModalConex(){
+  const list = document.getElementById('conex-list');
+  list.innerHTML = people.map(p=>{
+    const opts = people.filter(x=>x.id!==p.id).map(x=>`<option value="${x.id}" ${p.parentId===x.id?'selected':''}>${x.nome}</option>`).join('');
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--gray2);">
+      <div style="flex:1;font-size:13px;font-weight:600;color:var(--text);">${p.nome}<div style="font-size:10px;color:var(--text3);font-weight:400;">${p.cargo}</div></div>
+      <i data-lucide="arrow-right" style="width:14px;height:14px;color:var(--text3);flex-shrink:0;"></i>
+      <select data-id="${p.id}" style="flex:1;border:1px solid var(--gray2);border-radius:6px;padding:7px 8px;font-size:12px;color:var(--text);outline:none;">
+        <option value="">— Nível topo —</option>
+        ${opts}
+      </select>
+    </div>`;
+  }).join('');
+  document.getElementById('modal-conex').classList.add('open');
+  lucide.createIcons();
+}
+function saveConex(){
+  let changed=0;
+  document.querySelectorAll('#conex-list select').forEach(sel=>{
+    const id=sel.dataset.id;
+    const p=people.find(x=>x.id===id);
+    if(!p) return;
+    const newParent=sel.value||null;
+    if(p.parentId!==newParent){ p.parentId=newParent; changed++; }
+  });
+  saveData(); closeModalConex(); render();
+  toast(changed?`${changed} conexão(ões) atualizada(s)!`:'Sem alterações.','✓');
+}
+function closeModalConex(){ document.getElementById('modal-conex').classList.remove('open'); }
+
 // ── COUNTER ──
 function updateCounter(){
   document.getElementById('tb-counter').innerHTML=`<strong>${people.length}</strong> ${people.length===1?'pessoa':'pessoas'}`;
@@ -819,12 +876,10 @@ function toast(msg,icon=''){
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     document.getElementById('overlay').classList.remove('open');
-    document.getElementById('modal-pessoa').classList.remove('open');
-    document.getElementById('modal-atrib').classList.remove('open');
+    ['modal-pessoa','modal-atrib','modal-conex'].forEach(id=>document.getElementById(id).classList.remove('open'));
   }
 });
-// close modals clicking bg
-['modal-pessoa','modal-atrib'].forEach(id=>{
+['modal-pessoa','modal-atrib','modal-conex'].forEach(id=>{
   document.getElementById(id).addEventListener('click',e=>{ if(e.target.id===id) document.getElementById(id).classList.remove('open'); });
 });
 
