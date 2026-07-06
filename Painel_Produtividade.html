@@ -609,12 +609,13 @@ Chart.register(ChartDataLabels);
 
     /* ── Delta table ── */
     const fmtDelta = (a, b, inv) => {
-      if (a===null || b===null || +a===0) return '<td class="d-neu">—</td>';
+      if (a===null || b===null || +a===0) return '<td class="d-neu"><span>→ 0%</span></td>';
       const pct = Math.round(((+b-+a)/Math.abs(+a))*100);
       const pos = inv ? pct < 0 : pct > 0;
       const cls = pct===0?'d-neu':pos?'d-pos':'d-neg';
       const arr = pct===0?'→':pos?'▼':'▲';
-      return `<td class="${cls}">${arr} ${pct>0?'+':''}${pct}%</td>`;
+      const val = `${pct>0?'+':''}${pct}%`;
+      return `<td><span class="${cls}">${arr} ${val}</span></td>`;
     };
 
     let rows='', hasRows=false;
@@ -623,7 +624,7 @@ Chart.register(ChartDataLabels);
       hasRows=true;
       rows+=`<tr>
         <td><strong>${MESES[i]}</strong> <span style="color:var(--muted)">→ ${MESES[i+1]}</span></td>
-        <td><span class="badge-ev">${s.pris[i]} prisão${s.pris[i]>1?'ões':''}</span></td>
+        <td><span class="badge-ev">${s.pris[i]} prisões</span></td>
         ${fmtDelta(s.vand[i], s.vand[i+1], true)}
         ${fmtDelta(s.thp[i],  s.thp[i+1],  true)}
         ${fmtDelta(s.txab[i], s.txab[i+1], true)}
