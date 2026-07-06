@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Produtividade — Indicadores de Vandalismo</title>
+<script src="dados_indicadores.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --navy:  #1e3a5f;
+    --navy2: #2b4f82;
+    --navy3: #0d1f35;
+    --orange:#F78344;
+    --text:  #e8edf5;
+    --muted: #9aafc8;
+    --card:  #1a3356;
+    --border:#2e4f7a;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--navy3); color: var(--text); min-height: 100vh; }
+
+  /* ── Header ── */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: var(--navy); border-bottom: 2px solid var(--orange);
+    display: flex; align-items: center; gap: 16px; padding: 0 24px; height: 56px;
+  }
+  header .btn-inicio {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;
+    text-decoration: none; display: inline-block; transition: all .15s;
+  }
+  header .btn-inicio:hover { border-color: var(--orange); color: var(--orange); }
+  header h1 { font-size: 16px; font-weight: 600; color: var(--text); flex: 1; }
+  header .meta { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+  /* ── Hero ── */
+  .hero {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 80px 24px 28px;
+    display: flex; align-items: center; gap: 32px; flex-wrap: wrap;
+  }
+  .hero-title { font-size: 22px; font-weight: 700; color: var(--orange); min-width: 220px; }
+  .hero-title span { display: block; font-size: 13px; color: var(--muted); font-weight: 400; margin-top: 4px; }
+  .kpis { display: flex; gap: 20px; flex-wrap: wrap; }
+  .kpi { background: rgba(0,0,0,.25); border: 1px solid var(--border); border-radius: 10px; padding: 14px 22px; text-align: center; min-width: 130px; }
+  .kpi-val { font-size: 26px; font-weight: 700; color: var(--orange); }
+  .kpi-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .04em; }
+
+  /* ── Update banner ── */
+  .banner {
+    background: rgba(247,131,68,.08); border: 1px solid rgba(247,131,68,.3);
+    border-radius: 8px; padding: 10px 16px; margin: 20px 24px 0;
+    font-size: 12px; color: var(--muted);
+  }
+  .banner code { background: rgba(255,255,255,.07); padding: 1px 6px; border-radius: 4px; font-family: monospace; color: var(--orange); }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 4px; padding: 20px 24px 0; }
+  .tab-btn {
+    padding: 9px 22px; border-radius: 8px 8px 0 0; border: 1px solid var(--border);
+    border-bottom: none; background: var(--navy); color: var(--muted);
+    cursor: pointer; font-size: 14px; transition: all .15s;
+  }
+  .tab-btn.active { background: var(--card); color: var(--text); border-color: var(--orange); }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  /* ── Tab content ── */
+  .tab-content { display: none; padding: 0 24px 40px; }
+  .tab-content.active { display: block; }
+
+  /* ── Filter bar ── */
+  .filter-bar {
+    background: var(--card); border: 1px solid var(--border); border-top: none;
+    border-radius: 0 8px 8px 8px; padding: 16px 20px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .filter-bar label { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .filter-bar select, .filter-bar .checkbox-group { flex-shrink: 0; }
+  .filter-bar select {
+    background: var(--navy); border: 1px solid var(--border); color: var(--text);
+    padding: 6px 12px; border-radius: 6px; font-size: 13px;
+  }
+  .checkbox-group { display: flex; gap: 12px; }
+  .checkbox-group label { cursor: pointer; }
+  .checkbox-group input[type=checkbox] { accent-color: var(--orange); }
+
+  /* ── Chart grid ── */
+  .charts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; }
+  .chart-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; position: relative;
+  }
+  .chart-card h3 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 16px; }
+  .chart-card canvas { max-height: 240px; }
+
+  /* ── No-data notice ── */
+  #no-data-notice {
+    text-align: center; padding: 80px 24px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    margin: 24px;
+  }
+  #no-data-notice h2 { color: var(--orange); margin-bottom: 12px; }
+  #no-data-notice p { color: var(--muted); font-size: 14px; }
+  #no-data-notice code { background: rgba(255,255,255,.07); padding: 2px 8px; border-radius: 4px; font-family: monospace; color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <a href="index.html" class="btn-inicio">← Início</a>
+  <h1>Produtividade — Indicadores de Vandalismo</h1>
+  <span class="meta" id="hdr-meta"></span>
+</header>
+
+<!-- No-data fallback (shown if DADOS_IND is undefined) -->
+<div id="no-data-notice" style="display:none;">
+  <h2>Dados não encontrados</h2>
+  <p>Execute <code>extrair_indicadores.ps1</code> para gerar o arquivo <code>dados_indicadores.js</code> e recarregue a página.</p>
+</div>
+
+<!-- Main content (shown when data exists) -->
+<div id="main-content" style="display:none;">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-title">
+      Vandalismo Ferroviário
+      <span>Trechos 0–3 · 2024/2025</span>
+    </div>
+    <div class="kpis" id="hero-kpis"></div>
+  </div>
+
+  <!-- Update banner -->
+  <div class="banner">
+    Para atualizar os dados, execute <code>extrair_indicadores.ps1</code> e recarregue a página.
+    &nbsp;·&nbsp; Última geração: <span id="gerado-em"></span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="por-ano">Por Ano</button>
+    <button class="tab-btn" data-tab="por-trecho">Por Trecho</button>
+  </div>
+
+  <!-- Tab: Por Ano -->
+  <div class="tab-content active" id="tab-por-ano">
+    <div class="filter-bar">
+      <label>Trechos:
+        <div class="checkbox-group" id="chk-trechos">
+          <label><input type="checkbox" value="t0" checked> Trecho 0</label>
+          <label><input type="checkbox" value="t1" checked> Trecho 1</label>
+          <label><input type="checkbox" value="t2" checked> Trecho 2</label>
+          <label><input type="checkbox" value="t3" checked> Trecho 3</label>
+        </div>
+      </label>
+    </div>
+    <div class="charts-grid" id="charts-por-ano"></div>
+  </div>
+
+  <!-- Tab: Por Trecho -->
+  <div class="tab-content" id="tab-por-trecho">
+    <div class="filter-bar">
+      <label>Ano:
+        <select id="sel-ano">
+          <option value="2024">2024</option>
+          <option value="2025" selected>2025</option>
+        </select>
+      </label>
+    </div>
+    <div class="charts-grid" id="charts-por-trecho"></div>
+  </div>
+
+</div><!-- /main-content -->
+
+<script>
+(function() {
+  /* ── Data availability check ── */
+  if (typeof DADOS_IND === 'undefined') {
+    document.getElementById('no-data-notice').style.display = 'block';
+    return;
+  }
+  document.getElementById('main-content').style.display = 'block';
+
+  const D = DADOS_IND;
+  const MESES = D.meses;
+  const TRECHOS_IDS = ['t0','t1','t2','t3'];
+  const TRECHOS_NOMES = ['Trecho 0','Trecho 1','Trecho 2','Trecho 3'];
+
+  /* ── Header meta ── */
+  document.getElementById('gerado-em').textContent = D.geradoEm;
+  document.getElementById('hdr-meta').textContent = 'Atualizado: ' + D.geradoEm.split('T')[0];
+
+  /* ── Hero KPIs ── */
+  function sumArr(arr) { if (!arr) return 0; return arr.reduce((a,b) => a + (b === null ? 0 : +b), 0); }
+  function avgArr(arr) { if (!arr) return null; const v=arr.filter(x=>x!==null); return v.length ? v.reduce((a,b)=>a+ +b,0)/v.length : null; }
+
+  let totalVand2024=0, totalVand2025=0, avgTHP2025=0, thpCount=0;
+  TRECHOS_IDS.forEach(tid => {
+    totalVand2024 += sumArr(D.data['2024'][tid].vand);
+    totalVand2025 += sumArr(D.data['2025'][tid].vand);
+    const thpVals = D.data['2025'][tid].thp.filter(x=>x!==null);
+    avgTHP2025 += thpVals.reduce((a,b)=>a+ +b,0);
+    thpCount += thpVals.length;
+  });
+  avgTHP2025 = thpCount ? (avgTHP2025/thpCount).toFixed(1) : '--';
+
+  document.getElementById('hero-kpis').innerHTML = `
+    <div class="kpi"><div class="kpi-val">${totalVand2024}</div><div class="kpi-lbl">Vandalismos 2024</div></div>
+    <div class="kpi"><div class="kpi-val">${totalVand2025}</div><div class="kpi-lbl">Vandalismos 2025</div></div>
+    <div class="kpi"><div class="kpi-val">${avgTHP2025}h</div><div class="kpi-lbl">THP médio 2025</div></div>
+    <div class="kpi"><div class="kpi-val">4</div><div class="kpi-lbl">Trechos monitorados</div></div>
+  `;
+
+  /* ── Color palettes ── */
+  const COLORS_ANO = {
+    '2024': { bg:'rgba(247,131,68,.7)', border:'#F78344' },
+    '2025': { bg:'rgba(43,79,130,.9)',  border:'#5b8fd4' }
+  };
+  const COLORS_TRECHO = [
+    { bg:'rgba(247,131,68,.75)', border:'#F78344' },
+    { bg:'rgba(43,79,130,.85)',  border:'#5b8fd4' },
+    { bg:'rgba(46,175,120,.75)', border:'#2eaf78' },
+    { bg:'rgba(190,80,210,.75)', border:'#be50d2' }
+  ];
+
+  /* ── Chart helpers ── */
+  const chartInstances = {};
+
+  function destroyChart(id) {
+    if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+  }
+
+  function makeChart(canvasId, type, labels, datasets, yLabel) {
+    destroyChart(canvasId);
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    chartInstances[canvasId] = new Chart(ctx, {
+      type: type,
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: { labels: { color: '#9aafc8', font: { size: 11 } } },
+          tooltip: { backgroundColor: '#1a3356', titleColor: '#e8edf5', bodyColor: '#9aafc8' }
+        },
+        scales: {
+          x: { ticks: { color: '#9aafc8', font: { size: 10 } }, grid: { color: 'rgba(46,79,122,.3)' } },
+          y: {
+            ticks: { color: '#9aafc8', font: { size: 10 } },
+            grid: { color: 'rgba(46,79,122,.3)' },
+            title: yLabel ? { display: true, text: yLabel, color: '#9aafc8', font: { size: 10 } } : undefined
+          }
+        }
+      }
+    });
+  }
+
+  function nullSafe(arr) { return (arr || []).map(v => v === null ? null : +v); }
+
+  /* ── TAB: Por Ano ── */
+  const INDICADORES = [
+    { key:'thp',   label:'THP (horas/mês)',       type:'bar',  yLabel:'horas' },
+    { key:'vand',  label:'Vandalismos/mês',        type:'bar',  yLabel:'ocorrências' },
+    { key:'txab',  label:'Taxa de Abertura (%)',   type:'line', yLabel:'%' },
+    { key:'vagab', label:'Vagões Abertos',         type:'bar',  yLabel:'vagões' },
+    { key:'circ',  label:'Circulação (composições)',type:'line', yLabel:'composições' }
+  ];
+
+  function renderPorAno() {
+    const container = document.getElementById('charts-por-ano');
+    // Get selected trechos
+    const selected = Array.from(document.querySelectorAll('#chk-trechos input:checked')).map(c=>c.value);
+    if (!selected.length) { container.innerHTML='<p style="color:var(--muted);padding:20px">Selecione ao menos um trecho.</p>'; return; }
+
+    // Build/update cards
+    container.innerHTML = '';
+    INDICADORES.forEach(ind => {
+      const cid = 'chart-ano-' + ind.key;
+      const card = document.createElement('div');
+      card.className = 'chart-card';
+      card.innerHTML = `<h3>${ind.label}</h3><canvas id="${cid}"></canvas>`;
+      container.appendChild(card);
+
+      const datasets = [];
+      ['2024','2025'].forEach(ano => {
+        selected.forEach((tid, idx) => {
+          const tIdx = TRECHOS_IDS.indexOf(tid);
+          const tNome = TRECHOS_NOMES[tIdx];
+          const raw = D.data[ano][tid][ind.key];
+          const col = ano === '2024' ? COLORS_ANO['2024'] : COLORS_ANO['2025'];
+          // Slightly vary color per trecho
+          const alpha = 1 - idx*0.15;
+          datasets.push({
+            label: `${tNome} ${ano}`,
+            data: nullSafe(raw),
+            backgroundColor: col.bg.replace(/[\d.]+\)$/, (alpha*.8)+')'),
+            borderColor: col.border,
+            borderWidth: ind.type==='line' ? 2 : 1,
+            tension: 0.3,
+            spanGaps: false,
+            fill: false,
+            pointRadius: ind.type==='line' ? 3 : 0
+          });
+        });
+      });
+      makeChart(cid, ind.type, MESES, datasets, ind.yLabel);
+    });
+  }
+
+  // Init
+  renderPorAno();
+  document.querySelectorAll('#chk-trechos input').forEach(cb => {
+    cb.addEventListener('change', renderPorAno);
+  });
+
+  /* ── TAB: Por Trecho ── */
+  function renderPorTrecho() {
+    const container = document.getElementById('charts-por-trecho');
+    const ano = document.getElementById('sel-ano').value;
+
+    container.innerHTML = '';
+    INDICADORES.forEach(ind => {
+      const cid = 'chart-trecho-' + ind.key;
+      const card = document.createElement('div');
+      card.className = 'chart-card';
+      card.innerHTML = `<h3>${ind.label} — ${ano}</h3><canvas id="${cid}"></canvas>`;
+      container.appendChild(card);
+
+      const datasets = TRECHOS_IDS.map((tid, idx) => {
+        const raw = D.data[ano][tid][ind.key];
+        const col = COLORS_TRECHO[idx];
+        return {
+          label: TRECHOS_NOMES[idx],
+          data: nullSafe(raw),
+          backgroundColor: col.bg,
+          borderColor: col.border,
+          borderWidth: ind.type==='line' ? 2 : 1,
+          tension: 0.3,
+          spanGaps: false,
+          fill: false,
+          pointRadius: ind.type==='line' ? 3 : 0
+        };
+      });
+      makeChart(cid, ind.type, MESES, datasets, ind.yLabel);
+    });
+  }
+
+  renderPorTrecho();
+  document.getElementById('sel-ano').addEventListener('change', renderPorTrecho);
+
+  /* ── Tab switching ── */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      // Redraw active tab charts
+      if (btn.dataset.tab === 'por-ano') renderPorAno();
+      else renderPorTrecho();
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
