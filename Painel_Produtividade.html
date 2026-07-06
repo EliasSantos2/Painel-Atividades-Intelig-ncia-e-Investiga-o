@@ -482,9 +482,9 @@ Chart.register(ChartDataLabels);
           <canvas id="ch-thp"></canvas>
         </div>
         <div class="chart-card">
-          <div class="chart-title"><i data-lucide="percent" style="width:14px;height:14px"></i>Prisões × Taxa de Abertura</div>
+          <div class="chart-title"><i data-lucide="package" style="width:14px;height:14px"></i>Prisões × Vagões Abertos</div>
           <div class="chart-sep"></div>
-          <canvas id="ch-txab"></canvas>
+          <canvas id="ch-vagab"></canvas>
         </div>
         <div class="chart-card full">
           <div class="chart-title"><i data-lucide="layers" style="width:14px;height:14px"></i>Visão Geral — Todos os Indicadores × Prisões</div>
@@ -566,12 +566,12 @@ Chart.register(ChartDataLabels);
       options: baseOpts()
     });
 
-    /* ── Taxa de Abertura ── */
-    destroyChart('ch-txab');
-    charts['ch-txab'] = new Chart(document.getElementById('ch-txab'), {
+    /* ── Vagões Abertos ── */
+    destroyChart('ch-vagab');
+    charts['ch-vagab'] = new Chart(document.getElementById('ch-vagab'), {
       data: { labels: MESES, datasets: [
         barDs('Prisões', s.pris, RU.navy2),
-        lineDs('Taxa Ab. (%)', s.txab, RU.orange)
+        lineDs('Vagões Abertos', s.vagab, RU.orange)
       ]},
       options: baseOpts()
     });
@@ -613,7 +613,7 @@ Chart.register(ChartDataLabels);
       const pct = Math.round(((+b-+a)/Math.abs(+a))*100);
       const pos = inv ? pct < 0 : pct > 0;
       const cls = pct===0?'d-neu':pos?'d-pos':'d-neg';
-      const arr = pct===0?'→':pos?'▼':'▲';
+      const arr = pct===0?'→':pct>0?'▲':'▼';
       const val = `${pct>0?'+':''}${pct}%`;
       return `<td><span class="${cls}">${arr} ${val}</span></td>`;
     };
@@ -627,7 +627,6 @@ Chart.register(ChartDataLabels);
         <td><span class="badge-ev">${s.pris[i]} prisões</span></td>
         ${fmtDelta(s.vand[i], s.vand[i+1], true)}
         ${fmtDelta(s.thp[i],  s.thp[i+1],  true)}
-        ${fmtDelta(s.txab[i], s.txab[i+1], true)}
         ${fmtDelta(s.vagab[i],s.vagab[i+1],true)}
         ${fmtDelta(s.circ[i], s.circ[i+1], false)}
       </tr>`;
@@ -637,12 +636,12 @@ Chart.register(ChartDataLabels);
       ? `<table class="delta-table">
            <thead><tr>
              <th>Período</th><th>Evento</th>
-             <th>Vandalismo</th><th>THP</th><th>Taxa Abertura</th><th>Vagões Abertos</th><th>Circulação</th>
+             <th>Vandalismo</th><th>THP</th><th>Vagões Abertos</th><th>Circulação</th>
            </tr></thead>
            <tbody>${rows}</tbody>
          </table>
          <p style="font-size:11px;color:var(--muted);margin-top:12px;padding-left:4px">
-           ▼ verde = redução (melhora) · ▲ vermelho = aumento (piora) · → sem variação · Impacto medido no mês seguinte
+           ▲ sobe · ▼ desce · verde = melhora · vermelho = piora · → sem variação · Impacto medido no mês seguinte
          </p>`
       : '<p style="color:var(--muted);padding:20px;font-size:13px">Nenhum mês com prisões registrado neste período.</p>';
   }
