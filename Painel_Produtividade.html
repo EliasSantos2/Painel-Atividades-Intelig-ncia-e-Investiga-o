@@ -494,7 +494,7 @@ Chart.register(ChartDataLabels);
       backgroundColor: 'rgba(192,57,43,.65)', borderColor: RU.red,
       borderWidth: 1, yAxisID: yAxis || 'yRight', order: 2,
       datalabels: {
-        display: ctx => ctx.parsed.y > 0,
+        display: ctx => ctx.parsed?.y > 0,
         color: '#fff', font: { size: 8, weight: 'bold' },
         anchor: 'center', align: 'center',
         formatter: v => v || ''
@@ -508,7 +508,7 @@ Chart.register(ChartDataLabels);
       pointRadius: 4, pointBackgroundColor: color,
       fill: true, yAxisID: yAxis || 'yLeft', order: 1,
       datalabels: {
-        display: ctx => ctx.parsed.y !== null && ctx.parsed.y !== 0,
+        display: ctx => ctx.parsed?.y !== null && ctx.parsed?.y !== 0,
         color: RU.navy, backgroundColor: 'rgba(255,255,255,.8)',
         borderRadius: 3, padding: { top:2, bottom:2, left:4, right:4 },
         font: { size: 9, weight: 'bold' },
@@ -556,15 +556,15 @@ Chart.register(ChartDataLabels);
             backgroundColor: 'rgba(192,57,43,.5)', borderColor: RU.red,
             borderWidth: 1, yAxisID: 'yPris', order: 5,
             datalabels: {
-              display: ctx => ctx.parsed.y > 0,
+              display: ctx => ctx.parsed?.y > 0,
               color: '#fff', font: { size: 8, weight: 'bold' },
               anchor: 'center', align: 'center', formatter: v => v||''
             }
           },
           { type:'line', label:'Vandalismo', data: s.vand, borderColor:RU.orange, borderWidth:2, tension:.35, spanGaps:false, pointRadius:3, fill:false, yAxisID:'yInd', order:1,
-            datalabels:{ display: ctx=>ctx.parsed.y!==null&&ctx.parsed.y!==0, color:RU.orange, font:{size:8,weight:'bold'}, anchor:'top',align:'top',offset:1, formatter:v=>v===null?'':v } },
+            datalabels:{ display: ctx=>ctx.parsed?.y!==null&&ctx.parsed?.y!==0, color:RU.orange, font:{size:8,weight:'bold'}, anchor:'top',align:'top',offset:1, formatter:v=>v===null?'':v } },
           { type:'line', label:'THP (h)',    data: s.thp,  borderColor:RU.navy2, borderWidth:2, tension:.35, spanGaps:false, pointRadius:3, fill:false, yAxisID:'yInd', order:2,
-            datalabels:{ display: ctx=>ctx.parsed.y!==null&&ctx.parsed.y!==0, color:RU.navy2, font:{size:8,weight:'bold'}, anchor:'top',align:'top',offset:1, formatter:v=>v===null?'':v } },
+            datalabels:{ display: ctx=>ctx.parsed?.y!==null&&ctx.parsed?.y!==0, color:RU.navy2, font:{size:8,weight:'bold'}, anchor:'top',align:'top',offset:1, formatter:v=>v===null?'':v } },
           { type:'line', label:'Circulação (÷10)', data: s.circ.map(v=>v!==null?+(v/10).toFixed(0):null), borderColor:RU.green, borderWidth:2, tension:.35, spanGaps:false, pointRadius:3, fill:false, yAxisID:'yInd', order:3,
             datalabels:{ display: false } },
         ]
