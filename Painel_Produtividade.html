@@ -7,19 +7,25 @@
 <script src="dados_indicadores.js"></script>
 <script src="dados_prisoes.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
   :root {
-    --navy: #1e3a5f;
-    --navy2: #2b4f82;
-    --orange: #F78344;
-    --red: #e85050;
-    --green: #2eaf78;
-    --blue: #3b7dd8;
-    --bg: #f0f4f8;
-    --card: #ffffff;
-    --text: #1a2e45;
-    --muted: #6b82a0;
-    --border: #d8e3f0;
+    --navy:    #003865;
+    --navy2:   #005CA9;
+    --navyL:   #6B93C4;
+    --navyP:   #A8BDD4;
+    --orange:  #F78344;
+    --orangeL: #FBCAA9;
+    --red:     #C0392B;
+    --green:   #1E8449;
+    --purple:  #6C3483;
+    --bg:      #F0F4F8;
+    --card:    #FFFFFF;
+    --text:    #1A2E45;
+    --muted:   #6B82A0;
+    --border:  #D8E3F0;
+    --shadow:  0 2px 8px rgba(0,56,101,.07);
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -27,108 +33,125 @@
   /* ── Header ── */
   header {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    background: var(--navy); border-bottom: 2px solid var(--orange);
+    background: var(--navy); border-bottom: 3px solid var(--orange);
     display: flex; align-items: center; gap: 16px; padding: 0 24px; height: 56px;
   }
+  .hdr-logo { display: flex; align-items: center; gap: 10px; }
+  .hdr-logo i { color: var(--orange); }
+  header h1 { font-size: 14px; font-weight: 700; color: #fff; flex: 1; letter-spacing: .5px; text-transform: uppercase; }
   header a.btn-inicio {
-    background: transparent; border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.7);
-    padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;
-    text-decoration: none; display: inline-block; transition: all .15s;
+    background: transparent; border: 1px solid rgba(255,255,255,.25); color: rgba(255,255,255,.75);
+    padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all .15s;
   }
   header a.btn-inicio:hover { border-color: var(--orange); color: var(--orange); }
-  header h1 { font-size: 15px; font-weight: 600; color: #fff; flex: 1; }
-  header .meta { font-size: 11px; color: rgba(255,255,255,.5); }
+  .accent-bar { height: 3px; background: linear-gradient(90deg, var(--orange) 0%, var(--orangeL) 100%); }
+  header .meta { font-size: 10px; color: rgba(255,255,255,.45); white-space: nowrap; }
 
-  /* ── Main wrapper ── */
-  .main { padding: 72px 24px 48px; max-width: 1400px; margin: 0 auto; }
+  /* ── Main ── */
+  .main { padding: 72px 24px 48px; max-width: 1440px; margin: 0 auto; }
 
   /* ── Page title ── */
-  .page-title { margin-bottom: 24px; }
-  .page-title h2 { font-size: 20px; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 10px; }
-  .page-title h2::before { content: ''; display: inline-block; width: 4px; height: 22px; background: var(--orange); border-radius: 2px; }
-  .page-title p { font-size: 13px; color: var(--muted); margin-top: 4px; padding-left: 14px; }
+  .page-title { margin-bottom: 22px; }
+  .page-title h2 {
+    font-size: 18px; font-weight: 700; color: var(--navy);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .page-title h2::before {
+    content: ''; display: inline-block; width: 4px; height: 22px;
+    background: var(--orange); border-radius: 2px;
+  }
+  .page-title p { font-size: 13px; color: var(--muted); margin-top: 5px; padding-left: 14px; }
 
   /* ── KPI cards ── */
-  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 24px; }
   .kpi-card {
     background: var(--card); border-radius: 10px; padding: 18px 20px;
-    border-top: 4px solid var(--blue); box-shadow: 0 2px 8px rgba(0,0,0,.06);
-    display: flex; flex-direction: column; gap: 6px; position: relative;
+    border-top: 4px solid var(--navy2); box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 5px; transition: box-shadow .15s;
   }
-  .kpi-card.orange { border-color: var(--orange); }
-  .kpi-card.red    { border-color: var(--red); }
-  .kpi-card.green  { border-color: var(--green); }
-  .kpi-card.purple { border-color: #9b59b6; }
+  .kpi-card:hover { box-shadow: 0 4px 16px rgba(0,56,101,.12); }
+  .kpi-card.c-orange { border-top-color: var(--orange); }
+  .kpi-card.c-red    { border-top-color: var(--red); }
+  .kpi-card.c-green  { border-top-color: var(--green); }
+  .kpi-card.c-purple { border-top-color: var(--purple); }
+
   .kpi-icon {
-    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    background: rgba(59,125,216,.1); margin-bottom: 4px;
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,92,169,.1); margin-bottom: 6px;
   }
-  .kpi-card.orange .kpi-icon { background: rgba(247,131,68,.1); }
-  .kpi-card.red    .kpi-icon { background: rgba(232,80,80,.1); }
-  .kpi-card.green  .kpi-icon { background: rgba(46,175,120,.1); }
-  .kpi-card.purple .kpi-icon { background: rgba(155,89,182,.1); }
-  .kpi-icon svg { width: 18px; height: 18px; stroke: var(--blue); fill: none; stroke-width: 1.8; }
-  .kpi-card.orange .kpi-icon svg { stroke: var(--orange); }
-  .kpi-card.red    .kpi-icon svg { stroke: var(--red); }
-  .kpi-card.green  .kpi-icon svg { stroke: var(--green); }
-  .kpi-card.purple .kpi-icon svg { stroke: #9b59b6; }
-  .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
-  .kpi-val   { font-size: 30px; font-weight: 700; color: var(--blue); line-height: 1; }
-  .kpi-card.orange .kpi-val { color: var(--orange); }
-  .kpi-card.red    .kpi-val { color: var(--red); }
-  .kpi-card.green  .kpi-val { color: var(--green); }
-  .kpi-card.purple .kpi-val { color: #9b59b6; }
+  .kpi-card.c-orange .kpi-icon { background: rgba(247,131,68,.12); }
+  .kpi-card.c-red    .kpi-icon { background: rgba(192,57,43,.1); }
+  .kpi-card.c-green  .kpi-icon { background: rgba(30,132,73,.1); }
+  .kpi-card.c-purple .kpi-icon { background: rgba(108,52,131,.1); }
+  .kpi-icon i { color: var(--navy2); }
+  .kpi-card.c-orange .kpi-icon i { color: var(--orange); }
+  .kpi-card.c-red    .kpi-icon i { color: var(--red); }
+  .kpi-card.c-green  .kpi-icon i { color: var(--green); }
+  .kpi-card.c-purple .kpi-icon i { color: var(--purple); }
+
+  .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; }
+  .kpi-val   { font-size: 32px; font-weight: 700; color: var(--navy2); line-height: 1.05; }
+  .kpi-card.c-orange .kpi-val { color: var(--orange); }
+  .kpi-card.c-red    .kpi-val { color: var(--red); }
+  .kpi-card.c-green  .kpi-val { color: var(--green); }
+  .kpi-card.c-purple .kpi-val { color: var(--purple); }
   .kpi-sub   { font-size: 11px; color: var(--muted); }
 
-  /* ── Filters ── */
-  .filter-row {
+  /* ── Filter bar ── */
+  .filter-bar {
     background: var(--card); border-radius: 10px; padding: 14px 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.05); margin-bottom: 24px;
-    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+    box-shadow: var(--shadow); margin-bottom: 24px;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
   }
-  .filter-row label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; display: flex; align-items: center; gap: 8px; }
-  .filter-row select {
-    background: var(--bg); border: 1px solid var(--border); color: var(--text);
-    padding: 7px 12px; border-radius: 7px; font-size: 13px; cursor: pointer;
+  .filter-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--muted); white-space: nowrap;
   }
-  .trecho-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-  .trecho-tab {
-    padding: 7px 18px; border-radius: 20px; border: 1px solid var(--border);
-    background: var(--bg); color: var(--muted); cursor: pointer; font-size: 13px;
-    font-weight: 600; transition: all .15s;
+  .pill-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill {
+    padding: 6px 16px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--muted); cursor: pointer; font-size: 12px;
+    font-weight: 600; transition: all .15s; white-space: nowrap;
   }
-  .trecho-tab.active { background: var(--navy); color: #fff; border-color: var(--navy); }
-  .trecho-tab:hover:not(.active) { border-color: var(--navy2); color: var(--navy); }
+  .pill.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .pill:hover:not(.active) { border-color: var(--navy2); color: var(--navy2); }
+  .filter-sep { width: 1px; height: 28px; background: var(--border); }
 
   /* ── Section header ── */
-  .section-hdr {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
-    color: var(--muted); margin-bottom: 16px;
+  .sec-hdr {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
   }
-  .section-hdr::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-  .section-icon { color: var(--orange); font-size: 15px; }
+  .sec-hdr i { color: var(--orange); }
+  .sec-hdr::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
   /* ── Charts grid ── */
-  .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 28px; }
+  .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-bottom: 24px; }
   .chart-card {
-    background: var(--card); border-radius: 10px; padding: 22px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    background: var(--card); border-radius: 10px; padding: 20px 22px;
+    box-shadow: var(--shadow); border-left: 3px solid var(--orangeL);
   }
-  .chart-card.full { grid-column: 1 / -1; }
-  .chart-card h3 {
+  .chart-card.full { grid-column: 1 / -1; border-left-color: var(--navy2); }
+  .chart-title {
     font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
-    color: var(--muted); margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    color: var(--navy); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
   }
-  .chart-card h3 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-  .chart-card canvas { max-height: 260px; }
+  .chart-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .chart-card canvas { max-height: 240px; }
 
-  /* ── Impact table ── */
-  .impact-table-card {
-    background: var(--card); border-radius: 10px; padding: 22px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 28px;
+  /* ── Resumo mini cards ── */
+  .resumo-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .resumo-mini {
+    background: var(--bg); border-radius: 8px; padding: 14px 16px;
+    border: 1px solid var(--border); text-align: center;
   }
-  .impact-table-card h3 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 18px; }
+  .resumo-mini .val { font-size: 22px; font-weight: 700; }
+  .resumo-mini .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-top: 3px; }
+
+  /* ── Delta table ── */
+  .delta-card { background: var(--card); border-radius: 10px; padding: 22px; box-shadow: var(--shadow); margin-bottom: 24px; }
   .delta-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .delta-table th {
     background: var(--bg); color: var(--muted); text-transform: uppercase;
@@ -137,85 +160,75 @@
   }
   .delta-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
   .delta-table tr:last-child td { border-bottom: none; }
-  .delta-table tr:hover td { background: rgba(30,58,95,.03); }
-  .delta-pos { color: var(--green); font-weight: 700; }
-  .delta-neg { color: var(--red); font-weight: 700; }
-  .delta-neu { color: var(--muted); }
+  .delta-table tr:hover td { background: rgba(0,56,101,.03); }
+  .d-pos { color: var(--green); font-weight: 700; }
+  .d-neg { color: var(--red); font-weight: 700; }
+  .d-neu { color: var(--muted); }
   .badge-ev {
     display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;
-    background: rgba(232,80,80,.1); color: var(--red); border: 1px solid rgba(232,80,80,.25);
+    padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 700;
+    background: rgba(0,92,169,.08); color: var(--navy2); border: 1px solid rgba(0,92,169,.2);
   }
-  .badge-ev.cond { background: rgba(247,131,68,.1); color: var(--orange); border-color: rgba(247,131,68,.25); }
-  .trend-arrow { font-size: 13px; margin-right: 2px; }
-
-  /* ── Resumo por trecho ── */
-  .trecho-resumo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
-  .resumo-mini {
-    background: var(--bg); border-radius: 8px; padding: 12px 16px;
-    border: 1px solid var(--border); text-align: center;
-  }
-  .resumo-mini .val { font-size: 20px; font-weight: 700; }
-  .resumo-mini .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
 
   /* ── Responsive ── */
-  @media (max-width: 900px) {
-    .kpi-row { grid-template-columns: repeat(2, 1fr); }
-    .charts-grid { grid-template-columns: 1fr; }
-    .trecho-resumo { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 600px) {
-    .kpi-row { grid-template-columns: 1fr 1fr; }
-  }
+  @media (max-width: 1100px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 860px)  { .kpi-row { grid-template-columns: repeat(2, 1fr); } .charts-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
 <header>
-  <a href="index.html" class="btn-inicio">← Início</a>
+  <a href="index.html" class="btn-inicio">
+    <i data-lucide="chevron-left" style="width:14px;height:14px"></i> Início
+  </a>
+  <div class="hdr-logo">
+    <i data-lucide="train-front" style="width:20px;height:20px;color:var(--orange)"></i>
+  </div>
   <h1>Impacto das Prisões — Indicadores de Produtividade</h1>
   <span class="meta" id="hdr-meta"></span>
 </header>
 
 <div class="main">
 
-  <!-- Page title -->
   <div class="page-title">
     <h2>Análise de Impacto das Prisões nos Indicadores Ferroviários</h2>
     <p>Correlação entre prisões/conduções realizadas pelo time de inteligência e a variação dos indicadores de THP, Vandalismo, Circulação, Taxa de Abertura e Vagões Abertos por trecho.</p>
   </div>
 
-  <!-- KPIs globais -->
+  <!-- KPIs filtráveis -->
   <div class="kpi-row" id="kpi-row"></div>
 
   <!-- Filtros -->
-  <div class="filter-row">
-    <label>Trecho:
-      <div class="trecho-tabs" id="trecho-tabs">
-        <button class="trecho-tab active" data-tid="t0">Trecho 0</button>
-        <button class="trecho-tab" data-tid="t1">Trecho 1</button>
-        <button class="trecho-tab" data-tid="t2">Trecho 2</button>
-        <button class="trecho-tab" data-tid="t3">Trecho 3</button>
-      </div>
-    </label>
-    <label>Ano:
-      <select id="sel-ano">
-        <option value="2024">2024</option>
-        <option value="2025" selected>2025</option>
-        <option value="2026">2026</option>
-      </select>
-    </label>
+  <div class="filter-bar">
+    <span class="filter-label">Trecho</span>
+    <div class="pill-group" id="trecho-tabs">
+      <button class="pill active" data-tid="all">Todos</button>
+      <button class="pill" data-tid="t0">Trecho 0</button>
+      <button class="pill" data-tid="t1">Trecho 1</button>
+      <button class="pill" data-tid="t2">Trecho 2</button>
+      <button class="pill" data-tid="t3">Trecho 3</button>
+    </div>
+    <div class="filter-sep"></div>
+    <span class="filter-label">Ano</span>
+    <div class="pill-group" id="ano-tabs">
+      <button class="pill active" data-ano="all">Todos</button>
+      <button class="pill" data-ano="2024">2024</button>
+      <button class="pill" data-ano="2025">2025</button>
+      <button class="pill" data-ano="2026">2026</button>
+    </div>
   </div>
 
-  <!-- Conteúdo dinâmico por trecho -->
-  <div id="trecho-content"></div>
+  <!-- Conteúdo dinâmico -->
+  <div id="main-content"></div>
 
-</div><!-- /main -->
+</div>
 
 <script>
+Chart.register(ChartDataLabels);
+
 (function(){
   if (typeof DADOS_IND === 'undefined' || typeof DADOS_PRISOES === 'undefined') {
-    document.getElementById('trecho-content').innerHTML =
+    document.getElementById('main-content').innerHTML =
       '<div style="text-align:center;padding:60px;color:var(--muted)">Dados não encontrados. Execute os scripts de extração.</div>';
     return;
   }
@@ -223,285 +236,382 @@
   const D = DADOS_IND, P = DADOS_PRISOES;
   const MESES = D.meses;
   const TRECHOS = ['t0','t1','t2','t3'];
-  const T_NOME  = ['Trecho 0','Trecho 1','Trecho 2','Trecho 3'];
+  const T_NOME  = {'t0':'Trecho 0','t1':'Trecho 1','t2':'Trecho 2','t3':'Trecho 3'};
+  const ANOS    = ['2024','2025','2026'];
+
+  /* ── Paleta Rumo ── */
+  const RU = {
+    navy:    '#003865',
+    navy2:   '#005CA9',
+    navyL:   '#6B93C4',
+    navyP:   '#A8BDD4',
+    orange:  '#F78344',
+    orangeL: '#FBCAA9',
+    red:     '#C0392B',
+    green:   '#1E8449',
+    purple:  '#6C3483',
+  };
+
+  const CHART_COLORS = [RU.orange, RU.navy2, RU.navyL, RU.green, RU.red, RU.purple, '#E67E22', RU.navyP];
 
   document.getElementById('hdr-meta').textContent = 'Atualizado: ' + D.geradoEm.split('T')[0];
 
-  /* ── KPIs globais ── */
-  const G = P.global || {};
-  const distintos   = (G.distintos   || 0).toLocaleString('pt-BR');
-  const totalPresos = (G.PRESO       || 0).toLocaleString('pt-BR');
-  const totalCond   = (G.CONDUZIDO   || 0).toLocaleString('pt-BR');
-  const totalAbord  = (G.ABORDADO    || 0).toLocaleString('pt-BR');
-  const totalInv    = (G.INVESTIGADO || 0).toLocaleString('pt-BR');
+  /* ── Estado dos filtros ── */
+  let currentTid = 'all', currentAno = 'all';
 
-  const ICO_PERSON  = `<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;
-  const ICO_PRESO   = `<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.5" fill="currentColor" stroke="none"/></svg>`;
-  const ICO_COND    = `<svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>`;
-  const ICO_ABORD   = `<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
-  const ICO_INV     = `<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/><circle cx="17" cy="15" r="2.5"/><path d="M19 17l2 2"/></svg>`;
+  /* ── KPIs: usa global quando sem filtro, eventos quando filtrado ── */
+  function calcKpis(tid, ano) {
+    if (tid === 'all' && ano === 'all') {
+      const G = P.global || {};
+      return {
+        distintos:   G.distintos   || 0,
+        PRESO:       G.PRESO       || 0,
+        CONDUZIDO:   G.CONDUZIDO   || 0,
+        ABORDADO:    G.ABORDADO    || 0,
+        INVESTIGADO: G.INVESTIGADO || 0,
+      };
+    }
+    const counts = { distintos: 0, PRESO: 0, CONDUZIDO: 0, ABORDADO: 0, INVESTIGADO: 0 };
+    const nomes = new Set();
+    P.eventos.forEach(e => {
+      if (tid !== 'all' && e.tid !== tid) return;
+      if (ano !== 'all' && String(e.ano) !== String(ano)) return;
+      counts[e.status] = (counts[e.status] || 0) + 1;
+      if (e.nome) nomes.add(e.nome.trim().toUpperCase());
+    });
+    counts.distintos = nomes.size;
+    return counts;
+  }
 
-  document.getElementById('kpi-row').innerHTML = `
-    <div class="kpi-card">
-      <div class="kpi-icon">${ICO_PERSON}</div>
-      <div class="kpi-label">Infratores Cadastrados</div>
-      <div class="kpi-val">${distintos}</div>
-      <div class="kpi-sub">indivíduos distintos</div>
-    </div>
-    <div class="kpi-card red">
-      <div class="kpi-icon">${ICO_PRESO}</div>
-      <div class="kpi-label">Presos</div>
-      <div class="kpi-val">${totalPresos}</div>
-      <div class="kpi-sub">status PRESO</div>
-    </div>
-    <div class="kpi-card orange">
-      <div class="kpi-icon">${ICO_COND}</div>
-      <div class="kpi-label">Conduzidos</div>
-      <div class="kpi-val">${totalCond}</div>
-      <div class="kpi-sub">status CONDUZIDO</div>
-    </div>
-    <div class="kpi-card green">
-      <div class="kpi-icon">${ICO_ABORD}</div>
-      <div class="kpi-label">Abordados</div>
-      <div class="kpi-val">${totalAbord}</div>
-      <div class="kpi-sub">status ABORDADO</div>
-    </div>
-    <div class="kpi-card purple">
-      <div class="kpi-icon">${ICO_INV}</div>
-      <div class="kpi-label">Investigados</div>
-      <div class="kpi-val">${totalInv}</div>
-      <div class="kpi-sub">status IDENTIFICADO</div>
-    </div>
-  `;
+  function renderKpis() {
+    const c = calcKpis(currentTid, currentAno);
+    const fmt = n => n.toLocaleString('pt-BR');
+    document.getElementById('kpi-row').innerHTML = `
+      <div class="kpi-card">
+        <div class="kpi-icon"><i data-lucide="users" style="width:20px;height:20px"></i></div>
+        <div class="kpi-label">Infratores Cadastrados</div>
+        <div class="kpi-val">${fmt(c.distintos)}</div>
+        <div class="kpi-sub">indivíduos distintos</div>
+      </div>
+      <div class="kpi-card c-red">
+        <div class="kpi-icon"><i data-lucide="lock" style="width:20px;height:20px"></i></div>
+        <div class="kpi-label">Presos</div>
+        <div class="kpi-val">${fmt(c.PRESO||0)}</div>
+        <div class="kpi-sub">status PRESO</div>
+      </div>
+      <div class="kpi-card c-orange">
+        <div class="kpi-icon"><i data-lucide="handshake" style="width:20px;height:20px"></i></div>
+        <div class="kpi-label">Conduzidos</div>
+        <div class="kpi-val">${fmt(c.CONDUZIDO||0)}</div>
+        <div class="kpi-sub">status CONDUZIDO</div>
+      </div>
+      <div class="kpi-card c-green">
+        <div class="kpi-icon"><i data-lucide="eye" style="width:20px;height:20px"></i></div>
+        <div class="kpi-label">Abordados</div>
+        <div class="kpi-val">${fmt(c.ABORDADO||0)}</div>
+        <div class="kpi-sub">status ABORDADO</div>
+      </div>
+      <div class="kpi-card c-purple">
+        <div class="kpi-icon"><i data-lucide="file-search" style="width:20px;height:20px"></i></div>
+        <div class="kpi-label">Investigados</div>
+        <div class="kpi-val">${fmt(c.INVESTIGADO||0)}</div>
+        <div class="kpi-sub">status IDENTIFICADO</div>
+      </div>
+    `;
+    lucide.createIcons();
+  }
 
   /* ── Chart helpers ── */
   const charts = {};
   function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
   function nullSafe(arr) { return (arr||[]).map(v => v===null ? null : +v); }
 
-  /* ── Render trecho ── */
-  let currentTid = 't0', currentAno = '2025';
+  /* ── Opções base de gráfico ── */
+  function baseOpts(yLeftLabel, yLeftColor) {
+    return {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { labels: { color: RU.navyL, font: { size: 11 }, boxWidth: 14 } },
+        tooltip: {
+          backgroundColor: '#fff', titleColor: RU.navy, bodyColor: RU.navyL,
+          borderColor: '#D8E3F0', borderWidth: 1, padding: 10
+        },
+        datalabels: {
+          display: ctx => ctx.dataset.type === 'bar' || ctx.chart.data.datasets.length === 1,
+          color: ctx => ctx.dataset.type === 'bar' ? '#fff' : RU.navy,
+          font: { size: 9, weight: 'bold' },
+          anchor: ctx => ctx.dataset.type === 'bar' ? 'end' : 'top',
+          align: ctx => ctx.dataset.type === 'bar' ? 'end' : 'top',
+          offset: 2,
+          formatter: v => v === null || v === 0 ? '' : v,
+        }
+      },
+      scales: {
+        x: { ticks: { color: RU.navyL, font: { size: 10 } }, grid: { color: 'rgba(0,56,101,.05)' } },
+        yLeft: {
+          position: 'left', ticks: { color: yLeftColor, font: { size: 10 } },
+          grid: { color: 'rgba(0,56,101,.05)' },
+          title: { display: true, text: yLeftLabel, color: yLeftColor, font: { size: 10 } }
+        },
+        yRight: {
+          position: 'right', ticks: { color: RU.red, font: { size: 10 } },
+          grid: { display: false },
+          title: { display: true, text: 'Prisões', color: RU.red, font: { size: 10 } }
+        }
+      }
+    };
+  }
 
+  /* ── Compila séries ── */
+  function compileSeries(tid, ano) {
+    const tids  = tid  === 'all' ? TRECHOS : [tid];
+    const anos  = ano  === 'all' ? ANOS    : [ano];
+
+    const pris12 = new Array(12).fill(0);
+    const vand12 = new Array(12).fill(null);
+    const circ12 = new Array(12).fill(null);
+    const thp12  = new Array(12).fill(null);
+    const txab12 = new Array(12).fill(null);
+    const vagab12= new Array(12).fill(null);
+
+    const countV = new Array(12).fill(0);
+    const countC = new Array(12).fill(0);
+    const countT = new Array(12).fill(0);
+    const countTx= new Array(12).fill(0);
+    const countVA= new Array(12).fill(0);
+
+    anos.forEach(a => {
+      tids.forEach(t => {
+        const tot = P.totais[t] && P.totais[t][a];
+        if (tot) tot.forEach((v,i) => { pris12[i] += v; });
+
+        const ind = D.data[a] && D.data[a][t];
+        if (!ind) return;
+        for (let i=0; i<12; i++) {
+          if (ind.vand[i] !== null) { vand12[i] = (vand12[i]||0) + +ind.vand[i]; countV[i]++; }
+          if (ind.circ[i] !== null) { circ12[i] = (circ12[i]||0) + +ind.circ[i]; countC[i]++; }
+          if (ind.thp[i]  !== null) { thp12[i]  = (thp12[i] ||0) + +ind.thp[i];  countT[i]++; }
+          if (ind.txab[i] !== null) { txab12[i] = (txab12[i]||0) + +ind.txab[i]; countTx[i]++; }
+          if (ind.vagab[i]!== null) { vagab12[i]= (vagab12[i]||0)+ +ind.vagab[i];countVA[i]++; }
+        }
+      });
+    });
+
+    // média quando múltiplos trechos para taxas, soma para absolutos
+    const txabFmt = txab12.map((v,i) => countTx[i]>0 ? +((v/countTx[i])*100).toFixed(2) : null);
+
+    return {
+      pris: pris12,
+      vand: vand12.map((v,i) => countV[i]>0 ? Math.round(v) : null),
+      circ: circ12.map((v,i) => countC[i]>0 ? Math.round(v) : null),
+      thp:  thp12.map( (v,i) => countT[i]>0 ? +((v/countT[i]).toFixed(1)) : null),
+      txab: txabFmt,
+      vagab:vagab12.map((v,i)=> countVA[i]>0? Math.round(v):null),
+    };
+  }
+
+  /* ── Render charts + table ── */
   function render() {
     const tid = currentTid, ano = currentAno;
-    const tIdx = TRECHOS.indexOf(tid);
-    const tNome = T_NOME[tIdx];
-    const ind  = D.data[ano] && D.data[ano][tid];
-    const pris = P.totais[tid] && P.totais[tid][ano];
+    const s = compileSeries(tid, ano);
 
-    const wrap = document.getElementById('trecho-content');
+    const label = (tid === 'all' ? 'Todos os Trechos' : T_NOME[tid])
+                + ' · ' + (ano === 'all' ? 'Todos os Anos' : ano);
 
-    if (!ind || !pris) {
-      wrap.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">Sem dados para este trecho/ano.</div>';
-      return;
-    }
+    const totalP = s.pris.reduce((a,b)=>a+b,0);
+    const mCom   = s.pris.filter(x=>x>0).length;
 
-    const totalP = pris.reduce((a,b)=>a+b,0);
-    const mCom   = pris.filter(x=>x>0).length;
-
-    // calcula delta médio de vandalismo para o trecho
-    let dVSum=0, dVN=0, dCSum=0, dCN=0;
+    // delta médio vandalismo
+    let dvSum=0, dvN=0;
     for (let i=0; i<11; i++) {
-      if (pris[i]>0) {
-        if (ind.vand[i]!==null && ind.vand[i+1]!==null && +ind.vand[i]>0) { dVSum+=((+ind.vand[i+1]-+ind.vand[i])/Math.abs(+ind.vand[i]))*100; dVN++; }
-        if (ind.circ[i]!==null && ind.circ[i+1]!==null && +ind.circ[i]>0) { dCSum+=((+ind.circ[i+1]-+ind.circ[i])/Math.abs(+ind.circ[i]))*100; dCN++; }
+      if (s.pris[i]>0 && s.vand[i]!==null && s.vand[i+1]!==null && +s.vand[i]>0) {
+        dvSum += ((+s.vand[i+1]-+s.vand[i])/Math.abs(+s.vand[i]))*100; dvN++;
       }
     }
-    const dvMedia = dVN ? Math.round(dVSum/dVN) : null;
-    const dcMedia = dCN ? Math.round(dCSum/dCN) : null;
+    const dvMedia = dvN ? Math.round(dvSum/dvN) : null;
+    const dvCls   = dvMedia===null?'':dvMedia<0?'d-pos':'d-neg';
 
-    // helper cor delta
-    const clsDV = (v,inv) => v===null?'delta-neu':((inv?v<0:v>0)?'delta-pos':'delta-neg');
-    const fmtD  = (v,inv) => v===null?'--':(v>0?'+':'')+v+'%';
-
+    const wrap = document.getElementById('main-content');
     wrap.innerHTML = `
-      <div class="section-hdr"><span class="section-icon">⚡</span> Resumo — ${tNome} · ${ano}</div>
-      <div class="trecho-resumo" id="res-${tid}">
+      <div class="sec-hdr">
+        <i data-lucide="bar-chart-2" style="width:15px;height:15px"></i>
+        Resumo — ${label}
+      </div>
+      <div class="resumo-row">
         <div class="resumo-mini">
-          <div class="val" style="color:var(--red)">${totalP}</div>
-          <div class="lbl">Presos/Conduzidos</div>
+          <div class="val" style="color:var(--navy2)">${totalP.toLocaleString('pt-BR')}</div>
+          <div class="lbl">Prisões / Conduções</div>
         </div>
         <div class="resumo-mini">
-          <div class="val" style="color:var(--blue)">${mCom}</div>
-          <div class="lbl">Meses com prisões</div>
+          <div class="val" style="color:var(--orange)">${mCom}</div>
+          <div class="lbl">Meses com Prisões</div>
         </div>
         <div class="resumo-mini">
-          <div class="val ${clsDV(dvMedia,true)}">${fmtD(dvMedia,true)}</div>
-          <div class="lbl">Δ médio Vandalismo (mês seguinte)</div>
+          <div class="val ${dvCls}">${dvMedia!==null?(dvMedia>0?'+':'')+dvMedia+'%':'—'}</div>
+          <div class="lbl">Δ Médio Vandalismo (mês seguinte)</div>
         </div>
       </div>
 
-      <div class="section-hdr"><span class="section-icon">📊</span> Correlação Mensal</div>
+      <div class="sec-hdr">
+        <i data-lucide="trending-down" style="width:15px;height:15px"></i>
+        Correlação Mensal — ${label}
+      </div>
       <div class="charts-grid">
         <div class="chart-card">
-          <h3><span class="dot" style="background:var(--orange)"></span>Prisões × Vandalismo</h3>
+          <div class="chart-title"><span class="chart-dot" style="background:var(--orange)"></span>Prisões × Vandalismo</div>
           <canvas id="ch-vand"></canvas>
         </div>
         <div class="chart-card">
-          <h3><span class="dot" style="background:var(--green)"></span>Prisões × Circulação</h3>
+          <div class="chart-title"><span class="chart-dot" style="background:var(--green)"></span>Prisões × Circulação</div>
           <canvas id="ch-circ"></canvas>
         </div>
         <div class="chart-card">
-          <h3><span class="dot" style="background:var(--blue)"></span>Prisões × THP (horas)</h3>
+          <div class="chart-title"><span class="chart-dot" style="background:var(--navy2)"></span>Prisões × THP (horas)</div>
           <canvas id="ch-thp"></canvas>
         </div>
         <div class="chart-card">
-          <h3><span class="dot" style="background:#9b59b6"></span>Prisões × Taxa de Abertura %</h3>
+          <div class="chart-title"><span class="chart-dot" style="background:var(--purple)"></span>Prisões × Taxa de Abertura %</div>
           <canvas id="ch-txab"></canvas>
         </div>
         <div class="chart-card full">
-          <h3><span class="dot" style="background:var(--navy)"></span>Visão Geral — Todos os Indicadores × Prisões</h3>
+          <div class="chart-title"><span class="chart-dot" style="background:var(--navy)"></span>Visão Geral — Todos os Indicadores × Prisões</div>
           <canvas id="ch-all"></canvas>
         </div>
       </div>
 
-      <div class="section-hdr"><span class="section-icon">📋</span> Variação dos Indicadores no Mês Seguinte a Cada Prisão</div>
-      <div class="impact-table-card">
-        <div id="delta-table-wrap"></div>
+      <div class="sec-hdr">
+        <i data-lucide="table" style="width:15px;height:15px"></i>
+        Variação dos Indicadores no Mês Seguinte a Cada Prisão
       </div>
+      <div class="delta-card" id="delta-wrap"></div>
     `;
 
-    /* ── Chart factory ── */
-    const baseOpts = (yLeftLabel, yLeftColor, title) => ({
-      responsive: true, maintainAspectRatio: true,
-      plugins: {
-        legend: { labels: { color: '#6b82a0', font: { size: 11 }, boxWidth: 14 } },
-        tooltip: { backgroundColor: '#fff', titleColor: '#1a2e45', bodyColor: '#6b82a0',
-          borderColor: '#d8e3f0', borderWidth: 1, padding: 10 }
-      },
-      scales: {
-        x: { ticks: { color: '#6b82a0', font: { size: 10 } }, grid: { color: 'rgba(30,58,95,.07)' } },
-        yLeft: {
-          position: 'left', ticks: { color: yLeftColor, font: { size: 10 } },
-          grid: { color: 'rgba(30,58,95,.07)' },
-          title: { display: true, text: yLeftLabel, color: yLeftColor, font: { size: 10 } }
-        },
-        yRight: {
-          position: 'right', ticks: { color: '#e85050', font: { size: 10 } },
-          grid: { display: false },
-          title: { display: true, text: 'Prisões/Conduções', color: '#e85050', font: { size: 10 } }
-        }
+    lucide.createIcons();
+
+    /* ── dataset prisões (barra) ── */
+    const prisDs = (yAxis) => ({
+      type: 'bar', label: 'Prisões', data: s.pris,
+      backgroundColor: 'rgba(192,57,43,.65)', borderColor: RU.red,
+      borderWidth: 1, yAxisID: yAxis || 'yRight', order: 2,
+      datalabels: {
+        display: ctx => ctx.parsed.y > 0,
+        color: '#fff', font: { size: 8, weight: 'bold' },
+        anchor: 'center', align: 'center',
+        formatter: v => v || ''
       }
     });
 
-    const prisDataset = {
-      type: 'bar', label: 'Prisões/Conduções', data: pris,
-      backgroundColor: 'rgba(232,80,80,.25)', borderColor: 'rgba(232,80,80,.6)',
-      borderWidth: 1, yAxisID: 'yRight', order: 2
-    };
+    const lineDs = (label, data, color, yAxis) => ({
+      type: 'line', label, data,
+      borderColor: color, backgroundColor: color + '18',
+      borderWidth: 2.5, tension: 0.35, spanGaps: false,
+      pointRadius: 4, pointBackgroundColor: color,
+      fill: true, yAxisID: yAxis || 'yLeft', order: 1,
+      datalabels: {
+        display: ctx => ctx.parsed.y !== null && ctx.parsed.y !== 0,
+        color: RU.navy, backgroundColor: 'rgba(255,255,255,.8)',
+        borderRadius: 3, padding: { top:2, bottom:2, left:4, right:4 },
+        font: { size: 9, weight: 'bold' },
+        anchor: 'top', align: 'top', offset: 2,
+        formatter: v => v === null ? '' : v
+      }
+    });
 
-    // Vandalismo
+    /* ── Vandalismo ── */
     destroyChart('ch-vand');
-    charts['ch-vand'] = new Chart(document.getElementById('ch-vand').getContext('2d'), {
-      data: { labels: MESES, datasets: [
-        prisDataset,
-        { type:'line', label:'Vandalismo', data: nullSafe(ind.vand),
-          borderColor:'#F78344', backgroundColor:'rgba(247,131,68,.08)',
-          borderWidth:2.5, tension:0.35, spanGaps:false, pointRadius:4,
-          pointBackgroundColor:'#F78344', fill:true, yAxisID:'yLeft', order:1 }
-      ]},
-      options: baseOpts('Vandalismo', '#F78344')
+    charts['ch-vand'] = new Chart(document.getElementById('ch-vand'), {
+      data: { labels: MESES, datasets: [ prisDs(), lineDs('Vandalismo', s.vand, RU.orange) ] },
+      options: baseOpts('Ocorrências', RU.orange)
     });
 
-    // Circulação
+    /* ── Circulação ── */
     destroyChart('ch-circ');
-    charts['ch-circ'] = new Chart(document.getElementById('ch-circ').getContext('2d'), {
-      data: { labels: MESES, datasets: [
-        prisDataset,
-        { type:'line', label:'Circulação', data: nullSafe(ind.circ),
-          borderColor:'#2eaf78', backgroundColor:'rgba(46,175,120,.08)',
-          borderWidth:2.5, tension:0.35, spanGaps:false, pointRadius:4,
-          pointBackgroundColor:'#2eaf78', fill:true, yAxisID:'yLeft', order:1 }
-      ]},
-      options: baseOpts('Composições', '#2eaf78')
+    charts['ch-circ'] = new Chart(document.getElementById('ch-circ'), {
+      data: { labels: MESES, datasets: [ prisDs(), lineDs('Circulação', s.circ, RU.green) ] },
+      options: baseOpts('Composições', RU.green)
     });
 
-    // THP
+    /* ── THP ── */
     destroyChart('ch-thp');
-    charts['ch-thp'] = new Chart(document.getElementById('ch-thp').getContext('2d'), {
-      data: { labels: MESES, datasets: [
-        prisDataset,
-        { type:'line', label:'THP (h)', data: nullSafe(ind.thp),
-          borderColor:'#3b7dd8', backgroundColor:'rgba(59,125,216,.08)',
-          borderWidth:2.5, tension:0.35, spanGaps:false, pointRadius:4,
-          pointBackgroundColor:'#3b7dd8', fill:true, yAxisID:'yLeft', order:1 }
-      ]},
-      options: baseOpts('Horas', '#3b7dd8')
+    charts['ch-thp'] = new Chart(document.getElementById('ch-thp'), {
+      data: { labels: MESES, datasets: [ prisDs(), lineDs('THP (h)', s.thp, RU.navy2) ] },
+      options: baseOpts('Horas', RU.navy2)
     });
 
-    // Taxa de Abertura
+    /* ── Taxa de Abertura ── */
     destroyChart('ch-txab');
-    const txabPct = nullSafe(ind.txab).map(v => v!==null ? +(v*100).toFixed(2) : null);
-    charts['ch-txab'] = new Chart(document.getElementById('ch-txab').getContext('2d'), {
-      data: { labels: MESES, datasets: [
-        prisDataset,
-        { type:'line', label:'Taxa Ab. (%)', data: txabPct,
-          borderColor:'#9b59b6', backgroundColor:'rgba(155,89,182,.08)',
-          borderWidth:2.5, tension:0.35, spanGaps:false, pointRadius:4,
-          pointBackgroundColor:'#9b59b6', fill:true, yAxisID:'yLeft', order:1 }
-      ]},
-      options: baseOpts('%', '#9b59b6')
+    charts['ch-txab'] = new Chart(document.getElementById('ch-txab'), {
+      data: { labels: MESES, datasets: [ prisDs(), lineDs('Taxa Ab. (%)', s.txab, RU.purple) ] },
+      options: baseOpts('%', RU.purple)
     });
 
-    // Visão geral multi-eixo
+    /* ── Geral multi-line ── */
     destroyChart('ch-all');
-    charts['ch-all'] = new Chart(document.getElementById('ch-all').getContext('2d'), {
-      data: { labels: MESES, datasets: [
-        { type:'bar', label:'Prisões/Conduções', data: pris,
-          backgroundColor:'rgba(232,80,80,.25)', borderColor:'rgba(232,80,80,.5)',
-          borderWidth:1, yAxisID:'yPris', order:4 },
-        { type:'line', label:'Vandalismo', data: nullSafe(ind.vand),
-          borderColor:'#F78344', borderWidth:2, tension:0.35, spanGaps:false,
-          pointRadius:3, fill:false, yAxisID:'yVand', order:1 },
-        { type:'line', label:'THP (h)', data: nullSafe(ind.thp),
-          borderColor:'#3b7dd8', borderWidth:2, tension:0.35, spanGaps:false,
-          pointRadius:3, fill:false, yAxisID:'yVand', order:2 },
-        { type:'line', label:'Circulação (÷10)', data: nullSafe(ind.circ).map(v=>v!==null?+(v/10).toFixed(1):null),
-          borderColor:'#2eaf78', borderWidth:2, tension:0.35, spanGaps:false,
-          pointRadius:3, fill:false, yAxisID:'yVand', order:3 }
-      ]},
+    charts['ch-all'] = new Chart(document.getElementById('ch-all'), {
+      data: {
+        labels: MESES,
+        datasets: [
+          {
+            type: 'bar', label: 'Prisões', data: s.pris,
+            backgroundColor: 'rgba(192,57,43,.5)', borderColor: RU.red,
+            borderWidth: 1, yAxisID: 'yPris', order: 5,
+            datalabels: {
+              display: ctx => ctx.parsed.y > 0,
+              color: '#fff', font: { size: 8, weight: 'bold' },
+              anchor: 'center', align: 'center', formatter: v => v||''
+            }
+          },
+          { type:'line', label:'Vandalismo', data: s.vand, borderColor:RU.orange, borderWidth:2, tension:.35, spanGaps:false, pointRadius:3, fill:false, yAxisID:'yInd', order:1,
+            datalabels:{ display: ctx=>ctx.parsed.y!==null&&ctx.parsed.y!==0, color:RU.orange, font:{size:8,weight:'bold'}, anchor:'top',align:'top',offset:1, formatter:v=>v===null?'':v } },
+          { type:'line', label:'THP (h)',    data: s.thp,  borderColor:RU.navy2, borderWidth:2, tension:.35, spanGaps:false, pointRadius:3, fill:false, yAxisID:'yInd', order:2,
+            datalabels:{ display: ctx=>ctx.parsed.y!==null&&ctx.parsed.y!==0, color:RU.navy2, font:{size:8,weight:'bold'}, anchor:'top',align:'top',offset:1, formatter:v=>v===null?'':v } },
+          { type:'line', label:'Circulação (÷10)', data: s.circ.map(v=>v!==null?+(v/10).toFixed(0):null), borderColor:RU.green, borderWidth:2, tension:.35, spanGaps:false, pointRadius:3, fill:false, yAxisID:'yInd', order:3,
+            datalabels:{ display: false } },
+        ]
+      },
       options: {
-        responsive:true, maintainAspectRatio:true,
+        responsive: true, maintainAspectRatio: true,
         plugins: {
-          legend:{ labels:{ color:'#6b82a0', font:{size:11}, boxWidth:14 } },
-          tooltip:{ backgroundColor:'#fff', titleColor:'#1a2e45', bodyColor:'#6b82a0', borderColor:'#d8e3f0', borderWidth:1, padding:10 }
+          legend: { labels: { color: RU.navyL, font: { size: 11 }, boxWidth: 14 } },
+          tooltip: { backgroundColor:'#fff', titleColor:RU.navy, bodyColor:RU.navyL, borderColor:'#D8E3F0', borderWidth:1, padding:10 },
+          datalabels: {}
         },
         scales: {
-          x:{ ticks:{color:'#6b82a0',font:{size:10}}, grid:{color:'rgba(30,58,95,.07)'} },
-          yVand:{ position:'left', ticks:{color:'#6b82a0',font:{size:10}}, grid:{color:'rgba(30,58,95,.07)'},
-            title:{display:true,text:'Indicadores',color:'#6b82a0',font:{size:10}} },
-          yPris:{ position:'right', ticks:{color:'#e85050',font:{size:10}}, grid:{display:false},
-            title:{display:true,text:'Prisões',color:'#e85050',font:{size:10}} }
+          x: { ticks:{color:RU.navyL,font:{size:10}}, grid:{color:'rgba(0,56,101,.05)'} },
+          yInd: { position:'left', ticks:{color:RU.navyL,font:{size:10}}, grid:{color:'rgba(0,56,101,.05)'},
+            title:{display:true,text:'Indicadores',color:RU.navyL,font:{size:10}} },
+          yPris: { position:'right', ticks:{color:RU.red,font:{size:10}}, grid:{display:false},
+            title:{display:true,text:'Prisões',color:RU.red,font:{size:10}} }
         }
       }
     });
 
-    /* ── Tabela delta ── */
+    /* ── Delta table ── */
     const fmtDelta = (a, b, inv) => {
-      if (a===null || b===null || +a===0) return '<td class="delta-neu">—</td>';
-      const pct = Math.round(((+b - +a) / Math.abs(+a)) * 100);
+      if (a===null || b===null || +a===0) return '<td class="d-neu">—</td>';
+      const pct = Math.round(((+b-+a)/Math.abs(+a))*100);
       const pos = inv ? pct < 0 : pct > 0;
-      const cls = pct===0 ? 'delta-neu' : pos ? 'delta-pos' : 'delta-neg';
-      const arrow = pct===0 ? '→' : pos ? '▼' : '▲';
-      return `<td class="${cls}"><span class="trend-arrow">${arrow}</span>${pct>0?'+':''}${pct}%</td>`;
+      const cls = pct===0?'d-neu':pos?'d-pos':'d-neg';
+      const arr = pct===0?'→':pos?'▼':'▲';
+      return `<td class="${cls}">${arr} ${pct>0?'+':''}${pct}%</td>`;
     };
 
-    let rows = '', hasRows = false;
+    let rows='', hasRows=false;
     for (let i=0; i<11; i++) {
-      if (!pris[i]) continue;
-      hasRows = true;
-      rows += `<tr>
+      if (!s.pris[i]) continue;
+      hasRows=true;
+      rows+=`<tr>
         <td><strong>${MESES[i]}</strong> <span style="color:var(--muted)">→ ${MESES[i+1]}</span></td>
-        <td><span class="badge-ev">⚡ ${pris[i]} preso${pris[i]>1?'s':''}</span></td>
-        ${fmtDelta(ind.vand[i], ind.vand[i+1], true)}
-        ${fmtDelta(ind.thp[i],  ind.thp[i+1],  true)}
-        ${fmtDelta(ind.txab[i], ind.txab[i+1], true)}
-        ${fmtDelta(ind.vagab[i],ind.vagab[i+1],true)}
-        ${fmtDelta(ind.circ[i], ind.circ[i+1], false)}
+        <td><span class="badge-ev">${s.pris[i]} prisão${s.pris[i]>1?'ões':''}</span></td>
+        ${fmtDelta(s.vand[i], s.vand[i+1], true)}
+        ${fmtDelta(s.thp[i],  s.thp[i+1],  true)}
+        ${fmtDelta(s.txab[i], s.txab[i+1], true)}
+        ${fmtDelta(s.vagab[i],s.vagab[i+1],true)}
+        ${fmtDelta(s.circ[i], s.circ[i+1], false)}
       </tr>`;
     }
 
-    document.getElementById('delta-table-wrap').innerHTML = hasRows
+    document.getElementById('delta-wrap').innerHTML = hasRows
       ? `<table class="delta-table">
            <thead><tr>
              <th>Período</th><th>Evento</th>
@@ -510,26 +620,35 @@
            <tbody>${rows}</tbody>
          </table>
          <p style="font-size:11px;color:var(--muted);margin-top:12px;padding-left:4px">
-           ▼ verde = redução (melhora) · ▲ vermelho = aumento (piora) · → neutro · Variação do mês seguinte ao mês com prisões
+           ▼ verde = redução (melhora) · ▲ vermelho = aumento (piora) · → sem variação · Impacto medido no mês seguinte
          </p>`
       : '<p style="color:var(--muted);padding:20px;font-size:13px">Nenhum mês com prisões registrado neste período.</p>';
   }
 
   /* ── Events ── */
-  document.querySelectorAll('.trecho-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.trecho-tab').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      currentTid = btn.dataset.tid;
-      render();
-    });
-  });
-  document.getElementById('sel-ano').addEventListener('change', e => {
-    currentAno = e.target.value;
+  document.getElementById('trecho-tabs').addEventListener('click', e => {
+    const btn = e.target.closest('.pill[data-tid]');
+    if (!btn) return;
+    document.querySelectorAll('#trecho-tabs .pill').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTid = btn.dataset.tid;
+    renderKpis();
     render();
   });
 
+  document.getElementById('ano-tabs').addEventListener('click', e => {
+    const btn = e.target.closest('.pill[data-ano]');
+    if (!btn) return;
+    document.querySelectorAll('#ano-tabs .pill').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentAno = btn.dataset.ano;
+    renderKpis();
+    render();
+  });
+
+  renderKpis();
   render();
+  lucide.createIcons();
 })();
 </script>
 </body>
