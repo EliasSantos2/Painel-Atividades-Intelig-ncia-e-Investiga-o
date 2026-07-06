@@ -49,20 +49,35 @@
   .page-title p { font-size: 13px; color: var(--muted); margin-top: 4px; padding-left: 14px; }
 
   /* ── KPI cards ── */
-  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
   .kpi-card {
-    background: var(--card); border-radius: 10px; padding: 20px 22px;
-    border-top: 4px solid var(--orange); box-shadow: 0 2px 8px rgba(0,0,0,.06);
-    display: flex; flex-direction: column; gap: 6px;
+    background: var(--card); border-radius: 10px; padding: 18px 20px;
+    border-top: 4px solid var(--blue); box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    display: flex; flex-direction: column; gap: 6px; position: relative;
   }
-  .kpi-card.red   { border-color: var(--red); }
-  .kpi-card.blue  { border-color: var(--blue); }
-  .kpi-card.green { border-color: var(--green); }
+  .kpi-card.orange { border-color: var(--orange); }
+  .kpi-card.red    { border-color: var(--red); }
+  .kpi-card.green  { border-color: var(--green); }
+  .kpi-card.purple { border-color: #9b59b6; }
+  .kpi-icon {
+    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(59,125,216,.1); margin-bottom: 4px;
+  }
+  .kpi-card.orange .kpi-icon { background: rgba(247,131,68,.1); }
+  .kpi-card.red    .kpi-icon { background: rgba(232,80,80,.1); }
+  .kpi-card.green  .kpi-icon { background: rgba(46,175,120,.1); }
+  .kpi-card.purple .kpi-icon { background: rgba(155,89,182,.1); }
+  .kpi-icon svg { width: 18px; height: 18px; stroke: var(--blue); fill: none; stroke-width: 1.8; }
+  .kpi-card.orange .kpi-icon svg { stroke: var(--orange); }
+  .kpi-card.red    .kpi-icon svg { stroke: var(--red); }
+  .kpi-card.green  .kpi-icon svg { stroke: var(--green); }
+  .kpi-card.purple .kpi-icon svg { stroke: #9b59b6; }
   .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
-  .kpi-val   { font-size: 32px; font-weight: 700; color: var(--orange); line-height: 1; }
-  .kpi-card.red   .kpi-val { color: var(--red); }
-  .kpi-card.blue  .kpi-val { color: var(--blue); }
-  .kpi-card.green .kpi-val { color: var(--green); }
+  .kpi-val   { font-size: 30px; font-weight: 700; color: var(--blue); line-height: 1; }
+  .kpi-card.orange .kpi-val { color: var(--orange); }
+  .kpi-card.red    .kpi-val { color: var(--red); }
+  .kpi-card.green  .kpi-val { color: var(--green); }
+  .kpi-card.purple .kpi-val { color: #9b59b6; }
   .kpi-sub   { font-size: 11px; color: var(--muted); }
 
   /* ── Filters ── */
@@ -212,51 +227,50 @@
 
   document.getElementById('hdr-meta').textContent = 'Atualizado: ' + D.geradoEm.split('T')[0];
 
-  /* ── KPIs globais (todos trechos, 2024+) ── */
-  let totalPresos=0, totalCond=0, totalInv=0, mesesComPris=0;
-  P.eventos.forEach(e => {
-    if (e.status === 'PRESO') totalPresos++;
-    else if (e.status === 'CONDUZIDO') totalCond++;
-  });
-  // conta meses únicos com prisão em qualquer trecho
-  const mesesSet = new Set(P.eventos.map(e => e.ano+'-'+e.mes+'-'+e.tid));
-  // média de impacto no vandalismo (todos trechos, 2024+2025)
-  let deltaVandSum=0, deltaVandN=0;
-  ['2024','2025'].forEach(ano => {
-    TRECHOS.forEach(tid => {
-      const ind = D.data[ano] && D.data[ano][tid];
-      const pris = P.totais[tid] && P.totais[tid][ano];
-      if (!ind || !pris) return;
-      for (let i=0; i<11; i++) {
-        if (pris[i] > 0 && ind.vand[i]!==null && ind.vand[i+1]!==null && +ind.vand[i]>0) {
-          const dv = ((+ind.vand[i+1] - +ind.vand[i]) / Math.abs(+ind.vand[i])) * 100;
-          deltaVandSum += dv; deltaVandN++;
-        }
-      }
-    });
-  });
-  const mediaImpacto = deltaVandN ? Math.round(deltaVandSum/deltaVandN) : null;
+  /* ── KPIs globais ── */
+  const G = P.global || {};
+  const distintos   = (G.distintos   || 0).toLocaleString('pt-BR');
+  const totalPresos = (G.PRESO       || 0).toLocaleString('pt-BR');
+  const totalCond   = (G.CONDUZIDO   || 0).toLocaleString('pt-BR');
+  const totalAbord  = (G.ABORDADO    || 0).toLocaleString('pt-BR');
+  const totalInv    = (G.INVESTIGADO || 0).toLocaleString('pt-BR');
+
+  const ICO_PERSON  = `<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;
+  const ICO_PRESO   = `<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.5" fill="currentColor" stroke="none"/></svg>`;
+  const ICO_COND    = `<svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>`;
+  const ICO_ABORD   = `<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+  const ICO_INV     = `<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/><circle cx="17" cy="15" r="2.5"/><path d="M19 17l2 2"/></svg>`;
 
   document.getElementById('kpi-row').innerHTML = `
     <div class="kpi-card">
-      <div class="kpi-label">Presos registrados</div>
-      <div class="kpi-val">${totalPresos.toLocaleString('pt-BR')}</div>
-      <div class="kpi-sub">total acumulado na base</div>
+      <div class="kpi-icon">${ICO_PERSON}</div>
+      <div class="kpi-label">Infratores Cadastrados</div>
+      <div class="kpi-val">${distintos}</div>
+      <div class="kpi-sub">indivíduos distintos</div>
     </div>
     <div class="kpi-card red">
-      <div class="kpi-label">Conduzidos</div>
-      <div class="kpi-val">${totalCond.toLocaleString('pt-BR')}</div>
-      <div class="kpi-sub">total acumulado na base</div>
+      <div class="kpi-icon">${ICO_PRESO}</div>
+      <div class="kpi-label">Presos</div>
+      <div class="kpi-val">${totalPresos}</div>
+      <div class="kpi-sub">status PRESO</div>
     </div>
-    <div class="kpi-card blue">
-      <div class="kpi-label">Trechos monitorados</div>
-      <div class="kpi-val">4</div>
-      <div class="kpi-sub">T0 · T1 · T2 · T3</div>
+    <div class="kpi-card orange">
+      <div class="kpi-icon">${ICO_COND}</div>
+      <div class="kpi-label">Conduzidos</div>
+      <div class="kpi-val">${totalCond}</div>
+      <div class="kpi-sub">status CONDUZIDO</div>
     </div>
     <div class="kpi-card green">
-      <div class="kpi-label">Impacto médio vandalismo</div>
-      <div class="kpi-val">${mediaImpacto!==null?(mediaImpacto>0?'+':'')+mediaImpacto+'%':'--'}</div>
-      <div class="kpi-sub">variação mês seguinte à prisão</div>
+      <div class="kpi-icon">${ICO_ABORD}</div>
+      <div class="kpi-label">Abordados</div>
+      <div class="kpi-val">${totalAbord}</div>
+      <div class="kpi-sub">status ABORDADO</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-icon">${ICO_INV}</div>
+      <div class="kpi-label">Investigados</div>
+      <div class="kpi-val">${totalInv}</div>
+      <div class="kpi-sub">status IDENTIFICADO</div>
     </div>
   `;
 
