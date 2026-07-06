@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Produtividade — Indicadores de Vandalismo</title>
 <script src="dados_indicadores.js"></script>
+<script src="dados_prisoes.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root {
@@ -96,6 +97,27 @@
   .chart-card h3 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 16px; }
   .chart-card canvas { max-height: 240px; }
 
+  /* ── Impacto das Prisões ── */
+  .impacto-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(500px,1fr)); gap: 20px; margin-top: 16px; }
+  .impacto-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .impacto-card h3 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 16px; }
+  .impacto-card canvas { max-height: 260px; }
+
+  .delta-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  .delta-table th { color: var(--muted); text-transform: uppercase; font-size: 10px; letter-spacing: .05em; padding: 6px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+  .delta-table td { padding: 7px 10px; border-bottom: 1px solid rgba(46,79,122,.3); color: var(--text); }
+  .delta-table tr:last-child td { border-bottom: none; }
+  .delta-table tr:hover td { background: rgba(255,255,255,.03); }
+  .delta-pos { color: #2eaf78; font-weight: 600; }
+  .delta-neg { color: #e85050; font-weight: 600; }
+  .delta-neu { color: var(--muted); }
+  .badge-preso { background: rgba(232,80,80,.18); color: #e85050; border: 1px solid rgba(232,80,80,.3); padding: 1px 7px; border-radius: 10px; font-size: 10px; }
+  .badge-cond  { background: rgba(247,131,68,.18); color: #F78344; border: 1px solid rgba(247,131,68,.3); padding: 1px 7px; border-radius: 10px; font-size: 10px; }
+  .impacto-resumo { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px; }
+  .resumo-box { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 20px; flex:1; min-width:140px; text-align:center; }
+  .resumo-val { font-size:22px; font-weight:700; }
+  .resumo-lbl { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:4px; }
+
   /* ── No-data notice ── */
   #no-data-notice {
     text-align: center; padding: 80px 24px;
@@ -144,6 +166,7 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="por-ano">Por Ano</button>
     <button class="tab-btn" data-tab="por-trecho">Por Trecho</button>
+    <button class="tab-btn" data-tab="impacto">⚖ Impacto das Prisões</button>
   </div>
 
   <!-- Tab: Por Ano -->
@@ -172,6 +195,42 @@
       </label>
     </div>
     <div class="charts-grid" id="charts-por-trecho"></div>
+  </div>
+
+  <!-- Tab: Impacto das Prisões -->
+  <div class="tab-content" id="tab-impacto">
+    <div class="filter-bar">
+      <label>Trecho:
+        <select id="sel-imp-trecho">
+          <option value="t0">Trecho 0</option>
+          <option value="t1">Trecho 1</option>
+          <option value="t2">Trecho 2</option>
+          <option value="t3">Trecho 3</option>
+        </select>
+      </label>
+      <label>Ano:
+        <select id="sel-imp-ano">
+          <option value="2024">2024</option>
+          <option value="2025" selected>2025</option>
+          <option value="2026">2026</option>
+        </select>
+      </label>
+    </div>
+    <div id="impacto-resumo-boxes" class="impacto-resumo"></div>
+    <div class="impacto-grid">
+      <div class="impacto-card" style="grid-column:1/-1">
+        <h3>Prisões × Vandalismo × Circulação — Correlação Mensal</h3>
+        <canvas id="chart-corr-vand" style="max-height:280px"></canvas>
+      </div>
+      <div class="impacto-card" style="grid-column:1/-1">
+        <h3>Prisões × THP × Taxa de Abertura — Correlação Mensal</h3>
+        <canvas id="chart-corr-thp" style="max-height:280px"></canvas>
+      </div>
+      <div class="impacto-card" style="grid-column:1/-1">
+        <h3>Variação dos Indicadores no Mês Seguinte a Cada Prisão</h3>
+        <div id="delta-table-wrap"></div>
+      </div>
+    </div>
   </div>
 
 </div><!-- /main-content -->
@@ -352,6 +411,171 @@
   renderPorTrecho();
   document.getElementById('sel-ano').addEventListener('change', renderPorTrecho);
 
+  /* ── TAB: Impacto das Prisões ── */
+  function renderImpacto() {
+    if (typeof DADOS_PRISOES === 'undefined') {
+      document.getElementById('delta-table-wrap').innerHTML = '<p style="color:var(--muted);padding:20px">Arquivo dados_prisoes.js não encontrado.</p>';
+      return;
+    }
+    const P = DADOS_PRISOES;
+    const tid  = document.getElementById('sel-imp-trecho').value;
+    const ano  = document.getElementById('sel-imp-ano').value;
+    const indData = D.data[ano] && D.data[ano][tid];
+    const prisData = P.totais[tid] && P.totais[tid][ano];
+
+    if (!indData || !prisData) {
+      document.getElementById('delta-table-wrap').innerHTML = '<p style="color:var(--muted);padding:20px">Sem dados para este trecho/ano.</p>';
+      return;
+    }
+
+    const prisArr = prisData; // [12] arrests per month
+    const totalPris = prisArr.reduce((a,b)=>a+b,0);
+    const mesesComPris = prisArr.filter(x=>x>0).length;
+
+    // ── Resumo boxes ──
+    // Compare vandalismo: média meses sem prisão vs meses com prisão
+    const vand = indData.vand; const thp = indData.thp; const circ = indData.circ;
+    let vandComPris=[], vandSemPris=[], circComPris=[], circSemPris=[];
+    for(let i=0;i<12;i++){
+      if(vand[i]===null) continue;
+      if(prisArr[i]>0){ vandComPris.push(+vand[i]); if(circ[i]!==null)circComPris.push(+circ[i]); }
+      else { vandSemPris.push(+vand[i]); if(circ[i]!==null)circSemPris.push(+circ[i]); }
+    }
+    const avg = arr => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+    const avgVC = avg(vandComPris), avgVS = avg(vandSemPris);
+    const avgCC = avg(circComPris), avgCS = avg(circSemPris);
+    const deltaVand = (avgVC!==null&&avgVS!==null) ? Math.round(((avgVC-avgVS)/avgVS)*100) : null;
+    const deltaCirc = (avgCC!==null&&avgCS!==null) ? Math.round(((avgCC-avgCS)/avgCS)*100) : null;
+
+    document.getElementById('impacto-resumo-boxes').innerHTML = `
+      <div class="resumo-box"><div class="resumo-val" style="color:#e85050">${totalPris}</div><div class="resumo-lbl">Presos/Conduzidos ${ano}</div></div>
+      <div class="resumo-box"><div class="resumo-val" style="color:#F78344">${mesesComPris}</div><div class="resumo-lbl">Meses com prisões</div></div>
+      <div class="resumo-box"><div class="resumo-val ${deltaVand!==null&&deltaVand<0?'delta-pos':'delta-neg'}">${deltaVand!==null?(deltaVand>0?'+':'')+deltaVand+'%':'--'}</div><div class="resumo-lbl">Vandalismo: meses com prisão vs sem</div></div>
+      <div class="resumo-box"><div class="resumo-val ${deltaCirc!==null&&deltaCirc>0?'delta-pos':'delta-neg'}">${deltaCirc!==null?(deltaCirc>0?'+':'')+deltaCirc+'%':'--'}</div><div class="resumo-lbl">Circulação: meses com prisão vs sem</div></div>
+    `;
+
+    // ── Gráfico correlação Vandalismo + Circulação + Prisões ──
+    destroyChart('chart-corr-vand');
+    const ctxV = document.getElementById('chart-corr-vand').getContext('2d');
+    chartInstances['chart-corr-vand'] = new Chart(ctxV, {
+      data: {
+        labels: MESES,
+        datasets: [
+          {
+            type: 'bar', label: 'Prisões/Conduções', data: prisArr,
+            backgroundColor: 'rgba(232,80,80,.55)', borderColor: '#e85050', borderWidth: 1,
+            yAxisID: 'yRight', order: 1
+          },
+          {
+            type: 'line', label: 'Vandalismo', data: nullSafe(vand),
+            borderColor: '#F78344', backgroundColor: 'transparent', borderWidth: 2,
+            tension: 0.3, spanGaps: false, pointRadius: 4, yAxisID: 'yLeft', order: 0
+          },
+          {
+            type: 'line', label: 'Circulação', data: nullSafe(circ),
+            borderColor: '#2eaf78', backgroundColor: 'transparent', borderWidth: 2,
+            tension: 0.3, spanGaps: false, pointRadius: 4, yAxisID: 'yLeft2', order: 0
+          }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:true,
+        plugins: {
+          legend:{ labels:{ color:'#9aafc8', font:{size:11} } },
+          tooltip:{ backgroundColor:'#1a3356', titleColor:'#e8edf5', bodyColor:'#9aafc8' }
+        },
+        scales: {
+          x:{ ticks:{color:'#9aafc8',font:{size:10}}, grid:{color:'rgba(46,79,122,.3)'} },
+          yLeft:{ position:'left', ticks:{color:'#F78344',font:{size:10}}, grid:{color:'rgba(46,79,122,.2)'},
+            title:{display:true,text:'Vandalismo',color:'#F78344',font:{size:10}} },
+          yLeft2:{ position:'left', ticks:{color:'#2eaf78',font:{size:10}}, grid:{display:false},
+            title:{display:true,text:'Circulação',color:'#2eaf78',font:{size:10}}, offset:true },
+          yRight:{ position:'right', ticks:{color:'#e85050',font:{size:10}}, grid:{display:false},
+            title:{display:true,text:'Prisões',color:'#e85050',font:{size:10}} }
+        }
+      }
+    });
+
+    // ── Gráfico correlação THP + Taxa Abertura + Prisões ──
+    destroyChart('chart-corr-thp');
+    const ctxT = document.getElementById('chart-corr-thp').getContext('2d');
+    chartInstances['chart-corr-thp'] = new Chart(ctxT, {
+      data: {
+        labels: MESES,
+        datasets: [
+          {
+            type: 'bar', label: 'Prisões/Conduções', data: prisArr,
+            backgroundColor: 'rgba(232,80,80,.55)', borderColor: '#e85050', borderWidth: 1,
+            yAxisID: 'yRight', order: 1
+          },
+          {
+            type: 'line', label: 'THP (h)', data: nullSafe(thp),
+            borderColor: '#5b8fd4', backgroundColor: 'transparent', borderWidth: 2,
+            tension: 0.3, spanGaps: false, pointRadius: 4, yAxisID: 'yLeft', order: 0
+          },
+          {
+            type: 'line', label: 'Taxa Abertura (%)', data: nullSafe(indData.txab).map(v=>v!==null?+(v*100).toFixed(2):null),
+            borderColor: '#be50d2', backgroundColor: 'transparent', borderWidth: 2,
+            tension: 0.3, spanGaps: false, pointRadius: 4, yAxisID: 'yLeft2', order: 0
+          }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:true,
+        plugins: {
+          legend:{ labels:{ color:'#9aafc8', font:{size:11} } },
+          tooltip:{ backgroundColor:'#1a3356', titleColor:'#e8edf5', bodyColor:'#9aafc8' }
+        },
+        scales: {
+          x:{ ticks:{color:'#9aafc8',font:{size:10}}, grid:{color:'rgba(46,79,122,.3)'} },
+          yLeft:{ position:'left', ticks:{color:'#5b8fd4',font:{size:10}}, grid:{color:'rgba(46,79,122,.2)'},
+            title:{display:true,text:'THP (h)',color:'#5b8fd4',font:{size:10}} },
+          yLeft2:{ position:'left', ticks:{color:'#be50d2',font:{size:10}}, grid:{display:false},
+            title:{display:true,text:'Taxa Ab. (%)',color:'#be50d2',font:{size:10}}, offset:true },
+          yRight:{ position:'right', ticks:{color:'#e85050',font:{size:10}}, grid:{display:false},
+            title:{display:true,text:'Prisões',color:'#e85050',font:{size:10}} }
+        }
+      }
+    });
+
+    // ── Tabela Δ: mês com prisões → variação no mês seguinte ──
+    let rows = '';
+    for (let i = 0; i < 11; i++) {
+      if (prisArr[i] === 0) continue;
+      const mNow = MESES[i], mNext = MESES[i+1];
+      const fmt = (v, inv) => {
+        if (v === null || v === undefined) return '<td class="delta-neu">—</td>';
+        const pct = Math.round(v); const pos = inv ? pct < 0 : pct > 0;
+        const cls = pct === 0 ? 'delta-neu' : pos ? 'delta-pos' : 'delta-neg';
+        return `<td class="${cls}">${pct > 0 ? '+' : ''}${pct}%</td>`;
+      };
+      const delta = (key, inv) => {
+        const a = indData[key][i], b = indData[key][i+1];
+        if (a === null || b === null || a === 0) return null;
+        return ((+b - +a) / Math.abs(+a)) * 100;
+      };
+      rows += `<tr>
+        <td><strong>${mNow}</strong> → ${mNext}</td>
+        <td><span class="badge-preso">⚡ ${prisArr[i]} preso${prisArr[i]>1?'s':''}</span></td>
+        ${fmt(delta('vand'), true)}
+        ${fmt(delta('thp'), true)}
+        ${fmt(delta('txab'), true)}
+        ${fmt(delta('vagab'), true)}
+        ${fmt(delta('circ'), false)}
+      </tr>`;
+    }
+    document.getElementById('delta-table-wrap').innerHTML = rows
+      ? `<table class="delta-table">
+           <thead><tr><th>Período</th><th>Evento</th><th>Vandalismo</th><th>THP</th><th>Taxa Ab.</th><th>Vagões Ab.</th><th>Circulação</th></tr></thead>
+           <tbody>${rows}</tbody>
+         </table>
+         <p style="font-size:11px;color:var(--muted);margin-top:10px">Verde = melhora esperada · Vermelho = piora · Variação do mês seguinte ao mês com prisões</p>`
+      : '<p style="color:var(--muted);padding:16px">Nenhum mês com prisões registrado neste período.</p>';
+  }
+
+  document.getElementById('sel-imp-trecho').addEventListener('change', renderImpacto);
+  document.getElementById('sel-imp-ano').addEventListener('change', renderImpacto);
+
   /* ── Tab switching ── */
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -359,9 +583,9 @@
       document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-      // Redraw active tab charts
       if (btn.dataset.tab === 'por-ano') renderPorAno();
-      else renderPorTrecho();
+      else if (btn.dataset.tab === 'por-trecho') renderPorTrecho();
+      else if (btn.dataset.tab === 'impacto') renderImpacto();
     });
   });
 
