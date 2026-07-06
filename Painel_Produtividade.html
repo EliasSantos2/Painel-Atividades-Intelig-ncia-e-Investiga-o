@@ -351,12 +351,12 @@ Chart.register(ChartDataLabels);
         yLeft: {
           position: 'left', ticks: { display: false },
           grid: { color: 'rgba(0,56,101,.05)' },
-          title: { display: true, text: yLeftLabel, color: yLeftColor, font: { size: 10 } }
+          title: { display: false }
         },
         yRight: {
           position: 'right', ticks: { display: false },
           grid: { display: false },
-          title: { display: true, text: 'Prisões', color: RU.red, font: { size: 10 } }
+          title: { display: false }
         }
       }
     };
@@ -579,9 +579,9 @@ Chart.register(ChartDataLabels);
         scales: {
           x: { ticks:{color:RU.navyL,font:{size:10}}, grid:{color:'rgba(0,56,101,.05)'} },
           yInd: { position:'left', ticks:{display:false}, grid:{color:'rgba(0,56,101,.05)'},
-            title:{display:true,text:'Indicadores',color:RU.navyL,font:{size:10}} },
+            title:{display:false} },
           yPris: { position:'right', ticks:{display:false}, grid:{display:false},
-            title:{display:true,text:'Prisões',color:RU.red,font:{size:10}} }
+            title:{display:false} }
         }
       }
     });
