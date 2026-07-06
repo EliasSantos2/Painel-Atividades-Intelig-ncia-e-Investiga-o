@@ -608,6 +608,10 @@ Chart.register(ChartDataLabels);
     });
 
     /* ── Delta table ── */
+    const avg3 = (arr, i) => {
+      const vals = [arr[i+1], arr[i+2], arr[i+3]].filter(v => v !== null && v !== undefined);
+      return vals.length ? vals.reduce((s,v)=>s+ +v,0)/vals.length : null;
+    };
     const fmtDelta = (a, b, inv) => {
       if (a===null || b===null || +a===0) return '<td class="d-neu"><span>→ 0%</span></td>';
       const pct = Math.round(((+b-+a)/Math.abs(+a))*100);
@@ -619,16 +623,17 @@ Chart.register(ChartDataLabels);
     };
 
     let rows='', hasRows=false;
-    for (let i=0; i<11; i++) {
+    for (let i=0; i<9; i++) {
       if (!s.pris[i]) continue;
       hasRows=true;
+      const m3end = MESES[Math.min(i+3,11)];
       rows+=`<tr>
-        <td><strong>${MESES[i]}</strong> <span style="color:var(--muted)">→ ${MESES[i+1]}</span></td>
+        <td><strong>${MESES[i]}</strong> <span style="color:var(--muted)">→ média ${MESES[i+1]}–${m3end}</span></td>
         <td><span class="badge-ev">${s.pris[i]} prisões</span></td>
-        ${fmtDelta(s.vand[i], s.vand[i+1], true)}
-        ${fmtDelta(s.thp[i],  s.thp[i+1],  true)}
-        ${fmtDelta(s.vagab[i],s.vagab[i+1],true)}
-        ${fmtDelta(s.circ[i], s.circ[i+1], false)}
+        ${fmtDelta(s.vand[i],  avg3(s.vand, i),  true)}
+        ${fmtDelta(s.thp[i],   avg3(s.thp,  i),  true)}
+        ${fmtDelta(s.vagab[i], avg3(s.vagab,i),  true)}
+        ${fmtDelta(s.circ[i],  avg3(s.circ, i),  false)}
       </tr>`;
     }
 
@@ -641,7 +646,7 @@ Chart.register(ChartDataLabels);
            <tbody>${rows}</tbody>
          </table>
          <p style="font-size:11px;color:var(--muted);margin-top:12px;padding-left:4px">
-           ▲ sobe · ▼ desce · verde = melhora · vermelho = piora · → sem variação · Impacto medido no mês seguinte
+           ▲ sobe · ▼ desce · verde = melhora · vermelho = piora · → sem variação · Comparação: mês da prisão vs média dos 3 meses seguintes
          </p>`
       : '<p style="color:var(--muted);padding:20px;font-size:13px">Nenhum mês com prisões registrado neste período.</p>';
   }
