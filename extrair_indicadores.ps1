@@ -85,7 +85,8 @@ function Parse([string]$f,[string[]]$ss,[string]$cC,[string]$cV,[string]$cT,[str
     }
     $rc=@();$rv=@();$rt=@();$rva=@();$rtx=@()
     for($i=0;$i-lt 12;$i++){
-        if($dias[$i]-eq 0){$rc+='null';$rv+='null';$rt+='null';$rva+='null';$rtx+='null'}
+        # filtra meses sem dados reais: zero dias, ou circ total <= numero de dias (template com 1/dia)
+        if($dias[$i]-eq 0 -or $aC[$i]-le $dias[$i]){$rc+='null';$rv+='null';$rt+='null';$rva+='null';$rtx+='null'}
         else{
             $rc+=[string][int]$aC[$i];$rv+=[string][int]$aV[$i]
             $rt+=[string][math]::Round($aT[$i]*24,2);$rva+=[string][int]$aVA[$i]
@@ -102,39 +103,56 @@ function TJ($r){if($null -eq $r){return $NUL};"{ circ:$(FA $r.c), vand:$(FA $r.v
 $tmpBase=Join-Path $env:TEMP "xlsm_rumo_x"
 New-Item -ItemType Directory -Path $tmpBase -Force -ErrorAction SilentlyContinue | Out-Null
 Write-Host "=== Extraindo indicadores ===" ; Write-Host ""
-$R=@{}; $R['2024']=@{}; $R['2025']=@{}
+# usa chaves planas "ano_id" para evitar problema de escopo com hashtable aninhada
+$RES = [System.Collections.Hashtable]::new()
 
 foreach ($t in $TRECHOS) {
     $du=$t.dir.ToUpper()
+    # ── 2025 xlsm: contém DADOS 2024 e DADOS/DANOS ANO CORRENTE (2025) ──
     $xlsm=Join-Path $BASE "$($t.dir)\2025\$du ACOMPANHAMENTO VANDALISMO 2025.xlsm"
-    if (-not (Test-Path $xlsm)) { Write-Host "[$($t.id)] NAO ENCONTRADO: $xlsm"; $R['2024'][$t.id]=$null;$R['2025'][$t.id]=$null; continue }
-    Write-Host "[$($t.id)] $(Split-Path $xlsm -Leaf)"
-    $d=Expand-Xlsm $xlsm $tmpBase; $xl=Join-Path $d 'xl'
-    $ss=Load-SS $xl; $sh=Load-Sheets $xl
-    Write-Host "  SS:$($ss.Count) Abas:$($sh.Count)"
-    # 2024
-    $s24=$null; foreach($n in $sh.Keys){if($n -match 'DADOS 2024|DANOS 2024'){$s24=Join-Path $xl $sh[$n];Write-Host "  2024:'$n'";break}}
-    if($null -eq $s24){Write-Host '  [?] 2024 nao encontrada';$R['2024'][$t.id]=$null}
-    else{$r=Parse $s24 $ss 'D' 'H' 'L' 'N' 'O';$R['2024'][$t.id]=$r;$m=@();for($i=0;$i-lt 12;$i++){if($r.dias[$i]-gt 0){$m+=$MESES_NOME[$i]}};Write-Host "  2024($($m.Count)):$($m -join ',')"}
-    # 2025
-    $s25=$null
-    if($t.id -eq 't0'){
-        foreach($n in $sh.Keys){if($n -match 'DADOS 2025'){$s25=Join-Path $xl $sh[$n];Write-Host "  2025:'$n' (cols E,I,M,O,P)";break}}
-        if($null -ne $s25){$r=Parse $s25 $ss 'E' 'I' 'M' 'O' 'P'
-            $R['2025'][$t.id]=$r;$m=@();for($i=0;$i-lt 12;$i++){if($r.dias[$i]-gt 0){$m+=$MESES_NOME[$i]}};Write-Host "  2025($($m.Count)):$($m -join ',')"}
-        else{$R['2025'][$t.id]=$null;Write-Host '  [?] 2025 nao encontrada'}
-    } else {
-        foreach($n in $sh.Keys){if($n -match 'DANOS ANO CORRENTE'){$s25=Join-Path $xl $sh[$n];Write-Host "  2025:'$n'";break}}
-        if($null -ne $s25){$r=Parse $s25 $ss 'D' 'H' 'L' 'N' 'O'
-            $R['2025'][$t.id]=$r;$m=@();for($i=0;$i-lt 12;$i++){if($r.dias[$i]-gt 0){$m+=$MESES_NOME[$i]}};Write-Host "  2025($($m.Count)):$($m -join ',')"}
-        else{$R['2025'][$t.id]=$null;Write-Host '  [?] 2025 nao encontrada'}
+    if (-not (Test-Path $xlsm)) { Write-Host "[$($t.id)] NAO ENCONTRADO (2025): $xlsm" }
+    else {
+        Write-Host "[$($t.id)] $(Split-Path $xlsm -Leaf)"
+        $d=Expand-Xlsm $xlsm $tmpBase; $xl=Join-Path $d 'xl'
+        $ss=Load-SS $xl; $sh=Load-Sheets $xl
+        Write-Host "  SS:$($ss.Count) Abas:$($sh.Count)"
+        # 2024
+        $s24=$null; foreach($n in $sh.Keys){if($n -match 'DADOS 2024|DANOS 2024'){$s24=Join-Path $xl $sh[$n];Write-Host "  2024:'$n'";break}}
+        if($null -eq $s24){Write-Host '  [?] 2024 nao encontrada';$RES["2024_$($t.id)"]=$null}
+        else{$r=Parse $s24 $ss 'D' 'H' 'L' 'N' 'O';$RES["2024_$($t.id)"]=$r;$m=@(0..11|Where-Object{$r.dias[$_]-gt 0}|ForEach-Object{$MESES_NOME[$_]});Write-Host "  2024($($m.Count)):$($m -join ',')"}
+        # 2025
+        $s25=$null
+        if($t.id -eq 't0'){
+            foreach($n in $sh.Keys){if($n -match 'DADOS 2025'){$s25=Join-Path $xl $sh[$n];Write-Host "  2025:'$n'";break}}
+            if($null -ne $s25){$r=Parse $s25 $ss 'E' 'I' 'M' 'O' 'P';$RES["2025_$($t.id)"]=$r
+                $m=@(0..11|Where-Object{$r.dias[$_]-gt 0}|ForEach-Object{$MESES_NOME[$_]});Write-Host "  2025($($m.Count)):$($m -join ',')"}
+            else{$RES["2025_$($t.id)"]=$null;Write-Host '  [?] 2025 nao encontrada'}
+        } else {
+            foreach($n in $sh.Keys){if($n -match 'DANOS ANO CORRENTE|DADOS ANO CORRENTE'){$s25=Join-Path $xl $sh[$n];Write-Host "  2025:'$n'";break}}
+            if($null -ne $s25){$r=Parse $s25 $ss 'D' 'H' 'L' 'N' 'O';$RES["2025_$($t.id)"]=$r
+                $m=@(0..11|Where-Object{$r.dias[$_]-gt 0}|ForEach-Object{$MESES_NOME[$_]});Write-Host "  2025($($m.Count)):$($m -join ',')"}
+            else{$RES["2025_$($t.id)"]=$null;Write-Host '  [?] 2025 nao encontrada'}
+        }
+    }
+    # ── 2026 xlsm: DADOS/DANOS ANO CORRENTE com colunas E,I,M,O,P ──
+    $xlsm26=Join-Path $BASE "$($t.dir)\2026\$du ACOMPANHAMENTO VANDALISMO 2026.xlsm"
+    if (-not (Test-Path $xlsm26)) { Write-Host "  [?] 2026 nao encontrado"; $RES["2026_$($t.id)"]=$null }
+    else {
+        Write-Host "  [2026] $(Split-Path $xlsm26 -Leaf)"
+        $d26=Expand-Xlsm $xlsm26 $tmpBase; $xl26=Join-Path $d26 'xl'
+        $ss26=Load-SS $xl26; $sh26=Load-Sheets $xl26
+        $s26=$null; foreach($n in $sh26.Keys){if($n -match 'DADOS ANO CORRENTE|DANOS ANO CORRENTE'){$s26=Join-Path $xl26 $sh26[$n];Write-Host "  2026:'$n'";break}}
+        if($null -eq $s26){Write-Host '  [?] 2026 nao encontrada';$RES["2026_$($t.id)"]=$null}
+        else{$r=Parse $s26 $ss26 'E' 'I' 'M' 'O' 'P';$RES["2026_$($t.id)"]=$r
+            $m=@(0..11|Where-Object{$r.dias[$_]-gt 0}|ForEach-Object{$MESES_NOME[$_]});Write-Host "  2026($($m.Count)):$($m -join ',')"}
     }
     Write-Host ''
 }
 
 $ts=(Get-Date -Format 'yyyy-MM-ddTHH:mm:ss')
-$t0_24=TJ $R['2024']['t0']; $t1_24=TJ $R['2024']['t1']; $t2_24=TJ $R['2024']['t2']; $t3_24=TJ $R['2024']['t3']
-$t0_25=TJ $R['2025']['t0']; $t1_25=TJ $R['2025']['t1']; $t2_25=TJ $R['2025']['t2']; $t3_25=TJ $R['2025']['t3']
+$t0_24=TJ $RES["2024_t0"]; $t1_24=TJ $RES["2024_t1"]; $t2_24=TJ $RES["2024_t2"]; $t3_24=TJ $RES["2024_t3"]
+$t0_25=TJ $RES["2025_t0"]; $t1_25=TJ $RES["2025_t1"]; $t2_25=TJ $RES["2025_t2"]; $t3_25=TJ $RES["2025_t3"]
+$t0_26=TJ $RES["2026_t0"]; $t1_26=TJ $RES["2026_t1"]; $t2_26=TJ $RES["2026_t2"]; $t3_26=TJ $RES["2026_t3"]
 $jsTxt = @"
 // Gerado automaticamente por extrair_indicadores.ps1
 // Data: $ts
@@ -143,7 +161,7 @@ $jsTxt = @"
 const DADOS_IND = {
   meses: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
   trechos: ['Trecho 0','Trecho 1','Trecho 2','Trecho 3'],
-  anos: [2024, 2025],
+  anos: [2024, 2025, 2026],
   geradoEm: '$ts',
   data: {
     '2024': {
@@ -157,6 +175,12 @@ const DADOS_IND = {
       't1': $t1_25,
       't2': $t2_25,
       't3': $t3_25
+    },
+    '2026': {
+      't0': $t0_26,
+      't1': $t1_26,
+      't2': $t2_26,
+      't3': $t3_26
     }
   }
 };
