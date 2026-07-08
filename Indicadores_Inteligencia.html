@@ -17,6 +17,9 @@
 <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
 <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
 <script src="infratores_enc.js"></script>
+<script src="dados_indicadores.js"></script>
+<script src="dados_prisoes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -152,6 +155,40 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);min-hei
 .map-legend-bar{background:#fff;padding:8px 20px;display:flex;gap:20px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);font-weight:600}
 .leg-dot{width:11px;height:11px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle;flex-shrink:0}
 
+/* ── Impacto Prisões (aba) ── */
+.imp-kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.imp-kpi-card{background:var(--card);border-radius:10px;padding:16px 14px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:flex-start;gap:4px;border-top:3px solid var(--navyP)}
+.imp-kpi-card.c-red{border-top-color:var(--red)}.imp-kpi-card.c-orange{border-top-color:var(--orange)}.imp-kpi-card.c-green{border-top-color:var(--green)}.imp-kpi-card.c-purple{border-top-color:#6C3483}
+.imp-kpi-card .kpi-icon{color:var(--navyL)}.imp-kpi-card.c-red .kpi-icon{color:var(--red)}.imp-kpi-card.c-orange .kpi-icon{color:var(--orange)}.imp-kpi-card.c-green .kpi-icon{color:var(--green)}.imp-kpi-card.c-purple .kpi-icon{color:#6C3483}
+.imp-kpi-card .kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.imp-kpi-card .kpi-val{font-size:28px;font-weight:700;color:var(--navy);line-height:1}
+.imp-kpi-card .kpi-sub{font-size:10px;color:var(--muted)}
+.imp-filter-bar{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow);margin-bottom:20px;flex-wrap:wrap}
+.imp-filter-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.imp-pill-group{display:flex;gap:6px;flex-wrap:wrap}
+.imp-pill{background:transparent;border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:.15s}
+.imp-pill.active,.imp-pill:hover{background:var(--navy);border-color:var(--navy);color:#fff}
+.imp-filter-sep{width:1px;height:28px;background:var(--border);margin:0 4px}
+.imp-sec-hdr{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--navy);margin:20px 0 12px;padding-left:2px}
+.imp-sec-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
+.imp-charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px}
+.imp-chart-card{background:var(--card);border-radius:10px;padding:18px 18px 14px;box-shadow:var(--shadow)}
+.imp-chart-card.full{grid-column:1/-1}
+.imp-chart-title{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.imp-chart-sep{height:2px;background:var(--orange);border-radius:1px;margin-bottom:14px}
+.imp-resumo-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.imp-resumo-mini{background:var(--bg);border-radius:8px;padding:14px 16px;border:1px solid var(--border);text-align:center}
+.imp-resumo-mini .val{font-size:22px;font-weight:700}
+.imp-resumo-mini .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:3px}
+.imp-delta-card{background:var(--card);border-radius:10px;padding:22px;box-shadow:var(--shadow);margin-bottom:24px}
+.imp-delta-table{width:100%;border-collapse:collapse;font-size:13px}
+.imp-delta-table th{background:var(--bg);color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.06em;padding:9px 14px;text-align:left;border-bottom:2px solid var(--border);font-weight:700}
+.imp-delta-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+.imp-delta-table tr:last-child td{border-bottom:none}
+.imp-delta-table tr:hover td{background:rgba(0,56,101,.03)}
+.imp-d-pos{color:var(--green);font-weight:700}.imp-d-neg{color:var(--red);font-weight:700}.imp-d-neu{color:var(--muted)}
+.imp-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(0,92,169,.08);color:var(--navy2);border:1px solid rgba(0,92,169,.2)}
+#tab-impacto{padding:20px 24px}
 /* CERA PRO UNIVERSAL */
 select,input,button,textarea,label{font-family:Arial,sans-serif!important}
 .leaflet-popup-content,.leaflet-popup-content *{font-family:Arial,sans-serif!important}
@@ -257,6 +294,7 @@ select,input,button,textarea,label{font-family:Arial,sans-serif!important}
   <div class="tab" onclick="switchTab('mapa')"><i data-lucide="map-pin"></i> Mapa Operacional</div>
   <div class="tab" onclick="switchTab('produto')"><i data-lucide="package-check"></i> Produto Recuperado</div>
   <div class="tab" onclick="switchTab('infratores')"><i data-lucide="users-round"></i> Infratores</div>
+  <div class="tab" onclick="switchTab('impacto')"><i data-lucide="trending-down"></i> Impacto das Prisões</div>
 </div>
 
 <!-- PAINEL PRINCIPAL -->
@@ -493,6 +531,30 @@ select,input,button,textarea,label{font-family:Arial,sans-serif!important}
     </div>
   </div>
 </div>
+<!-- ABA: IMPACTO DAS PRISÕES -->
+<div id="tab-impacto" class="tab-content">
+  <div class="imp-kpi-row" id="imp-kpi-row"></div>
+  <div class="imp-filter-bar">
+    <span class="imp-filter-label">Trecho</span>
+    <div class="imp-pill-group" id="imp-trecho-tabs">
+      <button class="imp-pill active" data-tid="all">Todos</button>
+      <button class="imp-pill" data-tid="t0">Trecho 0</button>
+      <button class="imp-pill" data-tid="t1">Trecho 1</button>
+      <button class="imp-pill" data-tid="t2">Trecho 2</button>
+      <button class="imp-pill" data-tid="t3">Trecho 3</button>
+    </div>
+    <div class="imp-filter-sep"></div>
+    <span class="imp-filter-label">Ano</span>
+    <div class="imp-pill-group" id="imp-ano-tabs">
+      <button class="imp-pill active" data-ano="all">Todos</button>
+      <button class="imp-pill" data-ano="2024">2024</button>
+      <button class="imp-pill" data-ano="2025">2025</button>
+      <button class="imp-pill" data-ano="2026">2026</button>
+    </div>
+  </div>
+  <div id="imp-main-content"></div>
+</div>
+
 <div id="inf-modal" style="display:none;position:fixed;inset:0;background:rgba(0,20,40,.55);z-index:10000;align-items:flex-start;justify-content:center;padding:36px 16px;overflow:auto" onclick="if(event.target===this)infModalClose()">
   <div style="background:#fff;border-radius:12px;max-width:960px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;border-radius:12px 12px 0 0">
@@ -1354,6 +1416,7 @@ function switchTab(name) {
   if(name==='desdo'){ renderProcCharts(); }
   if(name==='produto'){ renderProdutoRecuperado(); }
   if(name==='infratores'){ infOpen(); }
+  if(name==='impacto'){ if(typeof _impactoInit==='function') _impactoInit(); }
 }
 
 // ── PRODUTO RECUPERADO (TIPO = APREENSÃO) ──────────────────────────────────
@@ -1626,6 +1689,156 @@ function infModalPessoa(nomeNorm){ if(!_infRows) return; const recs=_infRows.fil
 function infModalOcorrencia(r){ infModalShow(r.nome||'Ocorrência', infBlocoOcorrencia(r,0)); }
 function infShowPessoa(nomeNorm){ infModalPessoa(nomeNorm); }
 function infShowParent(id){ if(!_infRows) return; const ehMae=id.charAt(0)==='m'; const nome=id.slice(2); const tipo=ehMae?'Mãe':'Pai'; const filhos=[]; const seen={}; _infRows.forEach(function(r){ const par=_infNorm(ehMae?r.mae:r.pai); if(par===nome){ const k=_infNorm(r.nome); if(k&&!seen[k]){ seen[k]=1; filhos.push(r.nome); } } }); let h='<div style="font-size:12px;color:#666">'+filhos.length+' infrator(es) vinculado(s):</div><ul style="margin:8px 0 0;padding-left:18px;font-size:13px">'+filhos.map(function(n){return '<li>'+infEsc(n)+'</li>';}).join('')+'</ul>'; infModalShow(tipo+': '+nome, h); }
+
+// ── IMPACTO DAS PRISÕES ─────────────────────────────────────────────────────
+(function(){
+  if(typeof ChartDataLabels !== 'undefined'){
+    Chart.register(ChartDataLabels);
+    Chart.defaults.plugins.datalabels = { display: false }; // desativa globalmente
+  }
+
+  if(typeof DADOS_IND === 'undefined' || typeof DADOS_PRISOES === 'undefined') return;
+
+  const D = DADOS_IND, P = DADOS_PRISOES;
+  const MESES   = D.meses;
+  const TRECHOS = ['t0','t1','t2','t3'];
+  const T_NOME  = {t0:'Trecho 0',t1:'Trecho 1',t2:'Trecho 2',t3:'Trecho 3'};
+  const ANOS    = ['2024','2025','2026'];
+  const RU = { navy:'#003865', navy2:'#005CA9', navyL:'#6B93C4', orange:'#F78344', red:'#C0392B', green:'#1E8449' };
+  const TOOLTIP_BASE = { backgroundColor:'#fff', titleColor:RU.navy, bodyColor:RU.navyL, borderColor:'#D8E3F0', borderWidth:1, padding:10, titleFont:{weight:'bold',size:12} };
+
+  let impTid = 'all', impAno = 'all';
+  let _impInited = false;
+  const impCharts = {};
+
+  function impDestroyChart(id){ if(impCharts[id]){ impCharts[id].destroy(); delete impCharts[id]; } }
+
+  function calcImpKpis(tid, ano){
+    if(tid==='all' && ano==='all'){ const G=P.global||{}; return { distintos:G.distintos||0, PRESO:G.PRESO||0, CONDUZIDO:G.CONDUZIDO||0, ABORDADO:G.ABORDADO||0, INVESTIGADO:G.INVESTIGADO||0 }; }
+    const c={distintos:0,PRESO:0,CONDUZIDO:0,ABORDADO:0,INVESTIGADO:0}; const nomes=new Set();
+    P.eventos.forEach(e=>{ if(tid!=='all'&&e.tid!==tid) return; if(ano!=='all'&&String(e.ano)!==String(ano)) return; c[e.status]=(c[e.status]||0)+1; if(e.nome) nomes.add(e.nome.trim().toUpperCase()); });
+    c.distintos=nomes.size; return c;
+  }
+
+  function impRenderKpis(){
+    const c=calcImpKpis(impTid,impAno); const fmt=n=>n.toLocaleString('pt-BR');
+    document.getElementById('imp-kpi-row').innerHTML=`
+      <div class="imp-kpi-card"><div class="kpi-icon"><i data-lucide="users" style="width:20px;height:20px"></i></div><div class="kpi-label">Infratores Cadastrados</div><div class="kpi-val">${fmt(c.distintos)}</div><div class="kpi-sub">indivíduos distintos</div></div>
+      <div class="imp-kpi-card c-red"><div class="kpi-icon"><i data-lucide="lock" style="width:20px;height:20px"></i></div><div class="kpi-label">Presos</div><div class="kpi-val">${fmt(c.PRESO||0)}</div><div class="kpi-sub">status PRESO</div></div>
+      <div class="imp-kpi-card c-orange"><div class="kpi-icon"><i data-lucide="handshake" style="width:20px;height:20px"></i></div><div class="kpi-label">Conduzidos</div><div class="kpi-val">${fmt(c.CONDUZIDO||0)}</div><div class="kpi-sub">status CONDUZIDO</div></div>
+      <div class="imp-kpi-card c-green"><div class="kpi-icon"><i data-lucide="eye" style="width:20px;height:20px"></i></div><div class="kpi-label">Abordados</div><div class="kpi-val">${fmt(c.ABORDADO||0)}</div><div class="kpi-sub">status ABORDADO</div></div>
+      <div class="imp-kpi-card c-purple"><div class="kpi-icon"><i data-lucide="file-search" style="width:20px;height:20px"></i></div><div class="kpi-label">Investigados</div><div class="kpi-val">${fmt(c.INVESTIGADO||0)}</div><div class="kpi-sub">status IDENTIFICADO</div></div>`;
+    lucide.createIcons();
+  }
+
+  function impCompileSeries(tid, ano){
+    const tids=tid==='all'?TRECHOS:[tid], anos=ano==='all'?ANOS:[ano];
+    const pris12=new Array(12).fill(0), vand12=new Array(12).fill(null), circ12=new Array(12).fill(null);
+    const thp12=new Array(12).fill(null), vagab12=new Array(12).fill(null);
+    const cV=new Array(12).fill(0), cC=new Array(12).fill(0), cT=new Array(12).fill(0), cVA=new Array(12).fill(0);
+    anos.forEach(a=>{ tids.forEach(t=>{
+      const tot=P.totais[t]&&P.totais[t][a]; if(tot) tot.forEach((v,i)=>{ pris12[i]+=v; });
+      const ind=D.data[a]&&D.data[a][t]; if(!ind) return;
+      for(let i=0;i<12;i++){
+        if(ind.vand[i]!==null){vand12[i]=(vand12[i]||0)+ +ind.vand[i];cV[i]++;}
+        if(ind.circ[i]!==null){circ12[i]=(circ12[i]||0)+ +ind.circ[i];cC[i]++;}
+        if(ind.thp[i] !==null){thp12[i] =(thp12[i] ||0)+ +ind.thp[i]; cT[i]++;}
+        if(ind.vagab[i]!==null){vagab12[i]=(vagab12[i]||0)+ +ind.vagab[i];cVA[i]++;}
+      }
+    }); });
+    return {
+      pris:pris12,
+      vand:vand12.map((v,i)=>cV[i]>0?Math.round(v):null),
+      circ:circ12.map((v,i)=>cC[i]>0?Math.round(v):null),
+      thp: thp12.map((v,i) =>cT[i]>0?+((v/cT[i]).toFixed(1)):null),
+      vagab:vagab12.map((v,i)=>cVA[i]>0?Math.round(v):null),
+    };
+  }
+
+  function impBaseOpts(){
+    return { responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{labels:{color:RU.navy,font:{size:11,weight:'600'},boxWidth:12,padding:14}}, tooltip:TOOLTIP_BASE, datalabels:{display:false} },
+      scales:{
+        x:{ticks:{color:RU.navy,font:{size:10,weight:'600'},maxRotation:0},grid:{display:false},border:{display:false}},
+        yLeft:{position:'left',ticks:{display:false},grid:{color:'rgba(0,56,101,.06)'},border:{display:false},title:{display:false}},
+        yRight:{position:'right',ticks:{display:false},grid:{display:false},border:{display:false},title:{display:false}}
+      }
+    };
+  }
+
+  function impBarDs(label,data,color){ return {type:'bar',label,data,backgroundColor:color,borderColor:color,borderWidth:0,borderRadius:3,yAxisID:'yLeft',order:2,
+    datalabels:{display:ctx=>(ctx.parsed?.y??0)>0,color:RU.navy,font:{size:9,weight:'700'},anchor:'end',align:'end',offset:2,formatter:v=>(!v||v===0)?'':v}}; }
+  function impLineDs(label,data,color){ return {type:'line',label,data,borderColor:color,backgroundColor:'transparent',borderWidth:2.5,tension:.35,spanGaps:false,
+    pointRadius:4,pointBackgroundColor:'#fff',pointBorderColor:color,pointBorderWidth:2,fill:false,yAxisID:'yRight',order:1,
+    datalabels:{display:ctx=>(ctx.parsed?.y??0)>0,color:RU.navy,backgroundColor:'rgba(255,255,255,.85)',borderRadius:3,padding:{top:1,bottom:1,left:3,right:3},font:{size:8,weight:'700'},anchor:'top',align:'top',offset:3,formatter:v=>v===null?'':v}}; }
+
+  function impRender(){
+    const s=impCompileSeries(impTid,impAno);
+    const label=(impTid==='all'?'Todos os Trechos':T_NOME[impTid])+' · '+(impAno==='all'?'Todos os Anos':impAno);
+    const totalP=s.pris.reduce((a,b)=>a+b,0), mCom=s.pris.filter(x=>x>0).length;
+    let dvSum=0,dvN=0;
+    for(let i=0;i<11;i++){ if(s.pris[i]>0&&s.vand[i]!==null&&s.vand[i+1]!==null&&+s.vand[i]>0){ dvSum+=((+s.vand[i+1]-+s.vand[i])/Math.abs(+s.vand[i]))*100; dvN++; } }
+    const dvMedia=dvN?Math.round(dvSum/dvN):null;
+    const dvCls=dvMedia===null?'':dvMedia<0?'imp-d-pos':'imp-d-neg';
+
+    document.getElementById('imp-main-content').innerHTML=`
+      <div class="imp-sec-hdr"><i data-lucide="bar-chart-2" style="width:15px;height:15px"></i>Resumo — ${label}</div>
+      <div class="imp-resumo-row">
+        <div class="imp-resumo-mini"><div class="val" style="color:var(--navy2)">${totalP.toLocaleString('pt-BR')}</div><div class="lbl">Prisões / Conduções</div></div>
+        <div class="imp-resumo-mini"><div class="val" style="color:var(--orange)">${mCom}</div><div class="lbl">Meses com Prisões</div></div>
+        <div class="imp-resumo-mini"><div class="val ${dvCls}">${dvMedia!==null?(dvMedia>0?'+':'')+dvMedia+'%':'—'}</div><div class="lbl">Δ Médio Vandalismo (mês seguinte)</div></div>
+      </div>
+      <div class="imp-sec-hdr"><i data-lucide="trending-down" style="width:15px;height:15px"></i>Correlação Mensal — ${label}</div>
+      <div class="imp-charts-grid">
+        <div class="imp-chart-card"><div class="imp-chart-title"><i data-lucide="shield-alert" style="width:14px;height:14px"></i>Prisões × Vandalismo</div><div class="imp-chart-sep"></div><canvas id="imp-ch-vand"></canvas></div>
+        <div class="imp-chart-card"><div class="imp-chart-title"><i data-lucide="train-front" style="width:14px;height:14px"></i>Prisões × Circulação</div><div class="imp-chart-sep"></div><canvas id="imp-ch-circ"></canvas></div>
+        <div class="imp-chart-card"><div class="imp-chart-title"><i data-lucide="clock" style="width:14px;height:14px"></i>Prisões × THP (horas)</div><div class="imp-chart-sep"></div><canvas id="imp-ch-thp"></canvas></div>
+        <div class="imp-chart-card"><div class="imp-chart-title"><i data-lucide="package" style="width:14px;height:14px"></i>Prisões × Vagões Abertos</div><div class="imp-chart-sep"></div><canvas id="imp-ch-vagab"></canvas></div>
+        <div class="imp-chart-card full"><div class="imp-chart-title"><i data-lucide="layers" style="width:14px;height:14px"></i>Visão Geral — Todos os Indicadores × Prisões</div><div class="imp-chart-sep"></div><canvas id="imp-ch-all"></canvas></div>
+      </div>
+      <div class="imp-sec-hdr"><i data-lucide="table" style="width:15px;height:15px"></i>Variação dos Indicadores — Mês da Prisão vs Média dos 3 Meses Seguintes</div>
+      <div class="imp-delta-card" id="imp-delta-wrap"></div>`;
+
+    lucide.createIcons();
+
+    ['imp-ch-vand','imp-ch-circ','imp-ch-thp','imp-ch-vagab','imp-ch-all'].forEach(id=>impDestroyChart(id));
+
+    const mkChart=(id,ds)=>new Chart(document.getElementById(id),{data:{labels:MESES,datasets:ds},options:impBaseOpts()});
+    impCharts['imp-ch-vand'] =mkChart('imp-ch-vand', [impBarDs('Prisões',s.pris,RU.navy2), impLineDs('Vandalismo',s.vand,RU.orange)]);
+    impCharts['imp-ch-circ'] =mkChart('imp-ch-circ', [impBarDs('Prisões',s.pris,RU.navy2), impLineDs('Circulação',s.circ,RU.orange)]);
+    impCharts['imp-ch-thp']  =mkChart('imp-ch-thp',  [impBarDs('Prisões',s.pris,RU.navy2), impLineDs('THP (h)',s.thp,RU.orange)]);
+    impCharts['imp-ch-vagab']=mkChart('imp-ch-vagab',[impBarDs('Prisões',s.pris,RU.navy2), impLineDs('Vagões Abertos',s.vagab,RU.orange)]);
+    impCharts['imp-ch-all']  =new Chart(document.getElementById('imp-ch-all'),{
+      data:{labels:MESES,datasets:[impBarDs('Prisões',s.pris,RU.navy2),
+        {type:'line',label:'Vandalismo',data:s.vand,borderColor:RU.orange,backgroundColor:'transparent',borderWidth:2,tension:.35,spanGaps:false,pointRadius:3,pointBackgroundColor:'#fff',pointBorderColor:RU.orange,pointBorderWidth:2,fill:false,yAxisID:'yRight',order:1,datalabels:{display:false}},
+        {type:'line',label:'THP (h)',data:s.thp,borderColor:RU.navyL,backgroundColor:'transparent',borderWidth:2,tension:.35,spanGaps:false,pointRadius:3,pointBackgroundColor:'#fff',pointBorderColor:RU.navyL,pointBorderWidth:2,fill:false,yAxisID:'yRight',order:1,datalabels:{display:false}}
+      ]},options:impBaseOpts()});
+
+    // Delta table
+    const avg3=(arr,i)=>{ const v=[arr[i+1],arr[i+2],arr[i+3]].filter(x=>x!==null&&x!==undefined); return v.length?v.reduce((a,b)=>a+ +b,0)/v.length:null; };
+    const fmtD=(a,b,inv)=>{ if(a===null||b===null||+a===0) return '<td class="imp-d-neu"><span>→ 0%</span></td>'; const pct=Math.round(((+b-+a)/Math.abs(+a))*100); const pos=inv?pct<0:pct>0; const cls=pct===0?'imp-d-neu':pos?'imp-d-pos':'imp-d-neg'; const arr=pct===0?'→':pct>0?'▲':'▼'; return `<td><span class="${cls}">${arr} ${pct>0?'+':''}${pct}%</span></td>`; };
+    let rows='',hasRows=false;
+    for(let i=0;i<9;i++){ if(!s.pris[i]) continue; hasRows=true; const m3=MESES[Math.min(i+3,11)];
+      rows+=`<tr><td><strong>${MESES[i]}</strong> <span style="color:var(--muted)">→ média ${MESES[i+1]}–${m3}</span></td><td><span class="imp-badge">${s.pris[i]} prisões</span></td>${fmtD(s.vand[i],avg3(s.vand,i),true)}${fmtD(s.thp[i],avg3(s.thp,i),true)}${fmtD(s.vagab[i],avg3(s.vagab,i),true)}${fmtD(s.circ[i],avg3(s.circ,i),false)}</tr>`; }
+    document.getElementById('imp-delta-wrap').innerHTML=hasRows
+      ?`<table class="imp-delta-table"><thead><tr><th>Período</th><th>Evento</th><th>Vandalismo</th><th>THP</th><th>Vagões Abertos</th><th>Circulação</th></tr></thead><tbody>${rows}</tbody></table><p style="font-size:11px;color:var(--muted);margin-top:12px">▲ sobe · ▼ desce · verde = melhora · vermelho = piora · Comparação: mês da prisão vs média dos 3 meses seguintes</p>`
+      :'<p style="color:var(--muted);padding:20px;font-size:13px">Nenhum mês com prisões registrado neste período.</p>';
+  }
+
+  // Filtros
+  function impSetupFilters(){
+    document.getElementById('imp-trecho-tabs').addEventListener('click',e=>{ const b=e.target.closest('.imp-pill[data-tid]'); if(!b) return; document.querySelectorAll('#imp-trecho-tabs .imp-pill').forEach(x=>x.classList.remove('active')); b.classList.add('active'); impTid=b.dataset.tid; impRenderKpis(); impRender(); });
+    document.getElementById('imp-ano-tabs').addEventListener('click',e=>{ const b=e.target.closest('.imp-pill[data-ano]'); if(!b) return; document.querySelectorAll('#imp-ano-tabs .imp-pill').forEach(x=>x.classList.remove('active')); b.classList.add('active'); impAno=b.dataset.ano; impRenderKpis(); impRender(); });
+  }
+
+  window._impactoInit = function(){
+    if(_impInited) return;
+    _impInited=true;
+    impRenderKpis();
+    impRender();
+    impSetupFilters();
+  };
+})();
 
 // Init
 lucide.createIcons();
