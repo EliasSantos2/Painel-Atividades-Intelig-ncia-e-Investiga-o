@@ -312,8 +312,18 @@
 
   function renderRes(ops) {
     const totalPrej = ops.reduce((s, o) => s + (o.prejuizo != null ? +o.prejuizo : 0), 0);
-    const projPrej  = totalPrej * 12;
     const comPrej   = ops.filter(o => o.prejuizo != null && o.prejuizo > 0).length;
+
+    // Calcula meses decorridos desde a operação mais antiga até hoje
+    const datas = ops.map(o => o.inicio).filter(Boolean).map(d => new Date(d));
+    const maisAntiga = datas.length ? new Date(Math.min(...datas)) : new Date();
+    const hoje = new Date();
+    const meses = Math.max(1,
+      (hoje.getFullYear() - maisAntiga.getFullYear()) * 12 +
+      (hoje.getMonth() - maisAntiga.getMonth()) + 1
+    );
+    const projPrej = (totalPrej / meses) * 12;
+
     document.getElementById('res-prej').textContent = fmtBRL(totalPrej);
     document.getElementById('res-proj').textContent = fmtBRL(projPrej);
     document.getElementById('res-ops').textContent  = ops.length;
