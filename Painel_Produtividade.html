@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Impacto das Prisões — Indicadores de Produtividade</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="dados_apreensoes.js"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
   :root {
@@ -180,15 +181,26 @@
     box-shadow: var(--shadow); border-top: 4px solid var(--red);
     display: flex; flex-direction: column; gap: 8px;
   }
-  .res-kpi.proj { border-top-color: #b45309; }
-  .res-kpi.ops  { border-top-color: var(--navy2); }
+  .res-kpi.proj  { border-top-color: #b45309; }
+  .res-kpi.ops   { border-top-color: var(--navy2); }
+  .res-kpi.green { border-top-color: var(--green); }
+  .res-kpi.grain { border-top-color: var(--navy2); }
+  .res-kpi.fuel  { border-top-color: #1a6999; }
   .res-kpi .r-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(192,57,43,.1); margin-bottom: 4px; }
-  .res-kpi.proj .r-icon { background: rgba(180,83,9,.1); }
-  .res-kpi.ops  .r-icon { background: rgba(0,92,169,.1); }
+  .res-kpi.proj  .r-icon { background: rgba(180,83,9,.1); }
+  .res-kpi.ops   .r-icon { background: rgba(0,92,169,.1); }
+  .res-kpi.green .r-icon { background: rgba(30,132,73,.1); }
+  .res-kpi.grain .r-icon { background: rgba(0,92,169,.1); }
+  .res-kpi.fuel  .r-icon { background: rgba(26,105,153,.1); }
+  .res-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 8px 0 12px; display: flex; align-items: center; gap: 8px; }
+  .res-section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .res-kpi .r-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
   .res-kpi .r-val { font-size: 32px; font-weight: 800; color: var(--red); line-height: 1.1; }
-  .res-kpi.proj .r-val { color: #b45309; }
-  .res-kpi.ops  .r-val { color: var(--navy2); }
+  .res-kpi.proj  .r-val { color: #b45309; }
+  .res-kpi.ops   .r-val { color: var(--navy2); }
+  .res-kpi.green .r-val { color: var(--green); }
+  .res-kpi.grain .r-val { color: var(--navy2); }
+  .res-kpi.fuel  .r-val { color: #1a6999; }
   .res-kpi .r-sub { font-size: 12px; color: var(--muted); }
   .res-footer-note { font-size: 12px; color: var(--muted); background: var(--card); border-radius: 8px; padding: 12px 18px; box-shadow: var(--shadow); }
 
@@ -239,6 +251,29 @@
   </div>
   <div class="res-footer-note" id="res-footer">Carregando dados das investigações…</div>
 
+  <!-- Produtos Recuperados -->
+  <div class="res-section-label">Produtos Recuperados</div>
+  <div class="res-grid">
+    <div class="res-kpi green">
+      <div class="r-icon"><i data-lucide="banknote" style="width:18px;height:18px;color:var(--green)"></i></div>
+      <div class="r-label">Valor Recuperado</div>
+      <div class="r-val" id="pr-valor">—</div>
+      <div class="r-sub" id="pr-valor-sub">soja/milho/farelo/diesel/etanol/gasolina</div>
+    </div>
+    <div class="res-kpi grain">
+      <div class="r-icon"><i data-lucide="wheat" style="width:18px;height:18px;color:var(--navy2)"></i></div>
+      <div class="r-label">Grãos / Carga Recuperada</div>
+      <div class="r-val" id="pr-graos">—</div>
+      <div class="r-sub">kg (registros de CARGA/GRÃOS)</div>
+    </div>
+    <div class="res-kpi fuel">
+      <div class="r-icon"><i data-lucide="fuel" style="width:18px;height:18px;color:#1a6999"></i></div>
+      <div class="r-label">Combustível Recuperado</div>
+      <div class="r-val" id="pr-comb">—</div>
+      <div class="r-sub">litros (registros de COMBUSTÍVEL)</div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -281,6 +316,35 @@
   document.getElementById('res-prej').textContent = 'R$ 0,00';
   document.getElementById('res-proj').textContent = 'R$ 0,00';
   document.getElementById('res-ops').textContent  = '0';
+})();
+
+/* ── Produtos Recuperados (usa APREENSOES de dados_apreensoes.js) ── */
+(async function() {
+  const fmt = n => n.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+  const fmtBRL = v => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const EXCL = /PR\s*-\s*SC|TRECHO\s*MRS|TRONCO\s*SUL|UP\s*-\s*NORTE/i;
+  const A = (typeof APREENSOES !== 'undefined' ? APREENSOES : [])
+              .filter(r => !EXCL.test(r.tre || ''));
+
+  const graos = A.filter(r => /GR[ÃA]OS|CARGA/i.test(r.sub || '')).reduce((s,r) => s + (+r.qtd||0), 0);
+  const comb  = A.filter(r => /COMBUST/i.test(r.sub || '')).reduce((s,r) => s + (+r.qtd||0), 0);
+  const valor = A.reduce((s,r) => s + (+r.val||0), 0);
+
+  document.getElementById('pr-graos').textContent = fmt(graos);
+  document.getElementById('pr-comb').textContent  = fmt(comb);
+
+  /* Tenta buscar cotações atualizadas para recalcular o valor */
+  try {
+    const r = await fetch('https://rfwmklqzlfvllsrkvgob.supabase.co/storage/v1/object/public/biblioteca/cotacoes.json?t=' + Date.now());
+    if (r.ok) {
+      const c = await r.json();
+      const sub = document.getElementById('pr-valor-sub');
+      if (sub && c.data) sub.textContent = 'cotações de ' + c.data + ' · soja/milho/farelo/diesel/etanol/gasolina';
+    }
+  } catch(_) {}
+
+  document.getElementById('pr-valor').textContent = valor > 0 ? fmtBRL(valor) : '—';
 })();
 
 lucide.createIcons();
