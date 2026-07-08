@@ -357,6 +357,10 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
     </div>
     <div>
       <div class="card">
+        <div class="card-header"><h2><i data-lucide="trending-up" style="width:15px;height:15px;vertical-align:-2px;color:var(--orange)"></i> Resultados Atingidos</h2></div>
+        <div style="padding:16px" id="resultados-atingidos"></div>
+      </div>
+      <div class="card">
         <div class="card-header"><h2>Indicadores</h2></div>
         <div style="padding:16px" id="indicadores"></div>
       </div>
@@ -522,6 +526,11 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
     <div class="form-group full"><label>Próximo Marco</label><input id="op-marco" placeholder="Ex: Parecer do GAECO e execução das medidas operacionais"></div>
     <div class="form-group full"><label>Objetivo da Operação</label><textarea id="op-objetivo" placeholder="Descreva o objetivo principal…"></textarea></div>
     <div class="form-group full"><label>Principais Entregas Realizadas</label><textarea id="op-entregas" placeholder="Liste as entregas já concluídas…"></textarea></div>
+    <div class="form-group full">
+      <label>Prejuízo para a Companhia até o momento da investigação (R$)</label>
+      <input id="op-prejuizo" type="number" min="0" step="0.01" placeholder="Ex: 150000.00" style="max-width:280px">
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">Valor estimado em reais. Será somado no painel de Resultados Atingidos.</div>
+    </div>
     <div class="form-group full">
       <label>RELINT Final da Investigação</label>
       <div style="font-size:12px;color:var(--text2);margin-bottom:6px">
@@ -753,6 +762,22 @@ function renderDashboard(){
   </tr>`;}).join('');
   const priors=db.prioridades&&db.prioridades.length?db.prioridades:['Concluir diligências complementares da Operação Dreno','Executar medidas operacionais pendentes da Operação Ponto Cego','Intensificar monitoramentos nas Operações Fim da Linha e Carga Segura','Estruturar plano operacional da Operação Rastro Oculto','Consolidar evidências para futuras representações junto aos órgãos de Segurança Pública'];
   document.getElementById('priority-list').innerHTML=priors.map((p,i)=>`<li><span class="num">${i+1}</span>${p}</li>`).join('');
+  const fmtBRL=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2});
+  const totalPrej=ops.reduce((s,o)=>s+(o.prejuizo!=null?+o.prejuizo:0),0);
+  const projPrej=totalPrej*12;
+  const opsComPrej=ops.filter(o=>o.prejuizo!=null&&o.prejuizo>0).length;
+  document.getElementById('resultados-atingidos').innerHTML=`
+    <div class="ind-row" style="border-left:3px solid var(--red);padding-left:10px;margin-bottom:8px">
+      <span class="ind-label" style="font-weight:700;color:var(--text)">Prejuízo para a Companhia</span>
+      <span class="ind-val" style="color:var(--red);font-size:16px;font-weight:800">${fmtBRL(totalPrej)}</span>
+    </div>
+    <div class="ind-row" style="border-left:3px solid #b45309;padding-left:10px;margin-bottom:8px">
+      <span class="ind-label" style="font-weight:700;color:var(--text)">Projeção de Prejuízo caso não ocorresse a investigação</span>
+      <span class="ind-val" style="color:#b45309;font-size:16px;font-weight:800">${fmtBRL(projPrej)}</span>
+    </div>
+    <div style="font-size:11px;color:var(--text2);margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
+      Baseado em <strong>${opsComPrej}</strong> operação(ões) com prejuízo informado · Projeção = prejuízo × 12 meses
+    </div>`;
   document.getElementById('indicadores').innerHTML=[
     ['Operações em andamento',opsAtivas],
     ['Operações concluídas',ops.filter(o=>o.status==='Concluído').length],
@@ -1029,13 +1054,14 @@ function openOpModal(id){
     document.getElementById('op-objetivo').value=op.objetivo||'';document.getElementById('op-entregas').value=op.entregas||'';
     document.getElementById('op-relint-url').value=(op.relint&&op.relint.url)||'';
     document.getElementById('op-relint-name').value=(op.relint&&op.relint.name)||'';
+    document.getElementById('op-prejuizo').value=op.prejuizo!=null?op.prejuizo:'';
   }else{
     const maxN=db.operacoes.reduce((m,o)=>{const n=o.opIdStr?parseInt(o.opIdStr.replace('I-',''),10):0;return isNaN(n)?m:Math.max(m,n);},54);
     const nextN=maxN+1;
     document.getElementById('op-id-num').value=nextN;
     document.getElementById('op-id-preview').textContent='I-'+nextN;
     document.getElementById('op-fonte').value='';
-    ['op-nome','op-local','op-localidade','op-inicio','op-previsao','op-marco','op-objetivo','op-entregas','op-relint-url','op-relint-name'].forEach(x=>document.getElementById(x).value='');
+    ['op-nome','op-local','op-localidade','op-inicio','op-previsao','op-marco','op-objetivo','op-entregas','op-relint-url','op-relint-name','op-prejuizo'].forEach(x=>document.getElementById(x).value='');
     document.getElementById('op-status').value='Em andamento';
   }
   document.getElementById('op-modal').classList.add('open');
@@ -1046,7 +1072,8 @@ function saveOp(){
   if(!nome||!local){toast('Preencha os campos obrigatórios','error');return;}
   const idNum=document.getElementById('op-id-num').value.trim();
   const opIdStr=idNum?'I-'+idNum:'';
-  const data={nome,local,opIdStr,fonte:document.getElementById('op-fonte').value,localidade:document.getElementById('op-localidade').value.trim(),status:document.getElementById('op-status').value,inicio:document.getElementById('op-inicio').value,previsao:document.getElementById('op-previsao').value,marco:document.getElementById('op-marco').value.trim(),objetivo:document.getElementById('op-objetivo').value.trim(),entregas:document.getElementById('op-entregas').value.trim()};
+  const prejRaw=document.getElementById('op-prejuizo').value.trim();
+  const data={nome,local,opIdStr,fonte:document.getElementById('op-fonte').value,localidade:document.getElementById('op-localidade').value.trim(),status:document.getElementById('op-status').value,inicio:document.getElementById('op-inicio').value,previsao:document.getElementById('op-previsao').value,marco:document.getElementById('op-marco').value.trim(),objetivo:document.getElementById('op-objetivo').value.trim(),entregas:document.getElementById('op-entregas').value.trim(),prejuizo:prejRaw!==''?parseFloat(prejRaw):null};
   const relUrl=document.getElementById('op-relint-url').value.trim();
   const relName=document.getElementById('op-relint-name').value.trim();
   let target;
