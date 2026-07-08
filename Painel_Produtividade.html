@@ -4,11 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Impacto das Prisões — Indicadores de Produtividade</title>
-<script src="dados_indicadores.js"></script>
-<script src="dados_prisoes.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
   :root {
@@ -177,19 +173,6 @@
     background: rgba(0,92,169,.08); color: var(--navy2); border: 1px solid rgba(0,92,169,.2);
   }
 
-  /* ── Tab nav ── */
-  .mod-tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 2px solid var(--border); }
-  .mod-tab {
-    padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
-    border: none; background: none; color: var(--muted); border-radius: 6px 6px 0 0;
-    display: flex; align-items: center; gap: 7px; transition: all .15s;
-    border-bottom: 2px solid transparent; margin-bottom: -2px;
-  }
-  .mod-tab:hover { color: var(--navy); background: rgba(0,56,101,.04); }
-  .mod-tab.active { color: var(--navy); border-bottom-color: var(--orange); background: rgba(247,131,68,.06); }
-  .mod-tab-content { display: none; }
-  .mod-tab-content.active { display: block; }
-
   /* ── Resultados Atingidos ── */
   .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
   .res-kpi {
@@ -220,93 +203,37 @@
   <div class="hdr-logo">
     <i data-lucide="train-front" style="width:20px;height:20px;color:var(--orange)"></i>
   </div>
-  <h1>Impacto das Prisões — Indicadores de Produtividade</h1>
+  <h1>Resultados Atingidos — Investigações</h1>
   <span class="meta" id="hdr-meta"></span>
 </header>
 
 <div class="main">
 
-  <!-- Navegação de abas -->
-  <nav class="mod-tabs">
-    <button class="mod-tab active" onclick="switchModTab('impacto')">
-      <i data-lucide="bar-chart-2" style="width:15px;height:15px"></i> Impacto das Prisões
-    </button>
-    <button class="mod-tab" onclick="switchModTab('resultados')">
-      <i data-lucide="trending-up" style="width:15px;height:15px"></i> Resultados Atingidos
-    </button>
-  </nav>
-
-  <!-- Aba: Impacto das Prisões -->
-  <div class="mod-tab-content active" id="tab-impacto">
-    <div class="page-title">
-      <h2>Análise de Impacto das Prisões nos Indicadores Ferroviários</h2>
-      <p>Correlação entre prisões/conduções realizadas pelo time de inteligência e a variação dos indicadores de THP, Vandalismo, Circulação, Taxa de Abertura e Vagões Abertos por trecho.</p>
-    </div>
-
-    <!-- Filtros -->
-    <div class="filter-bar">
-      <span class="filter-label">Trecho</span>
-      <div class="pill-group" id="trecho-tabs">
-        <button class="pill active" data-tid="all">Todos</button>
-        <button class="pill" data-tid="t0">Trecho 0</button>
-        <button class="pill" data-tid="t1">Trecho 1</button>
-        <button class="pill" data-tid="t2">Trecho 2</button>
-        <button class="pill" data-tid="t3">Trecho 3</button>
-      </div>
-      <div class="filter-sep"></div>
-      <span class="filter-label">Ano</span>
-      <div class="pill-group" id="ano-tabs">
-        <button class="pill active" data-ano="all">Todos</button>
-        <button class="pill" data-ano="2024">2024</button>
-        <button class="pill" data-ano="2025">2025</button>
-        <button class="pill" data-ano="2026">2026</button>
-      </div>
-    </div>
-
-    <!-- Conteúdo dinâmico -->
-    <div id="main-content"></div>
+  <div class="page-title">
+    <h2>Resultados Atingidos — Investigações</h2>
+    <p>Consolidação dos prejuízos identificados nas operações investigadas pelo time de inteligência.</p>
   </div>
-
-  <!-- Aba: Resultados Atingidos -->
-  <div class="mod-tab-content" id="tab-resultados">
-    <div class="page-title">
-      <h2>Resultados Atingidos — Investigações</h2>
-      <p>Consolidação dos prejuízos identificados nas operações investigadas pelo time de inteligência.</p>
+  <div class="res-grid">
+    <div class="res-kpi">
+      <div class="r-icon"><i data-lucide="alert-triangle" style="width:18px;height:18px;color:var(--red)"></i></div>
+      <div class="r-label">Prejuízo para a Companhia</div>
+      <div class="r-val" id="res-prej">—</div>
+      <div class="r-sub">soma das operações investigadas</div>
     </div>
-    <div class="res-grid">
-      <div class="res-kpi">
-        <div class="r-icon"><i data-lucide="alert-triangle" style="width:18px;height:18px;color:var(--red)"></i></div>
-        <div class="r-label">Prejuízo para a Companhia</div>
-        <div class="r-val" id="res-prej">—</div>
-        <div class="r-sub">soma das operações investigadas</div>
-      </div>
-      <div class="res-kpi proj">
-        <div class="r-icon"><i data-lucide="trending-up" style="width:18px;height:18px;color:#b45309"></i></div>
-        <div class="r-label">Projeção caso não ocorresse a investigação</div>
-        <div class="r-val" id="res-proj">—</div>
-        <div class="r-sub">prejuízo × 12 meses</div>
-      </div>
+    <div class="res-kpi proj">
+      <div class="r-icon"><i data-lucide="trending-up" style="width:18px;height:18px;color:#b45309"></i></div>
+      <div class="r-label">Projeção caso não ocorresse a investigação</div>
+      <div class="r-val" id="res-proj">—</div>
+      <div class="r-sub">prejuízo × 12 meses</div>
     </div>
-    <div class="res-footer-note" id="res-footer">Carregando dados das investigações…</div>
   </div>
+  <div class="res-footer-note" id="res-footer">Carregando dados das investigações…</div>
 
 </div>
 
 <script>
-/* ── Troca de abas do módulo ── */
-function switchModTab(name) {
-  document.querySelectorAll('.mod-tab').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.mod-tab-content').forEach(c => c.classList.remove('active'));
-  document.querySelector(`.mod-tab[onclick*="${name}"]`).classList.add('active');
-  document.getElementById('tab-' + name).classList.add('active');
-  if (name === 'resultados') loadResultados();
-  lucide.createIcons();
-}
-
 /* ── Resultados Atingidos ── */
-let _resultadosLoaded = false;
-async function loadResultados() {
-  if (_resultadosLoaded) return;
+(async function() {
   const fmtBRL = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL', minimumFractionDigits:2 });
 
   function renderRes(ops) {
@@ -317,7 +244,6 @@ async function loadResultados() {
     document.getElementById('res-proj').textContent = fmtBRL(projPrej);
     document.getElementById('res-footer').textContent =
       `${comPrej} operaç${comPrej === 1 ? 'ão' : 'ões'} com prejuízo registrado de ${ops.length} no total`;
-    _resultadosLoaded = true;
   }
 
   try {
@@ -343,416 +269,9 @@ async function loadResultados() {
   document.getElementById('res-footer').textContent = 'Acesse o Módulo de Investigações para registrar dados.';
   document.getElementById('res-prej').textContent = 'R$ 0,00';
   document.getElementById('res-proj').textContent = 'R$ 0,00';
-}
-
-Chart.register(ChartDataLabels);
-
-(function(){
-  if (typeof DADOS_IND === 'undefined' || typeof DADOS_PRISOES === 'undefined') {
-    document.getElementById('main-content').innerHTML =
-      '<div style="text-align:center;padding:60px;color:var(--muted)">Dados não encontrados. Execute os scripts de extração.</div>';
-    return;
-  }
-
-  const D = DADOS_IND, P = DADOS_PRISOES;
-  const MESES = D.meses;
-  const TRECHOS = ['t0','t1','t2','t3'];
-  const T_NOME  = {'t0':'Trecho 0','t1':'Trecho 1','t2':'Trecho 2','t3':'Trecho 3'};
-  const ANOS    = ['2024','2025','2026'];
-
-  /* ── Paleta Rumo ── */
-  const RU = {
-    navy:    '#003865',
-    navy2:   '#005CA9',
-    navyL:   '#6B93C4',
-    navyP:   '#A8BDD4',
-    orange:  '#F78344',
-    orangeL: '#FBCAA9',
-    red:     '#C0392B',
-    green:   '#1E8449',
-    purple:  '#6C3483',
-  };
-
-  const CHART_COLORS = [RU.orange, RU.navy2, RU.navyL, RU.green, RU.red, RU.purple, '#E67E22', RU.navyP];
-
-  document.getElementById('hdr-meta').textContent = 'Atualizado: ' + D.geradoEm.split('T')[0];
-
-  /* ── Estado dos filtros ── */
-  let currentTid = 'all', currentAno = 'all';
-
-  /* ── KPIs: usa global quando sem filtro, eventos quando filtrado ── */
-  function calcKpis(tid, ano) {
-    if (tid === 'all' && ano === 'all') {
-      const G = P.global || {};
-      return {
-        distintos:   G.distintos   || 0,
-        PRESO:       G.PRESO       || 0,
-        CONDUZIDO:   G.CONDUZIDO   || 0,
-        ABORDADO:    G.ABORDADO    || 0,
-        INVESTIGADO: G.INVESTIGADO || 0,
-      };
-    }
-    const counts = { distintos: 0, PRESO: 0, CONDUZIDO: 0, ABORDADO: 0, INVESTIGADO: 0 };
-    const nomes = new Set();
-    P.eventos.forEach(e => {
-      if (tid !== 'all' && e.tid !== tid) return;
-      if (ano !== 'all' && String(e.ano) !== String(ano)) return;
-      counts[e.status] = (counts[e.status] || 0) + 1;
-      if (e.nome) nomes.add(e.nome.trim().toUpperCase());
-    });
-    counts.distintos = nomes.size;
-    return counts;
-  }
-
-
-
-  /* ── Chart helpers ── */
-  const charts = {};
-  function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
-  function nullSafe(arr) { return (arr||[]).map(v => v===null ? null : +v); }
-
-  /* ── Opções base de gráfico ── */
-  const TOOLTIP_BASE = {
-    backgroundColor: '#fff', titleColor: RU.navy, bodyColor: RU.navyL,
-    borderColor: '#D8E3F0', borderWidth: 1, padding: 10,
-    titleFont: { weight: 'bold', size: 12 }
-  };
-
-  function baseOpts() {
-    return {
-      responsive: true, maintainAspectRatio: true,
-      plugins: {
-        legend: {
-          labels: { color: RU.navy, font: { size: 11, weight: '600' }, boxWidth: 12, padding: 14 }
-        },
-        tooltip: TOOLTIP_BASE,
-        datalabels: { display: false }   // desativa global; cada dataset define o seu
-      },
-      scales: {
-        x: {
-          ticks: { color: RU.navy, font: { size: 10, weight: '600' }, maxRotation: 0 },
-          grid: { display: false },
-          border: { display: false }
-        },
-        yLeft: {
-          position: 'left', ticks: { display: false },
-          grid: { color: 'rgba(0,56,101,.06)', drawBorder: false },
-          border: { display: false },
-          title: { display: false }
-        },
-        yRight: {
-          position: 'right', ticks: { display: false },
-          grid: { display: false },
-          border: { display: false },
-          title: { display: false }
-        }
-      }
-    };
-  }
-
-  /* ── Compila séries ── */
-  function compileSeries(tid, ano) {
-    const tids  = tid  === 'all' ? TRECHOS : [tid];
-    const anos  = ano  === 'all' ? ANOS    : [ano];
-
-    const pris12 = new Array(12).fill(0);
-    const vand12 = new Array(12).fill(null);
-    const circ12 = new Array(12).fill(null);
-    const thp12  = new Array(12).fill(null);
-    const txab12 = new Array(12).fill(null);
-    const vagab12= new Array(12).fill(null);
-
-    const countV = new Array(12).fill(0);
-    const countC = new Array(12).fill(0);
-    const countT = new Array(12).fill(0);
-    const countTx= new Array(12).fill(0);
-    const countVA= new Array(12).fill(0);
-
-    anos.forEach(a => {
-      tids.forEach(t => {
-        const tot = P.totais[t] && P.totais[t][a];
-        if (tot) tot.forEach((v,i) => { pris12[i] += v; });
-
-        const ind = D.data[a] && D.data[a][t];
-        if (!ind) return;
-        for (let i=0; i<12; i++) {
-          if (ind.vand[i] !== null) { vand12[i] = (vand12[i]||0) + +ind.vand[i]; countV[i]++; }
-          if (ind.circ[i] !== null) { circ12[i] = (circ12[i]||0) + +ind.circ[i]; countC[i]++; }
-          if (ind.thp[i]  !== null) { thp12[i]  = (thp12[i] ||0) + +ind.thp[i];  countT[i]++; }
-          if (ind.txab[i] !== null) { txab12[i] = (txab12[i]||0) + +ind.txab[i]; countTx[i]++; }
-          if (ind.vagab[i]!== null) { vagab12[i]= (vagab12[i]||0)+ +ind.vagab[i];countVA[i]++; }
-        }
-      });
-    });
-
-    // média quando múltiplos trechos para taxas, soma para absolutos
-    const txabFmt = txab12.map((v,i) => countTx[i]>0 ? +((v/countTx[i])*100).toFixed(2) : null);
-
-    return {
-      pris: pris12,
-      vand: vand12.map((v,i) => countV[i]>0 ? Math.round(v) : null),
-      circ: circ12.map((v,i) => countC[i]>0 ? Math.round(v) : null),
-      thp:  thp12.map( (v,i) => countT[i]>0 ? +((v/countT[i]).toFixed(1)) : null),
-      txab: txabFmt,
-      vagab:vagab12.map((v,i)=> countVA[i]>0? Math.round(v):null),
-    };
-  }
-
-  /* ── Render charts + table ── */
-  function render() {
-    const tid = currentTid, ano = currentAno;
-    const s = compileSeries(tid, ano);
-
-    const label = (tid === 'all' ? 'Todos os Trechos' : T_NOME[tid])
-                + ' · ' + (ano === 'all' ? 'Todos os Anos' : ano);
-
-    const totalP = s.pris.reduce((a,b)=>a+b,0);
-    const mCom   = s.pris.filter(x=>x>0).length;
-
-    // delta médio vandalismo
-    let dvSum=0, dvN=0;
-    for (let i=0; i<11; i++) {
-      if (s.pris[i]>0 && s.vand[i]!==null && s.vand[i+1]!==null && +s.vand[i]>0) {
-        dvSum += ((+s.vand[i+1]-+s.vand[i])/Math.abs(+s.vand[i]))*100; dvN++;
-      }
-    }
-    const dvMedia = dvN ? Math.round(dvSum/dvN) : null;
-    const dvCls   = dvMedia===null?'':dvMedia<0?'d-pos':'d-neg';
-
-    const wrap = document.getElementById('main-content');
-    wrap.innerHTML = `
-      <div class="sec-hdr">
-        <i data-lucide="bar-chart-2" style="width:15px;height:15px"></i>
-        Resumo — ${label}
-      </div>
-      <div class="resumo-row">
-        <div class="resumo-mini">
-          <div class="val" style="color:var(--navy2)">${totalP.toLocaleString('pt-BR')}</div>
-          <div class="lbl">Prisões / Conduções</div>
-        </div>
-        <div class="resumo-mini">
-          <div class="val" style="color:var(--orange)">${mCom}</div>
-          <div class="lbl">Meses com Prisões</div>
-        </div>
-        <div class="resumo-mini">
-          <div class="val ${dvCls}">${dvMedia!==null?(dvMedia>0?'+':'')+dvMedia+'%':'—'}</div>
-          <div class="lbl">Δ Médio Vandalismo (mês seguinte)</div>
-        </div>
-      </div>
-
-      <div class="sec-hdr">
-        <i data-lucide="trending-down" style="width:15px;height:15px"></i>
-        Correlação Mensal — ${label}
-      </div>
-      <div class="charts-grid">
-        <div class="chart-card">
-          <div class="chart-title"><i data-lucide="shield-alert" style="width:14px;height:14px"></i>Prisões × Vandalismo</div>
-          <div class="chart-sep"></div>
-          <canvas id="ch-vand"></canvas>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title"><i data-lucide="train-front" style="width:14px;height:14px"></i>Prisões × Circulação</div>
-          <div class="chart-sep"></div>
-          <canvas id="ch-circ"></canvas>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title"><i data-lucide="clock" style="width:14px;height:14px"></i>Prisões × THP (horas)</div>
-          <div class="chart-sep"></div>
-          <canvas id="ch-thp"></canvas>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title"><i data-lucide="package" style="width:14px;height:14px"></i>Prisões × Vagões Abertos</div>
-          <div class="chart-sep"></div>
-          <canvas id="ch-vagab"></canvas>
-        </div>
-        <div class="chart-card full">
-          <div class="chart-title"><i data-lucide="layers" style="width:14px;height:14px"></i>Visão Geral — Todos os Indicadores × Prisões</div>
-          <div class="chart-sep"></div>
-          <canvas id="ch-all"></canvas>
-        </div>
-      </div>
-
-      <div class="sec-hdr">
-        <i data-lucide="table" style="width:15px;height:15px"></i>
-        Variação dos Indicadores no Mês Seguinte a Cada Prisão
-      </div>
-      <div class="delta-card" id="delta-wrap"></div>
-    `;
-
-    lucide.createIcons();
-
-    /* ── helpers de dataset ── */
-    const LABEL_ABOVE = {
-      display: ctx => (ctx.parsed?.y ?? 0) > 0,
-      color: RU.navy, font: { size: 9, weight: '700' },
-      anchor: 'end', align: 'end', offset: 2,
-      formatter: v => (!v || v === 0) ? '' : v
-    };
-    const LABEL_LINE = {
-      display: ctx => (ctx.parsed?.y ?? 0) > 0,
-      color: RU.navy, backgroundColor: 'rgba(255,255,255,.85)',
-      borderRadius: 3, padding: { top:1, bottom:1, left:3, right:3 },
-      font: { size: 8, weight: '700' },
-      anchor: 'top', align: 'top', offset: 3,
-      formatter: v => v === null ? '' : v
-    };
-
-    const barDs = (label, data, color, yAxis) => ({
-      type: 'bar', label, data,
-      backgroundColor: color, borderColor: color,
-      borderWidth: 0, borderRadius: 3,
-      yAxisID: yAxis || 'yLeft', order: 2,
-      datalabels: LABEL_ABOVE
-    });
-
-    const lineDs = (label, data, color, yAxis) => ({
-      type: 'line', label, data,
-      borderColor: color, backgroundColor: 'transparent',
-      borderWidth: 2.5, tension: 0.35, spanGaps: false,
-      pointRadius: 4, pointBackgroundColor: '#fff',
-      pointBorderColor: color, pointBorderWidth: 2,
-      fill: false, yAxisID: yAxis || 'yRight', order: 1,
-      datalabels: LABEL_LINE
-    });
-
-    /* ── Vandalismo ── */
-    destroyChart('ch-vand');
-    charts['ch-vand'] = new Chart(document.getElementById('ch-vand'), {
-      data: { labels: MESES, datasets: [
-        barDs('Prisões', s.pris, RU.navy2),
-        lineDs('Vandalismo', s.vand, RU.orange)
-      ]},
-      options: baseOpts()
-    });
-
-    /* ── Circulação ── */
-    destroyChart('ch-circ');
-    charts['ch-circ'] = new Chart(document.getElementById('ch-circ'), {
-      data: { labels: MESES, datasets: [
-        barDs('Prisões', s.pris, RU.navy2),
-        lineDs('Circulação', s.circ, RU.orange)
-      ]},
-      options: baseOpts()
-    });
-
-    /* ── THP ── */
-    destroyChart('ch-thp');
-    charts['ch-thp'] = new Chart(document.getElementById('ch-thp'), {
-      data: { labels: MESES, datasets: [
-        barDs('Prisões', s.pris, RU.navy2),
-        lineDs('THP (h)', s.thp, RU.orange)
-      ]},
-      options: baseOpts()
-    });
-
-    /* ── Vagões Abertos ── */
-    destroyChart('ch-vagab');
-    charts['ch-vagab'] = new Chart(document.getElementById('ch-vagab'), {
-      data: { labels: MESES, datasets: [
-        barDs('Prisões', s.pris, RU.navy2),
-        lineDs('Vagões Abertos', s.vagab, RU.orange)
-      ]},
-      options: baseOpts()
-    });
-
-    /* ── Geral ── */
-    destroyChart('ch-all');
-    charts['ch-all'] = new Chart(document.getElementById('ch-all'), {
-      data: { labels: MESES, datasets: [
-        barDs('Prisões', s.pris, RU.navy2),
-        { type:'line', label:'Vandalismo', data:s.vand, borderColor:RU.orange, backgroundColor:'transparent',
-          borderWidth:2, tension:.35, spanGaps:false, pointRadius:3, pointBackgroundColor:'#fff',
-          pointBorderColor:RU.orange, pointBorderWidth:2, fill:false, yAxisID:'yRight', order:1,
-          datalabels:{ display: ctx=>(ctx.parsed?.y??0)>0, color:RU.orange, font:{size:8,weight:'700'},
-            anchor:'top', align:'top', offset:2, formatter:v=>v??'' } },
-        { type:'line', label:'THP (h)',   data:s.thp,  borderColor:RU.navyL, backgroundColor:'transparent',
-          borderWidth:2, tension:.35, spanGaps:false, pointRadius:3, pointBackgroundColor:'#fff',
-          pointBorderColor:RU.navyL, pointBorderWidth:2, fill:false, yAxisID:'yRight', order:1,
-          datalabels:{ display: ctx=>(ctx.parsed?.y??0)>0, color:RU.navyL, font:{size:8,weight:'700'},
-            anchor:'top', align:'top', offset:2, formatter:v=>v??'' } },
-      ]},
-      options: {
-        responsive: true, maintainAspectRatio: true,
-        plugins: {
-          legend: { labels:{ color:RU.navy, font:{size:11,weight:'600'}, boxWidth:12, padding:14 } },
-          tooltip: TOOLTIP_BASE,
-          datalabels: { display: false }
-        },
-        scales: {
-          x: { ticks:{color:RU.navy,font:{size:10,weight:'600'},maxRotation:0}, grid:{display:false}, border:{display:false} },
-          yLeft:  { position:'left',  ticks:{display:false}, grid:{color:'rgba(0,56,101,.06)'}, border:{display:false}, title:{display:false} },
-          yRight: { position:'right', ticks:{display:false}, grid:{display:false}, border:{display:false}, title:{display:false} }
-        }
-      }
-    });
-
-    /* ── Delta table ── */
-    const avg3 = (arr, i) => {
-      const vals = [arr[i+1], arr[i+2], arr[i+3]].filter(v => v !== null && v !== undefined);
-      return vals.length ? vals.reduce((s,v)=>s+ +v,0)/vals.length : null;
-    };
-    const fmtDelta = (a, b, inv) => {
-      if (a===null || b===null || +a===0) return '<td class="d-neu"><span>→ 0%</span></td>';
-      const pct = Math.round(((+b-+a)/Math.abs(+a))*100);
-      const pos = inv ? pct < 0 : pct > 0;
-      const cls = pct===0?'d-neu':pos?'d-pos':'d-neg';
-      const arr = pct===0?'→':pct>0?'▲':'▼';
-      const val = `${pct>0?'+':''}${pct}%`;
-      return `<td><span class="${cls}">${arr} ${val}</span></td>`;
-    };
-
-    let rows='', hasRows=false;
-    for (let i=0; i<9; i++) {
-      if (!s.pris[i]) continue;
-      hasRows=true;
-      const m3end = MESES[Math.min(i+3,11)];
-      rows+=`<tr>
-        <td><strong>${MESES[i]}</strong> <span style="color:var(--muted)">→ média ${MESES[i+1]}–${m3end}</span></td>
-        <td><span class="badge-ev">${s.pris[i]} prisões</span></td>
-        ${fmtDelta(s.vand[i],  avg3(s.vand, i),  true)}
-        ${fmtDelta(s.thp[i],   avg3(s.thp,  i),  true)}
-        ${fmtDelta(s.vagab[i], avg3(s.vagab,i),  true)}
-        ${fmtDelta(s.circ[i],  avg3(s.circ, i),  false)}
-      </tr>`;
-    }
-
-    document.getElementById('delta-wrap').innerHTML = hasRows
-      ? `<table class="delta-table">
-           <thead><tr>
-             <th>Período</th><th>Evento</th>
-             <th>Vandalismo</th><th>THP</th><th>Vagões Abertos</th><th>Circulação</th>
-           </tr></thead>
-           <tbody>${rows}</tbody>
-         </table>
-         <p style="font-size:11px;color:var(--muted);margin-top:12px;padding-left:4px">
-           ▲ sobe · ▼ desce · verde = melhora · vermelho = piora · → sem variação · Comparação: mês da prisão vs média dos 3 meses seguintes
-         </p>`
-      : '<p style="color:var(--muted);padding:20px;font-size:13px">Nenhum mês com prisões registrado neste período.</p>';
-  }
-
-  /* ── Events ── */
-  document.getElementById('trecho-tabs').addEventListener('click', e => {
-    const btn = e.target.closest('.pill[data-tid]');
-    if (!btn) return;
-    document.querySelectorAll('#trecho-tabs .pill').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    currentTid = btn.dataset.tid;
-    render();
-  });
-
-  document.getElementById('ano-tabs').addEventListener('click', e => {
-    const btn = e.target.closest('.pill[data-ano]');
-    if (!btn) return;
-    document.querySelectorAll('#ano-tabs .pill').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    currentAno = btn.dataset.ano;
-    render();
-  });
-
-  render();
-  lucide.createIcons();
 })();
 
+lucide.createIcons();
 
 </script>
 </body>
