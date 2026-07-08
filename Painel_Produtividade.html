@@ -314,19 +314,19 @@
     const totalPrej = ops.reduce((s, o) => s + (o.prejuizo != null ? +o.prejuizo : 0), 0);
     const comPrej   = ops.filter(o => o.prejuizo != null && o.prejuizo > 0).length;
 
-    // Para cada operação: valor mensal = prejuizo / meses(inicio→previsao)
-    // Soma dos valores mensais × 12 = indenizações evitadas
-    const mensalTotal = ops.reduce((s, o) => {
-      if (!o.prejuizo || !o.inicio || !o.previsao) return s;
+    // Total de meses somados de todas as operações (inicio → previsao)
+    // Valor mensal = totalPrej / totalMeses → projeção = mensal × 12
+    const totalMeses = ops.reduce((s, o) => {
+      if (!o.inicio || !o.previsao) return s;
       const ini = new Date(o.inicio);
       const fim = new Date(o.previsao);
       const meses = Math.max(1,
         (fim.getFullYear() - ini.getFullYear()) * 12 +
         (fim.getMonth() - ini.getMonth()) + 1
       );
-      return s + (+o.prejuizo / meses);
+      return s + meses;
     }, 0);
-    const projPrej = mensalTotal * 12;
+    const projPrej = totalMeses > 0 ? (totalPrej / totalMeses) * 12 : 0;
 
     document.getElementById('res-prej').textContent = fmtBRL(totalPrej);
     document.getElementById('res-proj').textContent = fmtBRL(projPrej);
