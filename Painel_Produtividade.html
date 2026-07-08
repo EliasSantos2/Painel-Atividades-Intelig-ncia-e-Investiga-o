@@ -177,29 +177,6 @@
     background: rgba(0,92,169,.08); color: var(--navy2); border: 1px solid rgba(0,92,169,.2);
   }
 
-  /* ── Resultados Atingidos card ── */
-  .result-card {
-    background: var(--card); border-radius: 10px; padding: 20px 24px;
-    box-shadow: var(--shadow); margin-bottom: 20px;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-    align-items: start;
-  }
-  .result-card-hdr {
-    grid-column: 1 / -1; display: flex; align-items: center; gap: 8px;
-    font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .08em; color: var(--navy); margin-bottom: 4px;
-  }
-  .result-kpi {
-    background: var(--bg); border-radius: 8px; padding: 16px 18px;
-    border-left: 4px solid var(--red);
-  }
-  .result-kpi.proj { border-left-color: #b45309; }
-  .result-kpi .r-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
-  .result-kpi .r-val { font-size: 26px; font-weight: 800; color: var(--red); line-height: 1; }
-  .result-kpi.proj .r-val { color: #b45309; }
-  .result-kpi .r-sub { font-size: 10px; color: var(--muted); margin-top: 4px; }
-  .result-footer { grid-column: 1 / -1; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px; }
-
   /* ── Responsive ── */
   @media (max-width: 1100px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } }
   @media (max-width: 860px)  { .kpi-row { grid-template-columns: repeat(2, 1fr); } .charts-grid { grid-template-columns: 1fr; } }
@@ -223,25 +200,6 @@
   <div class="page-title">
     <h2>Análise de Impacto das Prisões nos Indicadores Ferroviários</h2>
     <p>Correlação entre prisões/conduções realizadas pelo time de inteligência e a variação dos indicadores de THP, Vandalismo, Circulação, Taxa de Abertura e Vagões Abertos por trecho.</p>
-  </div>
-
-  <!-- Resultados Atingidos -->
-  <div class="result-card" id="result-card">
-    <div class="result-card-hdr">
-      <i data-lucide="trending-up" style="width:15px;height:15px;color:var(--orange)"></i>
-      Resultados Atingidos — Investigações
-    </div>
-    <div class="result-kpi">
-      <div class="r-label">Prejuízo para a Companhia</div>
-      <div class="r-val" id="res-prej">—</div>
-      <div class="r-sub">soma das operações investigadas</div>
-    </div>
-    <div class="result-kpi proj">
-      <div class="r-label">Projeção caso não ocorresse a investigação</div>
-      <div class="r-val" id="res-proj">—</div>
-      <div class="r-sub">prejuízo × 12 meses</div>
-    </div>
-    <div class="result-footer" id="res-footer">Carregando dados das investigações…</div>
   </div>
 
   <!-- Filtros -->
@@ -678,45 +636,7 @@ Chart.register(ChartDataLabels);
   lucide.createIcons();
 })();
 
-/* ── Resultados Atingidos ── */
-(async function() {
-  const fmtBRL = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL', minimumFractionDigits:2 });
 
-  function renderCard(ops) {
-    const totalPrej = ops.reduce((s, o) => s + (o.prejuizo != null ? +o.prejuizo : 0), 0);
-    const projPrej  = totalPrej * 12;
-    const comPrej   = ops.filter(o => o.prejuizo != null && o.prejuizo > 0).length;
-
-    document.getElementById('res-prej').textContent = fmtBRL(totalPrej);
-    document.getElementById('res-proj').textContent = fmtBRL(projPrej);
-    document.getElementById('res-footer').textContent =
-      `${comPrej} operaç${comPrej === 1 ? 'ão' : 'ões'} com prejuízo registrado de ${ops.length} no total`;
-  }
-
-  /* 1. Tenta localStorage */
-  try {
-    const raw = localStorage.getItem('painel_inv_v3');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const ops = Array.isArray(parsed) ? parsed : (parsed.operacoes || []);
-      if (ops.length) { renderCard(ops); return; }
-    }
-  } catch(_) {}
-
-  /* 2. Fallback Supabase */
-  try {
-    const SUPA_URL = 'https://rfwmklqzlfvllsrkvgob.supabase.co';
-    const SUPA_KEY = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmd21rbHF6bGZ2bGxzcmt2Z29iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzg4NzIsImV4cCI6MjA5NzgxNDg3Mn0','xwJItVzF3jW46BtMQBLSNj3rT64G0dybPZQZ_k-QlTM'].join('.');
-    const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
-    const { data } = await sb.from('painel_inv').select('data').eq('id', 1).single();
-    if (data?.data) {
-      const ops = Array.isArray(data.data) ? data.data : (data.data.operacoes || []);
-      renderCard(ops);
-    }
-  } catch(_) {
-    document.getElementById('res-footer').textContent = 'Acesse o Módulo de Investigações para registrar dados.';
-  }
-})();
 </script>
 </body>
 </html>
