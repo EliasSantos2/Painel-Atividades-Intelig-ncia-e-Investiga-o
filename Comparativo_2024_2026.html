@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Comparativo 2024 vs 2026 — Indicadores de Segurança</title>
+<title>Comparativo 2024 vs 2026 — Trecho 0 · Indicadores de Segurança</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
@@ -102,41 +102,41 @@
   <a href="index.html"><i data-lucide="chevron-left" style="width:14px;height:14px"></i> Início</a>
   <i data-lucide="train-front" style="width:20px;height:20px;color:var(--orange)"></i>
   <h1>Comparativo de Indicadores — 2024 vs 2026</h1>
-  <span class="period">Jan–Jul · Todos os Trechos</span>
+  <span class="period">Jan–Jul · Trecho 0</span>
 </header>
 
 <div class="main">
 
   <div class="page-title">
     <h2>Redução dos Indicadores de Segurança: 2024 → 2026</h2>
-    <p>Comparação Janeiro–Julho de 2024 vs Janeiro–Julho de 2026 · Soma de todos os trechos (T0, T1, T2 e T3)</p>
+    <p>Comparação Janeiro–Julho de 2024 vs Janeiro–Julho de 2026 · Trecho 0 — Baixada Santista</p>
   </div>
 
   <!-- Resumo em cards -->
   <div class="kpi-grid">
     <div class="kpi-card good">
       <div class="k-label">▼ Vandalismo</div>
-      <div class="k-pct">−40,9%</div>
-      <div class="k-from-to"><strong>636</strong> ocorrências em 2024 → <strong>376</strong> em 2026</div>
-      <div class="k-note">Redução de 260 ocorrências de vandalismo</div>
+      <div class="k-pct">−73,5%</div>
+      <div class="k-from-to"><strong>408</strong> ocorrências em 2024 → <strong>108</strong> em 2026</div>
+      <div class="k-note">Redução de 300 ocorrências de vandalismo</div>
     </div>
     <div class="kpi-card good">
       <div class="k-label">▼ THP (Tempo de Halte de Processo)</div>
-      <div class="k-pct">−18,8%</div>
-      <div class="k-from-to"><strong>726,6 h</strong> em 2024 → <strong>590,2 h</strong> em 2026</div>
-      <div class="k-note">Redução de 136 horas de parada</div>
+      <div class="k-pct">−53,6%</div>
+      <div class="k-from-to"><strong>297,1 h</strong> em 2024 → <strong>137,9 h</strong> em 2026</div>
+      <div class="k-note">Redução de 159 horas de parada</div>
     </div>
     <div class="kpi-card good">
       <div class="k-label">▼ Vagões Abertos</div>
-      <div class="k-pct">−56,4%</div>
-      <div class="k-from-to"><strong>140</strong> vagões em 2024 → <strong>61</strong> em 2026</div>
-      <div class="k-note">Redução de 79 vagões abertos indevidamente</div>
+      <div class="k-pct">−65,9%</div>
+      <div class="k-from-to"><strong>88</strong> vagões em 2024 → <strong>30</strong> em 2026</div>
+      <div class="k-note">Redução de 58 vagões abertos indevidamente</div>
     </div>
     <div class="kpi-card good">
       <div class="k-label">▲ Taxa de Sucesso</div>
-      <div class="k-pct">+0,62 pp</div>
-      <div class="k-from-to"><strong>98,51%</strong> em 2024 → <strong>99,13%</strong> em 2026</div>
-      <div class="k-note">Melhora consistente acima da meta (96%)</div>
+      <div class="k-pct">+2,76 pp</div>
+      <div class="k-from-to"><strong>95,98%</strong> em 2024 → <strong>98,74%</strong> em 2026</div>
+      <div class="k-note">Melhora expressiva — acima da meta de 96%</div>
     </div>
   </div>
 
@@ -211,8 +211,8 @@ new Chart(document.getElementById('ch-vand'), {
   data: {
     labels: ['Jan–Jul'],
     datasets: [
-      { label: '2024', data: [636], backgroundColor: C24, borderRadius: 5 },
-      { label: '2026', data: [376], backgroundColor: C26, borderRadius: 5 }
+      { label: '2024', data: [408], backgroundColor: C24, borderRadius: 5 },
+      { label: '2026', data: [108], backgroundColor: C26, borderRadius: 5 }
     ]
   },
   options: { ...baseOpts('Ocorrências'), plugins: { ...baseOpts().plugins,
@@ -226,8 +226,8 @@ new Chart(document.getElementById('ch-thp'), {
   data: {
     labels: ['Jan–Jul'],
     datasets: [
-      { label: '2024', data: [726.6], backgroundColor: C24, borderRadius: 5 },
-      { label: '2026', data: [590.2], backgroundColor: C26, borderRadius: 5 }
+      { label: '2024', data: [297.1], backgroundColor: C24, borderRadius: 5 },
+      { label: '2026', data: [137.9], backgroundColor: C26, borderRadius: 5 }
     ]
   },
   options: baseOpts('Horas')
@@ -239,8 +239,8 @@ new Chart(document.getElementById('ch-vag'), {
   data: {
     labels: ['Jan–Jul'],
     datasets: [
-      { label: '2024', data: [140], backgroundColor: C24, borderRadius: 5 },
-      { label: '2026', data: [61],  backgroundColor: C26, borderRadius: 5 }
+      { label: '2024', data: [88], backgroundColor: C24, borderRadius: 5 },
+      { label: '2026', data: [30], backgroundColor: C26, borderRadius: 5 }
     ]
   },
   options: baseOpts('Vagões')
@@ -252,15 +252,15 @@ new Chart(document.getElementById('ch-tx'), {
   data: {
     labels: ['Jan–Jul'],
     datasets: [
-      { label: '2024', data: [98.51], backgroundColor: C24, borderRadius: 5 },
-      { label: '2026', data: [99.13], backgroundColor: C26, borderRadius: 5 }
+      { label: '2024', data: [95.98], backgroundColor: C24, borderRadius: 5 },
+      { label: '2026', data: [98.74], backgroundColor: C26, borderRadius: 5 }
     ]
   },
   options: {
     ...baseOpts('%'),
     scales: {
       x: { grid: { display: false }, ticks: { color: '#5a6e8a' } },
-      y: { min: 96, max: 100, grid: { color: GRID }, ticks: { color: '#5a6e8a', callback: v => v + '%' } }
+      y: { min: 93, max: 100, grid: { color: GRID }, ticks: { color: '#5a6e8a', callback: v => v + '%' } }
     }
   }
 });
@@ -272,8 +272,8 @@ new Chart(document.getElementById('ch-pct'), {
     labels: ['Vandalismo', 'THP (Paradas)', 'Vagões Abertos', 'Taxa de Sucesso'],
     datasets: [{
       label: 'Variação % (2024 → 2026)',
-      data: [-40.9, -18.8, -56.4, 0.6],
-      backgroundColor: [-40.9, -18.8, -56.4, 0.6].map(v => v < 0 ? '#1E8449' : '#F78344'),
+      data: [-73.5, -53.6, -65.9, 2.76],
+      backgroundColor: [-73.5, -53.6, -65.9, 2.76].map(v => v < 0 ? '#1E8449' : '#F78344'),
       borderRadius: 5,
     }]
   },
@@ -288,7 +288,7 @@ new Chart(document.getElementById('ch-pct'), {
       x: {
         grid: { color: GRID },
         ticks: { color: '#5a6e8a', font: { size: 12 }, callback: v => v + '%' },
-        min: -70, max: 10
+        min: -85, max: 15
       },
       y: { grid: { display: false }, ticks: { color: '#1A2E45', font: { size: 13, weight: '600' } } }
     }
@@ -306,7 +306,7 @@ new Chart(document.getElementById('ch-pct'), {
         ctx.fillStyle = val < 0 ? '#1E8449' : '#F78344';
         ctx.textAlign = anchor;
         ctx.textBaseline = 'middle';
-        ctx.fillText((val > 0 ? '+' : '') + val + '%', x, bar.y);
+        ctx.fillText((val > 0 ? '+' : '') + val.toFixed(1).replace('.',',') + (Math.abs(val) < 10 ? ' pp' : '%'), x, bar.y);
         ctx.restore();
       });
     }
