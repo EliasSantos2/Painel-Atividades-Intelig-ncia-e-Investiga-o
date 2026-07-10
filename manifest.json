@@ -1,0 +1,28 @@
+{
+  "name": "Inteligência & Investigação — Rumo",
+  "short_name": "Rumo Intel",
+  "description": "Plataforma de Inteligência e Investigação da Rumo Logística",
+  "start_url": "/Painel-Atividades-Intelig-ncia-e-Investiga-o/",
+  "scope": "/Painel-Atividades-Intelig-ncia-e-Investiga-o/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#003865",
+  "theme_color": "#003865",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["business", "productivity"]
+}
