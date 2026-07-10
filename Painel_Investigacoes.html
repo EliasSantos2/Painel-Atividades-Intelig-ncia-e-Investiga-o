@@ -527,6 +527,12 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
       <label>Prejuízo para a Companhia até o momento da investigação (R$)</label>
       <input id="op-prejuizo" type="number" min="0" step="0.01" placeholder="Ex: 150000.00" style="max-width:280px">
       <div style="font-size:11px;color:var(--text2);margin-top:4px">Valor estimado em reais. Será somado no painel de Resultados Atingidos.</div>
+      <div id="prej-preview" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(0,56,101,.06);border-radius:8px;font-size:12px;color:var(--text);border-left:3px solid var(--navy2)">
+        <strong>Prévia do cálculo:</strong>
+        <span id="prej-preview-meses"></span> meses de investigação →
+        Mensal: <strong id="prej-preview-mensal"></strong> →
+        Indenizações evitadas (anual): <strong id="prej-preview-anual" style="color:#b45309"></strong>
+      </div>
     </div>
     <div class="form-group full">
       <label>RELINT Final da Investigação</label>
@@ -1940,6 +1946,39 @@ loadConfig();
   document.addEventListener('visibilitychange',function(){ if(!document.hidden){ if(pending){ location.reload(); } else { check(); } } });
 })();
 document.addEventListener('DOMContentLoaded',function(){ if(typeof lucide!=='undefined') lucide.createIcons(); });
+
+// Prévia de cálculo de indenizações evitadas no formulário
+(function(){
+  const fmtBRL = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2});
+
+  function atualizarPrevia(){
+    const ini  = document.getElementById('op-inicio').value;
+    const fim  = document.getElementById('op-previsao').value;
+    const prej = parseFloat(document.getElementById('op-prejuizo').value);
+    const preview = document.getElementById('prej-preview');
+
+    if (!ini || !fim || isNaN(prej) || prej <= 0) { preview.style.display='none'; return; }
+
+    const dIni = new Date(ini);
+    const dFim = new Date(Math.min(new Date(fim), new Date()));
+    const meses = Math.max(1,
+      (dFim.getFullYear()-dIni.getFullYear())*12 +
+      (dFim.getMonth()-dIni.getMonth()) + 1
+    );
+    const mensal = prej / meses;
+    const anual  = mensal * 12;
+
+    document.getElementById('prej-preview-meses').textContent = meses;
+    document.getElementById('prej-preview-mensal').textContent = fmtBRL(mensal);
+    document.getElementById('prej-preview-anual').textContent  = fmtBRL(anual);
+    preview.style.display = 'block';
+  }
+
+  ['op-inicio','op-previsao','op-prejuizo'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', atualizarPrevia);
+    document.getElementById(id)?.addEventListener('input',  atualizarPrevia);
+  });
+})();
 </script>
 <script>
 if ('serviceWorker' in navigator) {
