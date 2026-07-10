@@ -195,6 +195,21 @@
   .res-kpi.fuel  .r-icon { background: rgba(26,105,153,.1); }
   .res-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 8px 0 12px; display: flex; align-items: center; gap: 8px; }
   .res-section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  /* ── Tabela de operações ── */
+  .ops-table-card { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 28px; }
+  .ops-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .ops-table thead th { background: var(--navy); color: rgba(255,255,255,.85); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; padding: 11px 16px; text-align: left; }
+  .ops-table thead th:not(:first-child) { text-align: right; }
+  .ops-table tbody td { padding: 11px 16px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  .ops-table tbody td:not(:first-child) { text-align: right; }
+  .ops-table tbody tr:last-child td { border-bottom: none; }
+  .ops-table tbody tr:hover td { background: rgba(0,56,101,.03); }
+  .ops-table .t-name { font-weight: 600; }
+  .ops-table .t-meses { color: var(--muted); font-size: 12px; }
+  .ops-table .t-prej { color: var(--red); font-weight: 700; }
+  .ops-table .t-evit { color: #b45309; font-weight: 700; }
+  .ops-table tfoot td { background: var(--bg); font-weight: 700; font-size: 12px; padding: 10px 16px; border-top: 2px solid var(--border); }
+  .ops-table tfoot td:not(:first-child) { text-align: right; }
   .res-kpi .r-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
   .res-kpi .r-val { font-size: 32px; font-weight: 800; color: var(--red); line-height: 1.1; }
   .res-kpi.proj  .r-val { color: #b45309; }
@@ -251,6 +266,34 @@
     </div>
   </div>
   <div class="res-footer-note" id="res-footer">Carregando dados das investigações…</div>
+
+  <!-- Tabela de operações com indenizações -->
+  <div class="res-section-label" style="margin-top:20px">Detalhamento por Operação</div>
+  <div class="ops-table-card">
+    <table class="ops-table">
+      <thead>
+        <tr>
+          <th>Operação</th>
+          <th>Início</th>
+          <th>Previsão Término</th>
+          <th>Duração</th>
+          <th>Indenização Paga</th>
+          <th>Indenização Evitada (anual)</th>
+        </tr>
+      </thead>
+      <tbody id="ops-table-body">
+        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">Carregando…</td></tr>
+      </tbody>
+      <tfoot id="ops-table-foot" style="display:none">
+        <tr>
+          <td colspan="3">Total</td>
+          <td id="ops-tot-meses">—</td>
+          <td id="ops-tot-prej" class="t-prej">—</td>
+          <td id="ops-tot-evit" class="t-evit">—</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
 
   <!-- Redução de Indicadores 2024 vs 2026 -->
   <div class="res-section-label">Redução dos Indicadores de Segurança — Trecho 0 · 2023 (Full Year) vs 2026 (Projeção)</div>
@@ -336,6 +379,37 @@
     document.getElementById('res-ops').textContent  = comPrej;
     document.getElementById('res-footer').textContent =
       `${comPrej} operaç${comPrej === 1 ? 'ão' : 'ões'} com prejuízo registrado de ${ops.length} no total`;
+
+    // Popula tabela de detalhamento
+    const fmtData = d => new Date(d).toLocaleDateString('pt-BR');
+    const tbody = document.getElementById('ops-table-body');
+    const tfoot = document.getElementById('ops-table-foot');
+    tbody.innerHTML = '';
+
+    opsCompletas.forEach(o => {
+      const ini = new Date(o.inicio);
+      const fim = new Date(Math.min(new Date(o.previsao), hoje));
+      const meses = Math.max(1,
+        (fim.getFullYear() - ini.getFullYear()) * 12 +
+        (fim.getMonth() - ini.getMonth()) + 1
+      );
+      const evitada = (+o.prejuizo / totalMeses) * 12;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="t-name">${o.nome || '—'}</td>
+        <td>${fmtData(o.inicio)}</td>
+        <td>${fmtData(o.previsao)}</td>
+        <td class="t-meses">${meses} ${meses === 1 ? 'mês' : 'meses'}</td>
+        <td class="t-prej">${fmtBRL(+o.prejuizo)}</td>
+        <td class="t-evit">${fmtBRL(evitada)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('ops-tot-meses').textContent = `${totalMeses} meses`;
+    document.getElementById('ops-tot-prej').textContent  = fmtBRL(totalPrej);
+    document.getElementById('ops-tot-evit').textContent  = fmtBRL(projPrej);
+    tfoot.style.display = '';
   }
 
   try {
