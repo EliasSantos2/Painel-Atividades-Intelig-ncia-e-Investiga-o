@@ -312,13 +312,15 @@
   const fmtBRL = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL', minimumFractionDigits:2 });
 
   function renderRes(ops) {
-    const totalPrej = ops.reduce((s, o) => s + (o.prejuizo != null ? +o.prejuizo : 0), 0);
-    const comPrej   = ops.filter(o => o.prejuizo != null && o.prejuizo > 0).length;
+    // Apenas operações com prejuizo + inicio + previsao preenchidos
+    const opsCompletas = ops.filter(o => o.prejuizo != null && +o.prejuizo > 0 && o.inicio && o.previsao);
+    const comPrej = opsCompletas.length;
+
+    const totalPrej = opsCompletas.reduce((s, o) => s + +o.prejuizo, 0);
 
     // Período total: do inicio mais antigo até a previsao mais recente
-    // Valor mensal = totalPrej / meses_totais → projeção = mensal × 12
-    const datesIni = ops.map(o => o.inicio).filter(Boolean).map(d => new Date(d));
-    const datesFim = ops.map(o => o.previsao).filter(Boolean).map(d => new Date(d));
+    const datesIni = opsCompletas.map(o => new Date(o.inicio));
+    const datesFim = opsCompletas.map(o => new Date(o.previsao));
     const maisAntigo = datesIni.length ? new Date(Math.min(...datesIni)) : null;
     const maisFuturo = datesFim.length ? new Date(Math.max(...datesFim)) : null;
     const totalMeses = (maisAntigo && maisFuturo) ? Math.max(1,
