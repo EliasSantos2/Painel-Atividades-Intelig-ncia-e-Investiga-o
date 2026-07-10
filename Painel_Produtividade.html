@@ -357,8 +357,6 @@
     document.getElementById('res-prej').textContent = fmtBRL(totalPrej);
     document.getElementById('res-proj').textContent = fmtBRL(projPrej);
     document.getElementById('res-ops').textContent  = comPrej;
-    document.getElementById('res-footer').textContent =
-      `${comPrej} operaç${comPrej === 1 ? 'ão' : 'ões'} com prejuízo registrado de ${ops.length} no total`;
 
     // Popula tabela de detalhamento
     const fmtData = d => new Date(d).toLocaleDateString('pt-BR');
@@ -409,7 +407,6 @@
     }
   } catch(_) {}
 
-  document.getElementById('res-footer').textContent = 'Acesse o Módulo de Investigações para registrar dados.';
   document.getElementById('res-prej').textContent = 'R$ 0,00';
   document.getElementById('res-proj').textContent = 'R$ 0,00';
   document.getElementById('res-ops').textContent  = '0';
