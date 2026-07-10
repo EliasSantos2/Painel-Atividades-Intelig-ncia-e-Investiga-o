@@ -1,323 +1,302 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#003865"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Rumo Intel"><link rel="apple-touch-icon" href="icons/icon-192.png">
-<title>Impacto das Prisões — Indicadores de Produtividade</title>
+<title>Resultados Atingidos — Investigações</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="dados_apreensoes.js"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
-  :root {
-    --navy:    #003865;
-    --navy2:   #005CA9;
-    --navyL:   #6B93C4;
-    --navyP:   #A8BDD4;
-    --orange:  #F78344;
-    --orangeL: #FBCAA9;
-    --red:     #C0392B;
-    --green:   #1E8449;
-    --purple:  #6C3483;
-    --bg:      #F0F4F8;
-    --card:    #FFFFFF;
-    --text:    #1A2E45;
-    --muted:   #6B82A0;
-    --border:  #D8E3F0;
-    --shadow:  0 2px 8px rgba(0,56,101,.07);
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+:root {
+  --navy:   #003865;
+  --navy2:  #005CA9;
+  --navyL:  #6B93C4;
+  --orange: #F78344;
+  --red:    #C0392B;
+  --green:  #1E8449;
+  --greenL: #D5F0E0;
+  --redL:   #FDECEA;
+  --blueL:  #E8F0FA;
+  --bg:     #F0F4F8;
+  --card:   #FFFFFF;
+  --text:   #1A2E45;
+  --muted:  #6B82A0;
+  --border: #D8E3F0;
+  --shadow: 0 2px 12px rgba(0,56,101,.08);
+  --shadow-md: 0 4px 20px rgba(0,56,101,.12);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-  /* ── Header ── */
-  header {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    background: var(--navy); border-bottom: 3px solid var(--orange);
-    display: flex; align-items: center; gap: 16px; padding: 0 24px; height: 56px;
-  }
-  .hdr-logo { display: flex; align-items: center; gap: 10px; }
-  .hdr-logo i { color: var(--orange); }
-  header h1 { font-size: 14px; font-weight: 700; color: #fff; flex: 1; letter-spacing: .5px; text-transform: uppercase; }
-  header a.btn-inicio {
-    background: transparent; border: 1px solid rgba(255,255,255,.25); color: rgba(255,255,255,.75);
-    padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;
-    text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all .15s;
-  }
-  header a.btn-inicio:hover { border-color: var(--orange); color: var(--orange); }
-  .accent-bar { height: 3px; background: linear-gradient(90deg, var(--orange) 0%, var(--orangeL) 100%); }
-  header .meta { font-size: 10px; color: rgba(255,255,255,.45); white-space: nowrap; }
+/* ── Header ── */
+header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: var(--navy); border-bottom: 3px solid var(--orange);
+  display: flex; align-items: center; gap: 14px; padding: 0 28px; height: 56px;
+}
+header a.btn-back {
+  color: rgba(255,255,255,.65); text-decoration: none; font-size: 12px; font-weight: 600;
+  border: 1px solid rgba(255,255,255,.2); padding: 5px 14px; border-radius: 6px;
+  display: inline-flex; align-items: center; gap: 6px; transition: all .15s; white-space: nowrap;
+}
+header a.btn-back:hover { color: var(--orange); border-color: var(--orange); }
+header .hdr-icon { color: var(--orange); display: flex; }
+header h1 { font-size: 13px; font-weight: 700; color: #fff; flex: 1; letter-spacing: .6px; text-transform: uppercase; }
+header .hdr-date { font-size: 11px; color: rgba(255,255,255,.4); white-space: nowrap; }
 
-  /* ── Main ── */
-  .main { padding: 72px 24px 48px; max-width: 1440px; margin: 0 auto; }
+/* ── Hero ── */
+.hero {
+  background: linear-gradient(135deg, var(--navy) 0%, #00274d 100%);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  padding: 48px 28px 36px;
+  margin-top: 56px;
+}
+.hero-inner { max-width: 1300px; margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.hero-text .eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+}
+.hero-text .eyebrow::before { content: ''; width: 24px; height: 2px; background: var(--orange); border-radius: 2px; }
+.hero-text h2 { font-size: 26px; font-weight: 800; color: #fff; line-height: 1.2; letter-spacing: -.3px; }
+.hero-text p { font-size: 13px; color: rgba(255,255,255,.55); margin-top: 8px; max-width: 560px; line-height: 1.6; }
+.hero-badge {
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 10px; padding: 14px 20px; text-align: right; white-space: nowrap;
+}
+.hero-badge .b-label { font-size: 10px; color: rgba(255,255,255,.45); text-transform: uppercase; letter-spacing: .08em; }
+.hero-badge .b-val { font-size: 13px; font-weight: 700; color: rgba(255,255,255,.85); margin-top: 4px; }
 
-  /* ── Page title ── */
-  .page-title { margin-bottom: 22px; }
-  .page-title h2 {
-    font-size: 18px; font-weight: 700; color: var(--navy);
-    display: flex; align-items: center; gap: 10px;
-  }
-  .page-title h2::before {
-    content: ''; display: inline-block; width: 4px; height: 22px;
-    background: var(--orange); border-radius: 2px;
-  }
-  .page-title p { font-size: 13px; color: var(--muted); margin-top: 5px; padding-left: 14px; }
+/* ── Main ── */
+.main { max-width: 1300px; margin: 0 auto; padding: 32px 28px 60px; }
 
-  /* ── KPI cards ── */
-  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 24px; }
-  .kpi-card {
-    background: var(--card); border-radius: 10px; padding: 18px 20px;
-    border-top: 4px solid var(--navy2); box-shadow: var(--shadow);
-    display: flex; flex-direction: column; gap: 5px; transition: box-shadow .15s;
-  }
-  .kpi-card:hover { box-shadow: 0 4px 16px rgba(0,56,101,.12); }
-  .kpi-card.c-orange { border-top-color: var(--orange); }
-  .kpi-card.c-red    { border-top-color: var(--red); }
-  .kpi-card.c-green  { border-top-color: var(--green); }
-  .kpi-card.c-purple { border-top-color: var(--purple); }
+/* ── Section header ── */
+.sec-title {
+  display: flex; align-items: center; gap: 12px;
+  margin: 0 0 20px;
+}
+.sec-title .st-bar { width: 4px; height: 20px; background: var(--orange); border-radius: 2px; flex-shrink: 0; }
+.sec-title .st-text { font-size: 13px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: .06em; }
+.sec-title .st-sub { font-size: 11px; color: var(--muted); margin-left: 4px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-  .kpi-icon {
-    width: 36px; height: 36px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(0,92,169,.1); margin-bottom: 6px;
-  }
-  .kpi-card.c-orange .kpi-icon { background: rgba(247,131,68,.12); }
-  .kpi-card.c-red    .kpi-icon { background: rgba(192,57,43,.1); }
-  .kpi-card.c-green  .kpi-icon { background: rgba(30,132,73,.1); }
-  .kpi-card.c-purple .kpi-icon { background: rgba(108,52,131,.1); }
-  .kpi-icon i { color: var(--navy2); }
-  .kpi-card.c-orange .kpi-icon i { color: var(--orange); }
-  .kpi-card.c-red    .kpi-icon i { color: var(--red); }
-  .kpi-card.c-green  .kpi-icon i { color: var(--green); }
-  .kpi-card.c-purple .kpi-icon i { color: var(--purple); }
+/* ── KPI cards — resultados financeiros ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 36px; }
+.kpi-card {
+  background: var(--card); border-radius: 14px; padding: 28px 26px 24px;
+  box-shadow: var(--shadow); position: relative; overflow: hidden;
+  display: flex; flex-direction: column; gap: 10px;
+  border: 1px solid var(--border);
+}
+.kpi-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: var(--navy2);
+}
+.kpi-card.k-red::before   { background: var(--red); }
+.kpi-card.k-green::before { background: var(--green); }
+.kpi-card.k-blue::before  { background: var(--navy2); }
+.kpi-card .k-icon-wrap {
+  width: 42px; height: 42px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--blueL);
+}
+.kpi-card.k-red   .k-icon-wrap { background: var(--redL); }
+.kpi-card.k-green .k-icon-wrap { background: var(--greenL); }
+.kpi-card .k-icon-wrap i { color: var(--navy2); }
+.kpi-card.k-red   .k-icon-wrap i { color: var(--red); }
+.kpi-card.k-green .k-icon-wrap i { color: var(--green); }
+.kpi-card .k-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.kpi-card .k-value { font-size: 34px; font-weight: 900; line-height: 1; color: var(--navy2); letter-spacing: -.5px; }
+.kpi-card.k-red   .k-value { color: var(--red); }
+.kpi-card.k-green .k-value { color: var(--green); }
+.kpi-card .k-desc { font-size: 11px; color: var(--muted); line-height: 1.5; border-top: 1px solid var(--border); padding-top: 10px; }
 
-  .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; }
-  .kpi-val   { font-size: 32px; font-weight: 700; color: var(--navy2); line-height: 1.05; }
-  .kpi-card.c-orange .kpi-val { color: var(--orange); }
-  .kpi-card.c-red    .kpi-val { color: var(--red); }
-  .kpi-card.c-green  .kpi-val { color: var(--green); }
-  .kpi-card.c-purple .kpi-val { color: var(--purple); }
-  .kpi-sub   { font-size: 11px; color: var(--muted); }
+/* ── Security reduction grid ── */
+.sec-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 36px; }
+.sec-card {
+  background: var(--card); border-radius: 12px; padding: 22px 20px 18px;
+  box-shadow: var(--shadow); border: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden;
+}
+.sec-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.sec-card.s-green::before { background: var(--green); }
+.sec-card.s-blue::before  { background: var(--navy2); }
+.sec-card.s-teal::before  { background: #1a6999; }
+.sec-card .s-icon-wrap { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--greenL); }
+.sec-card.s-blue .s-icon-wrap { background: var(--blueL); }
+.sec-card.s-teal .s-icon-wrap { background: rgba(26,105,153,.1); }
+.sec-card .s-icon-wrap i { color: var(--green); }
+.sec-card.s-blue .s-icon-wrap i { color: var(--navy2); }
+.sec-card.s-teal .s-icon-wrap i { color: #1a6999; }
+.sec-card .s-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.sec-card .s-pct { font-size: 32px; font-weight: 900; line-height: 1; color: var(--green); letter-spacing: -.5px; }
+.sec-card.s-blue .s-pct { color: var(--navy2); }
+.sec-card.s-teal .s-pct { color: #1a6999; }
+.sec-card .s-detail { font-size: 11px; color: var(--muted); line-height: 1.5; }
+.sec-card .s-period { font-size: 10px; color: var(--orange); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-top: 4px; }
 
-  /* ── Filter bar ── */
-  .filter-bar {
-    background: var(--card); border-radius: 10px; padding: 14px 20px;
-    box-shadow: var(--shadow); margin-bottom: 24px;
-    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
-  }
-  .filter-label {
-    font-size: 10px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .07em; color: var(--muted); white-space: nowrap;
-  }
-  .pill-group { display: flex; gap: 6px; flex-wrap: wrap; }
-  .pill {
-    padding: 6px 16px; border-radius: 20px; border: 1.5px solid var(--border);
-    background: var(--bg); color: var(--muted); cursor: pointer; font-size: 12px;
-    font-weight: 600; transition: all .15s; white-space: nowrap;
-  }
-  .pill.active { background: var(--navy); color: #fff; border-color: var(--navy); }
-  .pill:hover:not(.active) { border-color: var(--navy2); color: var(--navy2); }
-  .filter-sep { width: 1px; height: 28px; background: var(--border); }
+/* ── Table ── */
+.table-wrap { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border); margin-bottom: 12px; }
+.table-head-bar {
+  background: var(--navy); padding: 16px 22px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.table-head-bar .th-title { font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: .07em; display: flex; align-items: center; gap: 8px; }
+.table-head-bar .th-title i { color: var(--orange); }
+.table-head-bar .th-sub { font-size: 11px; color: rgba(255,255,255,.45); }
+table.det { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.det thead th {
+  background: #002a4d; color: rgba(255,255,255,.7);
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  padding: 10px 18px; text-align: left;
+}
+table.det thead th:not(:first-child) { text-align: right; }
+table.det tbody td { padding: 13px 18px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+table.det tbody td:not(:first-child) { text-align: right; }
+table.det tbody tr:nth-child(even) td { background: rgba(0,56,101,.02); }
+table.det tbody tr:last-child td { border-bottom: none; }
+table.det tbody tr:hover td { background: rgba(0,92,169,.04); }
+table.det .td-name { font-weight: 700; color: var(--navy); font-size: 13px; }
+table.det .td-date { color: var(--muted); font-size: 12px; }
+table.det .td-dur { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; background: var(--blueL); color: var(--navy2); border-radius: 20px; font-size: 11px; font-weight: 700; }
+table.det .td-prej { color: var(--red); font-weight: 700; }
+table.det .td-evit { color: var(--green); font-weight: 700; }
+table.det tfoot td {
+  background: var(--navy); color: rgba(255,255,255,.9);
+  font-weight: 700; font-size: 12px; padding: 13px 18px;
+  border-top: none;
+}
+table.det tfoot td:not(:first-child) { text-align: right; }
+table.det tfoot .td-evit { color: #7de8a5; }
+table.det tfoot .td-prej { color: #f4a5a0; }
 
-  /* ── Section header ── */
-  .sec-hdr {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
-    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
-  }
-  .sec-hdr i { color: var(--orange); }
-  .sec-hdr::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-  /* ── Charts grid ── */
-  .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-bottom: 24px; }
-  .chart-card {
-    background: var(--card); border-radius: 10px; padding: 22px 24px 18px;
-    box-shadow: var(--shadow);
-  }
-  .chart-card.full { grid-column: 1 / -1; }
-  .chart-title {
-    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
-    color: var(--navy); margin-bottom: 4px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .chart-title i { color: var(--navy2); }
-  .chart-sep {
-    height: 2px; background: var(--orange); border-radius: 2px;
-    margin-bottom: 18px; width: 100%;
-  }
-  .chart-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-  .chart-card canvas { max-height: 260px; }
-
-  /* ── Resumo mini cards ── */
-  .resumo-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
-  .resumo-mini {
-    background: var(--bg); border-radius: 8px; padding: 14px 16px;
-    border: 1px solid var(--border); text-align: center;
-  }
-  .resumo-mini .val { font-size: 22px; font-weight: 700; }
-  .resumo-mini .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-top: 3px; }
-
-  /* ── Delta table ── */
-  .delta-card { background: var(--card); border-radius: 10px; padding: 22px; box-shadow: var(--shadow); margin-bottom: 24px; }
-  .delta-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .delta-table th {
-    background: var(--bg); color: var(--muted); text-transform: uppercase;
-    font-size: 10px; letter-spacing: .06em; padding: 9px 14px;
-    text-align: left; border-bottom: 2px solid var(--border); font-weight: 700;
-  }
-  .delta-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
-  .delta-table tr:last-child td { border-bottom: none; }
-  .delta-table tr:hover td { background: rgba(0,56,101,.03); }
-  .d-pos { color: var(--green); font-weight: 700; }
-  .d-neg { color: var(--red); font-weight: 700; }
-  .d-neu { color: var(--muted); }
-  .badge-ev {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 700;
-    background: rgba(0,92,169,.08); color: var(--navy2); border: 1px solid rgba(0,92,169,.2);
-  }
-
-  /* ── Resultados Atingidos ── */
-  .res-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 28px; }
-  .res-kpi {
-    background: var(--card); border-radius: 12px; padding: 28px 28px 22px;
-    box-shadow: var(--shadow); border-top: 4px solid var(--red);
-    display: flex; flex-direction: column; gap: 8px;
-  }
-  .res-kpi.proj  { border-top-color: #b45309; }
-  .res-kpi.ops   { border-top-color: var(--navy2); }
-  .res-kpi.green { border-top-color: var(--green); }
-  .res-kpi.grain { border-top-color: var(--navy2); }
-  .res-kpi.fuel  { border-top-color: #1a6999; }
-  .res-kpi .r-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(192,57,43,.1); margin-bottom: 4px; }
-  .res-kpi.proj  .r-icon { background: rgba(180,83,9,.1); }
-  .res-kpi.ops   .r-icon { background: rgba(0,92,169,.1); }
-  .res-kpi.green .r-icon { background: rgba(30,132,73,.1); }
-  .res-kpi.grain .r-icon { background: rgba(0,92,169,.1); }
-  .res-kpi.fuel  .r-icon { background: rgba(26,105,153,.1); }
-  .res-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 8px 0 12px; display: flex; align-items: center; gap: 8px; }
-  .res-section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-  /* ── Tabela de operações ── */
-  .ops-table-card { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 28px; }
-  .ops-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .ops-table thead th { background: var(--navy); color: rgba(255,255,255,.85); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; padding: 11px 16px; text-align: left; }
-  .ops-table thead th:not(:first-child) { text-align: right; }
-  .ops-table tbody td { padding: 11px 16px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
-  .ops-table tbody td:not(:first-child) { text-align: right; }
-  .ops-table tbody tr:last-child td { border-bottom: none; }
-  .ops-table tbody tr:hover td { background: rgba(0,56,101,.03); }
-  .ops-table .t-name { font-weight: 600; }
-  .ops-table .t-meses { color: var(--muted); font-size: 12px; }
-  .ops-table .t-prej { color: var(--red); font-weight: 700; }
-  .ops-table .t-evit { color: #b45309; font-weight: 700; }
-  .ops-table tfoot td { background: var(--bg); font-weight: 700; font-size: 12px; padding: 10px 16px; border-top: 2px solid var(--border); }
-  .ops-table tfoot td:not(:first-child) { text-align: right; }
-  .res-kpi .r-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-  .res-kpi .r-val { font-size: 32px; font-weight: 800; color: var(--red); line-height: 1.1; }
-  .res-kpi.proj  .r-val { color: #b45309; }
-  .res-kpi.ops   .r-val { color: var(--navy2); }
-  .res-kpi.green .r-val { color: var(--green); }
-  .res-kpi.grain .r-val { color: var(--navy2); }
-  .res-kpi.fuel  .r-val { color: #1a6999; }
-  .res-kpi .r-sub { font-size: 12px; color: var(--muted); }
-  .res-footer-note { font-size: 12px; color: var(--muted); background: var(--card); border-radius: 8px; padding: 12px 18px; box-shadow: var(--shadow); }
-
-  /* ── Responsive ── */
-  @media (max-width: 1100px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } }
-  @media (max-width: 1100px) { .res-grid { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 860px)  { .kpi-row { grid-template-columns: repeat(2, 1fr); } .charts-grid { grid-template-columns: 1fr; } .res-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .kpi-grid { grid-template-columns: 1fr 1fr; } .sec-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 700px)  { .kpi-grid { grid-template-columns: 1fr; } .sec-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
 <header>
-  <a href="index.html" class="btn-inicio">
+  <a href="index.html" class="btn-back">
     <i data-lucide="chevron-left" style="width:14px;height:14px"></i> Início
   </a>
-  <div class="hdr-logo">
-    <i data-lucide="train-front" style="width:20px;height:20px;color:var(--orange)"></i>
-  </div>
+  <span class="hdr-icon"><i data-lucide="train-front" style="width:20px;height:20px"></i></span>
   <h1>Resultados Atingidos — Investigações</h1>
-  <span class="meta" id="hdr-meta"></span>
+  <span class="hdr-date" id="hdr-date"></span>
 </header>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="eyebrow">Núcleo de Inteligência · Rumo Logística</div>
+      <h2>Resultados Atingidos nas Investigações</h2>
+      <p>Consolidação dos impactos financeiros e operacionais gerados pelo trabalho de inteligência — indenizações identificadas, projeção de economia anual e redução dos indicadores de segurança.</p>
+    </div>
+    <div class="hero-badge">
+      <div class="b-label">Atualizado em</div>
+      <div class="b-val" id="hero-date">—</div>
+    </div>
+  </div>
+</div>
 
 <div class="main">
 
-  <div class="page-title">
-    <h2>Resultados Atingidos — Investigações</h2>
-    <p>Valor do prejuízo que a Companhia estava sofrendo antes da investigação ser iniciada, e a projeção do impacto financeiro caso as fraudes não tivessem sido identificadas e cessadas.</p>
+  <!-- KPIs financeiros -->
+  <div class="sec-title">
+    <div class="st-bar"></div>
+    <span class="st-text">Impacto Financeiro das Investigações</span>
   </div>
-  <div class="res-grid">
-    <div class="res-kpi">
-      <div class="r-icon"><i data-lucide="shield-alert" style="width:18px;height:18px;color:var(--red)"></i></div>
-      <div class="r-label">Indenizações pagas pela Companhia</div>
-      <div class="r-val" id="res-prej">—</div>
-      <div class="r-sub">valor total de indenizações pagas nas operações investigadas até o momento</div>
+  <div class="kpi-grid">
+    <div class="kpi-card k-red">
+      <div class="k-icon-wrap"><i data-lucide="shield-alert" style="width:20px;height:20px"></i></div>
+      <div class="k-label">Indenizações pagas pela Companhia</div>
+      <div class="k-value" id="res-prej">—</div>
+      <div class="k-desc">Soma total das indenizações pagas nas operações investigadas com dados completos de período e valor.</div>
     </div>
-    <div class="res-kpi green">
-      <div class="r-icon"><i data-lucide="shield-check" style="width:18px;height:18px;color:var(--green)"></i></div>
-      <div class="r-label">Indenizações evitadas pelas investigações</div>
-      <div class="r-val" id="res-proj">—</div>
-      <div class="r-sub">estimativa das indenizações que seriam pagas em 12 meses caso as fraudes continuassem sem intervenção</div>
+    <div class="kpi-card k-green">
+      <div class="k-icon-wrap"><i data-lucide="shield-check" style="width:20px;height:20px"></i></div>
+      <div class="k-label">Indenizações evitadas pelas investigações</div>
+      <div class="k-value" id="res-proj">—</div>
+      <div class="k-desc">Projeção anual das indenizações que seriam pagas caso as fraudes continuassem sem a intervenção das investigações.</div>
     </div>
-    <div class="res-kpi ops">
-      <div class="r-icon"><i data-lucide="folder-open" style="width:18px;height:18px;color:var(--navy2)"></i></div>
-      <div class="r-label">Operações realizadas</div>
-      <div class="r-val" id="res-ops">—</div>
-      <div class="r-sub">total de operações investigadas pelo time de inteligência</div>
-    </div>
-  </div>
-
-  <!-- Redução de Indicadores 2024 vs 2026 -->
-  <div class="res-section-label">Redução dos Indicadores de Segurança — Trecho 0 · 2023 (Full Year) vs 2026 (Projeção)</div>
-  <div class="res-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
-    <div class="res-kpi green" style="border-top-color:var(--green)">
-      <div class="r-icon"><i data-lucide="shield-off" style="width:18px;height:18px;color:var(--green)"></i></div>
-      <div class="r-label">▼ Vandalismo</div>
-      <div class="r-val" style="color:var(--green);font-size:28px">−83,6%</div>
-      <div class="r-sub">1.132 ocorr. em 2023 → ~185 proj. 2026</div>
-    </div>
-    <div class="res-kpi green" style="border-top-color:#1a6999">
-      <div class="r-icon"><i data-lucide="clock" style="width:18px;height:18px;color:#1a6999"></i></div>
-      <div class="r-label">▼ THP (Horas de Parada)</div>
-      <div class="r-val" style="color:#1a6999;font-size:28px">−86,4%</div>
-      <div class="r-sub">1.745 h em 2023 → ~236 h proj. 2026</div>
-    </div>
-    <div class="res-kpi green" style="border-top-color:var(--navy2)">
-      <div class="r-icon"><i data-lucide="door-open" style="width:18px;height:18px;color:var(--navy2)"></i></div>
-      <div class="r-label">▼ Vagões Abertos</div>
-      <div class="r-val" style="color:var(--navy2);font-size:28px">−82,4%</div>
-      <div class="r-sub">289 vagões em 2023 → ~51 proj. 2026</div>
-    </div>
-    <div class="res-kpi ops">
-      <div class="r-icon"><i data-lucide="check-circle" style="width:18px;height:18px;color:var(--navy2)"></i></div>
-      <div class="r-label">▲ Taxa de Sucesso</div>
-      <div class="r-val" style="font-size:28px">+5,54 pp</div>
-      <div class="r-sub">93,20% em 2023 → 98,74% proj. 2026</div>
+    <div class="kpi-card k-blue">
+      <div class="k-icon-wrap"><i data-lucide="folder-check" style="width:20px;height:20px"></i></div>
+      <div class="k-label">Operações realizadas</div>
+      <div class="k-value" id="res-ops">—</div>
+      <div class="k-desc">Total de operações investigadas com registro completo de indenização, data de início e previsão de término.</div>
     </div>
   </div>
 
-  <!-- Tabela de operações com indenizações -->
-  <div class="res-section-label" style="margin-top:20px">Detalhamento por Operação</div>
-  <div class="ops-table-card">
-    <table class="ops-table">
+  <!-- Redução de Indicadores de Segurança -->
+  <div class="sec-title">
+    <div class="st-bar"></div>
+    <span class="st-text">Redução dos Indicadores de Segurança</span>
+    <span class="st-sub">Trecho 0 — 2023 (Full Year) vs 2026 (Projeção)</span>
+  </div>
+  <div class="sec-grid">
+    <div class="sec-card s-green">
+      <div class="s-icon-wrap"><i data-lucide="shield-off" style="width:18px;height:18px"></i></div>
+      <div class="s-label">▼ Vandalismo</div>
+      <div class="s-pct">−83,6%</div>
+      <div class="s-detail">1.132 ocorrências em 2023<br>→ ~185 projetado para 2026</div>
+      <div class="s-period">Redução de 947 ocorrências</div>
+    </div>
+    <div class="sec-card s-teal">
+      <div class="s-icon-wrap"><i data-lucide="clock" style="width:18px;height:18px"></i></div>
+      <div class="s-label">▼ THP — Tempo de Parada</div>
+      <div class="s-pct">−86,4%</div>
+      <div class="s-detail">1.745 h acumuladas em 2023<br>→ ~236 h projetado para 2026</div>
+      <div class="s-period">Redução de 1.509 horas</div>
+    </div>
+    <div class="sec-card s-blue">
+      <div class="s-icon-wrap"><i data-lucide="door-open" style="width:18px;height:18px"></i></div>
+      <div class="s-label">▼ Vagões Abertos</div>
+      <div class="s-pct">−82,4%</div>
+      <div class="s-detail">289 vagões abertos em 2023<br>→ ~51 projetado para 2026</div>
+      <div class="s-period">Redução de 238 vagões</div>
+    </div>
+    <div class="sec-card s-green">
+      <div class="s-icon-wrap"><i data-lucide="check-circle" style="width:18px;height:18px"></i></div>
+      <div class="s-label">▲ Taxa de Sucesso</div>
+      <div class="s-pct">+5,54 pp</div>
+      <div class="s-detail">93,20% em 2023<br>→ 98,74% projetado para 2026</div>
+      <div class="s-period">Acima da meta de 96%</div>
+    </div>
+  </div>
+
+  <!-- Tabela de detalhamento -->
+  <div class="sec-title">
+    <div class="st-bar"></div>
+    <span class="st-text">Detalhamento por Operação</span>
+    <span class="st-sub">operações com indenização, início e previsão de término registrados</span>
+  </div>
+  <div class="table-wrap">
+    <div class="table-head-bar">
+      <div class="th-title"><i data-lucide="table-2" style="width:15px;height:15px"></i> Operações investigadas com indenização</div>
+      <div class="th-sub" id="table-period">—</div>
+    </div>
+    <table class="det">
       <thead>
         <tr>
           <th>Operação</th>
-          <th>Início</th>
-          <th>Previsão Término</th>
+          <th>Data de Início</th>
+          <th>Previsão de Término</th>
           <th>Duração</th>
           <th>Indenização Paga</th>
           <th>Indenização Evitada (anual)</th>
         </tr>
       </thead>
       <tbody id="ops-table-body">
-        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">Carregando…</td></tr>
+        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px;font-size:13px">Carregando dados…</td></tr>
       </tbody>
       <tfoot id="ops-table-foot" style="display:none">
         <tr>
-          <td colspan="3">Total</td>
-          <td id="ops-tot-meses">—</td>
-          <td id="ops-tot-prej" class="t-prej">—</td>
-          <td id="ops-tot-evit" class="t-evit">—</td>
+          <td colspan="3" style="color:rgba(255,255,255,.7);font-size:11px;letter-spacing:.05em;text-transform:uppercase">Total consolidado</td>
+          <td id="ops-tot-meses" style="color:rgba(255,255,255,.6);font-size:12px">—</td>
+          <td id="ops-tot-prej" class="td-prej">—</td>
+          <td id="ops-tot-evit" class="td-evit">—</td>
         </tr>
       </tfoot>
     </table>
@@ -326,11 +305,15 @@
 </div>
 
 <script>
-/* ── Resultados Atingidos ── */
 (async function() {
-  const fmtBRL = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL', minimumFractionDigits:2 });
+  const fmtBRL  = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL', minimumFractionDigits:2 });
+  const fmtData = d => new Date(d).toLocaleDateString('pt-BR');
 
-  // Calcula meses completos entre duas datas (ignora dias quebrados)
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+  document.getElementById('hero-date').textContent = dateStr;
+  document.getElementById('hdr-date').textContent  = dateStr;
+
   function mesesCompletos(dIni, dFim) {
     let m = (dFim.getFullYear() - dIni.getFullYear()) * 12 + (dFim.getMonth() - dIni.getMonth());
     if (dFim.getDate() < dIni.getDate()) m--;
@@ -338,45 +321,44 @@
   }
 
   function renderRes(ops) {
-    // Apenas operações com prejuizo + inicio + previsao preenchidos
     const opsCompletas = ops.filter(o => o.prejuizo != null && +o.prejuizo > 0 && o.inicio && o.previsao);
-    const comPrej = opsCompletas.length;
-
+    const comPrej  = opsCompletas.length;
     const totalPrej = opsCompletas.reduce((s, o) => s + +o.prejuizo, 0);
 
-    // Período total: do inicio mais antigo até a previsao mais recente
-    // previsao é limitada à data de hoje para não inflar com datas futuras
     const hoje = new Date();
     const datesIni = opsCompletas.map(o => new Date(o.inicio));
     const datesFim = opsCompletas.map(o => new Date(Math.min(new Date(o.previsao), hoje)));
     const maisAntigo = datesIni.length ? new Date(Math.min(...datesIni)) : null;
     const maisFuturo = datesFim.length ? new Date(Math.max(...datesFim)) : null;
     const totalMeses = (maisAntigo && maisFuturo) ? mesesCompletos(maisAntigo, maisFuturo) : 0;
-    const projPrej = totalMeses > 0 ? (totalPrej / totalMeses) * 12 : 0;
+    const projPrej  = totalMeses > 0 ? (totalPrej / totalMeses) * 12 : 0;
 
     document.getElementById('res-prej').textContent = fmtBRL(totalPrej);
     document.getElementById('res-proj').textContent = fmtBRL(projPrej);
     document.getElementById('res-ops').textContent  = comPrej;
 
-    // Popula tabela de detalhamento
-    const fmtData = d => new Date(d).toLocaleDateString('pt-BR');
+    if (maisAntigo && maisFuturo) {
+      document.getElementById('table-period').textContent =
+        `${fmtData(maisAntigo)} – ${fmtData(maisFuturo)} · ${totalMeses} meses`;
+    }
+
     const tbody = document.getElementById('ops-table-body');
     const tfoot = document.getElementById('ops-table-foot');
     tbody.innerHTML = '';
 
     opsCompletas.forEach(o => {
-      const ini = new Date(o.inicio);
-      const fim = new Date(Math.min(new Date(o.previsao), hoje));
+      const ini   = new Date(o.inicio);
+      const fim   = new Date(Math.min(new Date(o.previsao), hoje));
       const meses = mesesCompletos(ini, fim);
       const evitada = (+o.prejuizo / totalMeses) * 12;
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td class="t-name">${o.nome || '—'}</td>
-        <td>${fmtData(o.inicio)}</td>
-        <td>${fmtData(o.previsao)}</td>
-        <td class="t-meses">${meses} ${meses === 1 ? 'mês' : 'meses'}</td>
-        <td class="t-prej">${fmtBRL(+o.prejuizo)}</td>
-        <td class="t-evit">${fmtBRL(evitada)}</td>
+        <td class="td-name">${o.nome || '—'}</td>
+        <td class="td-date">${fmtData(o.inicio)}</td>
+        <td class="td-date">${fmtData(o.previsao)}</td>
+        <td><span class="td-dur"><i data-lucide="calendar" style="width:11px;height:11px"></i> ${meses} ${meses===1?'mês':'meses'}</span></td>
+        <td class="td-prej">${fmtBRL(+o.prejuizo)}</td>
+        <td class="td-evit">${fmtBRL(evitada)}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -385,6 +367,7 @@
     document.getElementById('ops-tot-prej').textContent  = fmtBRL(totalPrej);
     document.getElementById('ops-tot-evit').textContent  = fmtBRL(projPrej);
     tfoot.style.display = '';
+    lucide.createIcons();
   }
 
   try {
@@ -410,18 +393,18 @@
   document.getElementById('res-prej').textContent = 'R$ 0,00';
   document.getElementById('res-proj').textContent = 'R$ 0,00';
   document.getElementById('res-ops').textContent  = '0';
+  document.getElementById('ops-table-body').innerHTML =
+    '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">Nenhum dado encontrado. Acesse o Módulo de Investigações para registrar operações.</td></tr>';
 })();
 
-
 lucide.createIcons();
-
 </script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .catch(err => console.warn('SW:', err));
+    navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW:', err));
   });
 }
-</script></body>
+</script>
+</body>
 </html>
