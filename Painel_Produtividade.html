@@ -121,20 +121,17 @@ header .hdr-date { font-size: 11px; color: rgba(255,255,255,.4); white-space: no
 }
 .sec-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
 .sec-card.s-green::before { background: var(--green); }
-.sec-card.s-blue::before  { background: var(--navy2); }
-.sec-card.s-teal::before  { background: #1a6999; }
+.sec-card.s-red::before   { background: var(--red); }
 .sec-card .s-icon-wrap { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--greenL); }
-.sec-card.s-blue .s-icon-wrap { background: var(--blueL); }
-.sec-card.s-teal .s-icon-wrap { background: rgba(26,105,153,.1); }
+.sec-card.s-red .s-icon-wrap { background: rgba(192,57,43,.1); }
 .sec-card .s-icon-wrap i { color: var(--green); }
-.sec-card.s-blue .s-icon-wrap i { color: var(--navy2); }
-.sec-card.s-teal .s-icon-wrap i { color: #1a6999; }
+.sec-card.s-red .s-icon-wrap i { color: var(--red); }
 .sec-card .s-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
 .sec-card .s-pct { font-size: 32px; font-weight: 900; line-height: 1; color: var(--green); letter-spacing: -.5px; }
-.sec-card.s-blue .s-pct { color: var(--navy2); }
-.sec-card.s-teal .s-pct { color: #1a6999; }
+.sec-card.s-red .s-pct { color: var(--red); }
 .sec-card .s-detail { font-size: 11px; color: var(--muted); line-height: 1.5; }
 .sec-card .s-period { font-size: 10px; color: var(--orange); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-top: 4px; }
+.sec-card.s-red .s-period { color: var(--red); }
 
 /* ── Table ── */
 .table-wrap { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border); margin-bottom: 12px; }
@@ -243,14 +240,14 @@ table.det tfoot .td-prej { color: #f4a5a0; }
       <div class="s-detail">1.132 ocorrências em 2023<br>→ ~185 projetado para 2026</div>
       <div class="s-period">Redução de 947 ocorrências</div>
     </div>
-    <div class="sec-card s-teal">
+    <div class="sec-card s-green">
       <div class="s-icon-wrap"><i data-lucide="clock" style="width:18px;height:18px"></i></div>
       <div class="s-label">▼ THP — Tempo de Parada</div>
       <div class="s-pct">−86,4%</div>
       <div class="s-detail">1.745 h acumuladas em 2023<br>→ ~236 h projetado para 2026</div>
       <div class="s-period">Redução de 1.509 horas</div>
     </div>
-    <div class="sec-card s-blue">
+    <div class="sec-card s-green">
       <div class="s-icon-wrap"><i data-lucide="door-open" style="width:18px;height:18px"></i></div>
       <div class="s-label">▼ Vagões Abertos</div>
       <div class="s-pct">−82,4%</div>
