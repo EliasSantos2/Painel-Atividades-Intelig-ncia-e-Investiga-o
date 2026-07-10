@@ -319,8 +319,10 @@
     const totalPrej = opsCompletas.reduce((s, o) => s + +o.prejuizo, 0);
 
     // Período total: do inicio mais antigo até a previsao mais recente
+    // previsao é limitada à data de hoje para não inflar com datas futuras
+    const hoje = new Date();
     const datesIni = opsCompletas.map(o => new Date(o.inicio));
-    const datesFim = opsCompletas.map(o => new Date(o.previsao));
+    const datesFim = opsCompletas.map(o => new Date(Math.min(new Date(o.previsao), hoje)));
     const maisAntigo = datesIni.length ? new Date(Math.min(...datesIni)) : null;
     const maisFuturo = datesFim.length ? new Date(Math.max(...datesFim)) : null;
     const totalMeses = (maisAntigo && maisFuturo) ? Math.max(1,
