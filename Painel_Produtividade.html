@@ -346,10 +346,12 @@ table.det tfoot .td-prej { color: #f4a5a0; }
     const tfoot = document.getElementById('ops-table-foot');
     tbody.innerHTML = '';
 
+    let somaMeses = 0;
     opsCompletas.forEach(o => {
       const ini   = new Date(o.inicio);
       const fim   = new Date(Math.min(new Date(o.previsao), hoje));
       const meses = mesesCompletos(ini, fim);
+      somaMeses += meses;
       const evitada = (+o.prejuizo / totalMeses) * 12;
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -363,7 +365,7 @@ table.det tfoot .td-prej { color: #f4a5a0; }
       tbody.appendChild(tr);
     });
 
-    document.getElementById('ops-tot-meses').textContent = `${totalMeses} meses`;
+    document.getElementById('ops-tot-meses').textContent = `${somaMeses} ${somaMeses===1?'mês':'meses'}`;
     document.getElementById('ops-tot-prej').textContent  = fmtBRL(totalPrej);
     document.getElementById('ops-tot-evit').textContent  = fmtBRL(projPrej);
     tfoot.style.display = '';
