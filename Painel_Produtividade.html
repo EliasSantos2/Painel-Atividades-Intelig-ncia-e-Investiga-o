@@ -354,6 +354,13 @@
 (async function() {
   const fmtBRL = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL', minimumFractionDigits:2 });
 
+  // Calcula meses completos entre duas datas (ignora dias quebrados)
+  function mesesCompletos(dIni, dFim) {
+    let m = (dFim.getFullYear() - dIni.getFullYear()) * 12 + (dFim.getMonth() - dIni.getMonth());
+    if (dFim.getDate() < dIni.getDate()) m--;
+    return Math.max(1, m);
+  }
+
   function renderRes(ops) {
     // Apenas operações com prejuizo + inicio + previsao preenchidos
     const opsCompletas = ops.filter(o => o.prejuizo != null && +o.prejuizo > 0 && o.inicio && o.previsao);
@@ -368,10 +375,7 @@
     const datesFim = opsCompletas.map(o => new Date(Math.min(new Date(o.previsao), hoje)));
     const maisAntigo = datesIni.length ? new Date(Math.min(...datesIni)) : null;
     const maisFuturo = datesFim.length ? new Date(Math.max(...datesFim)) : null;
-    const totalMeses = (maisAntigo && maisFuturo) ? Math.max(1,
-      (maisFuturo.getFullYear() - maisAntigo.getFullYear()) * 12 +
-      (maisFuturo.getMonth() - maisAntigo.getMonth()) + 1
-    ) : 0;
+    const totalMeses = (maisAntigo && maisFuturo) ? mesesCompletos(maisAntigo, maisFuturo) : 0;
     const projPrej = totalMeses > 0 ? (totalPrej / totalMeses) * 12 : 0;
 
     document.getElementById('res-prej').textContent = fmtBRL(totalPrej);
@@ -389,10 +393,7 @@
     opsCompletas.forEach(o => {
       const ini = new Date(o.inicio);
       const fim = new Date(Math.min(new Date(o.previsao), hoje));
-      const meses = Math.max(1,
-        (fim.getFullYear() - ini.getFullYear()) * 12 +
-        (fim.getMonth() - ini.getMonth()) + 1
-      );
+      const meses = mesesCompletos(ini, fim);
       const evitada = (+o.prejuizo / totalMeses) * 12;
       const tr = document.createElement('tr');
       tr.innerHTML = `

@@ -1961,10 +1961,9 @@ document.addEventListener('DOMContentLoaded',function(){ if(typeof lucide!=='und
 
     const dIni = new Date(ini);
     const dFim = new Date(Math.min(new Date(fim), new Date()));
-    const meses = Math.max(1,
-      (dFim.getFullYear()-dIni.getFullYear())*12 +
-      (dFim.getMonth()-dIni.getMonth()) + 1
-    );
+    let meses = (dFim.getFullYear()-dIni.getFullYear())*12 + (dFim.getMonth()-dIni.getMonth());
+    if (dFim.getDate() < dIni.getDate()) meses--;
+    meses = Math.max(1, meses);
     const mensal = prej / meses;
     const anual  = mensal * 12;
 
