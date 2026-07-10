@@ -347,12 +347,14 @@ table.det tfoot .td-prej { color: #f4a5a0; }
     tbody.innerHTML = '';
 
     let somaMeses = 0;
+    let somaEvitada = 0;
     opsCompletas.forEach(o => {
       const ini   = new Date(o.inicio);
       const fim   = new Date(Math.min(new Date(o.previsao), hoje));
       const meses = mesesCompletos(ini, fim);
       somaMeses += meses;
-      const evitada = (+o.prejuizo / totalMeses) * 12;
+      const evitada = (+o.prejuizo / meses) * 12;
+      somaEvitada += evitada;
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="td-name">${o.nome || '—'}</td>
@@ -365,9 +367,10 @@ table.det tfoot .td-prej { color: #f4a5a0; }
       tbody.appendChild(tr);
     });
 
+    document.getElementById('res-proj').textContent = fmtBRL(somaEvitada);
     document.getElementById('ops-tot-meses').textContent = `${somaMeses} ${somaMeses===1?'mês':'meses'}`;
     document.getElementById('ops-tot-prej').textContent  = fmtBRL(totalPrej);
-    document.getElementById('ops-tot-evit').textContent  = fmtBRL(projPrej);
+    document.getElementById('ops-tot-evit').textContent  = fmtBRL(somaEvitada);
     tfoot.style.display = '';
     lucide.createIcons();
   }
