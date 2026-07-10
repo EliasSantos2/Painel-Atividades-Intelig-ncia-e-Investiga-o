@@ -1,4 +1,4 @@
-const CACHE = 'rumo-intel-v3';
+const CACHE = 'rumo-intel-v4';
 const ASSETS = [
   './',
   './index.html',
