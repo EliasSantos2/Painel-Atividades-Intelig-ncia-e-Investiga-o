@@ -315,18 +315,16 @@
     const totalPrej = ops.reduce((s, o) => s + (o.prejuizo != null ? +o.prejuizo : 0), 0);
     const comPrej   = ops.filter(o => o.prejuizo != null && o.prejuizo > 0).length;
 
-    // Total de meses somados de todas as operações (inicio → previsao)
-    // Valor mensal = totalPrej / totalMeses → projeção = mensal × 12
-    const totalMeses = ops.reduce((s, o) => {
-      if (!o.inicio || !o.previsao) return s;
-      const ini = new Date(o.inicio);
-      const fim = new Date(o.previsao);
-      const meses = Math.max(1,
-        (fim.getFullYear() - ini.getFullYear()) * 12 +
-        (fim.getMonth() - ini.getMonth()) + 1
-      );
-      return s + meses;
-    }, 0);
+    // Período total: do inicio mais antigo até a previsao mais recente
+    // Valor mensal = totalPrej / meses_totais → projeção = mensal × 12
+    const datesIni = ops.map(o => o.inicio).filter(Boolean).map(d => new Date(d));
+    const datesFim = ops.map(o => o.previsao).filter(Boolean).map(d => new Date(d));
+    const maisAntigo = datesIni.length ? new Date(Math.min(...datesIni)) : null;
+    const maisFuturo = datesFim.length ? new Date(Math.max(...datesFim)) : null;
+    const totalMeses = (maisAntigo && maisFuturo) ? Math.max(1,
+      (maisFuturo.getFullYear() - maisAntigo.getFullYear()) * 12 +
+      (maisFuturo.getMonth() - maisAntigo.getMonth()) + 1
+    ) : 0;
     const projPrej = totalMeses > 0 ? (totalPrej / totalMeses) * 12 : 0;
 
     document.getElementById('res-prej').textContent = fmtBRL(totalPrej);
