@@ -324,28 +324,6 @@
     </div>
   </div>
 
-  <!-- Produtos Recuperados -->
-  <div class="res-section-label">Produtos Recuperados</div>
-  <div class="res-grid">
-    <div class="res-kpi green">
-      <div class="r-icon"><i data-lucide="banknote" style="width:18px;height:18px;color:var(--green)"></i></div>
-      <div class="r-label">Valor Recuperado</div>
-      <div class="r-val" id="pr-valor">—</div>
-      <div class="r-sub" id="pr-valor-sub">soja/milho/farelo/diesel/etanol/gasolina</div>
-    </div>
-    <div class="res-kpi grain">
-      <div class="r-icon"><i data-lucide="wheat" style="width:18px;height:18px;color:var(--navy2)"></i></div>
-      <div class="r-label">Grãos / Carga Recuperada</div>
-      <div class="r-val" id="pr-graos">—</div>
-      <div class="r-sub">kg (registros de CARGA/GRÃOS)</div>
-    </div>
-    <div class="res-kpi fuel">
-      <div class="r-icon"><i data-lucide="fuel" style="width:18px;height:18px;color:#1a6999"></i></div>
-      <div class="r-label">Combustível Recuperado</div>
-      <div class="r-val" id="pr-comb">—</div>
-      <div class="r-sub">litros (registros de COMBUSTÍVEL)</div>
-    </div>
-  </div>
 
 </div>
 
@@ -439,34 +417,6 @@
   document.getElementById('res-ops').textContent  = '0';
 })();
 
-/* ── Produtos Recuperados (usa APREENSOES de dados_apreensoes.js) ── */
-(async function() {
-  const fmt = n => n.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
-  const fmtBRL = v => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-  const EXCL = /PR\s*-\s*SC|TRECHO\s*MRS|TRONCO\s*SUL|UP\s*-\s*NORTE/i;
-  const A = (typeof APREENSOES !== 'undefined' ? APREENSOES : [])
-              .filter(r => !EXCL.test(r.tre || ''));
-
-  const graos = A.filter(r => /GR[ÃA]OS|CARGA/i.test(r.sub || '')).reduce((s,r) => s + (+r.qtd||0), 0);
-  const comb  = A.filter(r => /COMBUST/i.test(r.sub || '')).reduce((s,r) => s + (+r.qtd||0), 0);
-  const valor = A.reduce((s,r) => s + (+r.val||0), 0);
-
-  document.getElementById('pr-graos').textContent = fmt(graos);
-  document.getElementById('pr-comb').textContent  = fmt(comb);
-
-  /* Tenta buscar cotações atualizadas para recalcular o valor */
-  try {
-    const r = await fetch('https://rfwmklqzlfvllsrkvgob.supabase.co/storage/v1/object/public/biblioteca/cotacoes.json?t=' + Date.now());
-    if (r.ok) {
-      const c = await r.json();
-      const sub = document.getElementById('pr-valor-sub');
-      if (sub && c.data) sub.textContent = 'cotações de ' + c.data + ' · soja/milho/farelo/diesel/etanol/gasolina';
-    }
-  } catch(_) {}
-
-  document.getElementById('pr-valor').textContent = valor > 0 ? fmtBRL(valor) : '—';
-})();
 
 lucide.createIcons();
 
