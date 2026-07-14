@@ -490,22 +490,38 @@ window.addEventListener('scroll', () => {
   hdr.classList.toggle('scrolled', window.scrollY > 60);
 }, { passive: true });
 
-// Load painel data from localStorage
-function loadDB() {
-  try { const r = localStorage.getItem('painel_inv_v3'); return r ? JSON.parse(r) : null; } catch(e) { return null; }
-}
-function updateStats() {
-  const db = loadDB(); if (!db) return;
+const _SUPA = 'https://rfwmklqzlfvllsrkvgob.supabase.co';
+const _KEY  = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmd21rbHF6bGZ2bGxzcmt2Z29iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzg4NzIsImV4cCI6MjA5NzgxNDg3Mn0','xwJItVzF3jW46BtMQBLSNj3rT64G0dybPZQZ_k-QlTM'].join('.');
+
+function applyStats(db) {
   const ops = db.operacoes || [], ts = db.tarefas || [];
   const atv  = ops.filter(o => o.status !== 'Concluído' && o.status !== 'Encerrado').length;
   const done = ts.filter(t => t.status === 'Concluído').length;
   const pct  = ts.length ? Math.round(done / ts.length * 100) : 0;
   const alta = ts.filter(t => t.prioridade === 'Alta' && t.status !== 'Concluído').length;
-  document.getElementById('s-ops').innerHTML   = `<em>${atv}</em>`;
+  document.getElementById('s-ops').innerHTML    = `<em>${atv}</em>`;
   document.getElementById('s-tasks').textContent = ts.length;
-  document.getElementById('s-pct').innerHTML   = `${pct}<em>%</em>`;
-  document.getElementById('s-alta').textContent = alta;
-  document.getElementById('m1-n').textContent  = atv;
+  document.getElementById('s-pct').innerHTML    = `${pct}<em>%</em>`;
+  document.getElementById('s-alta').textContent  = alta;
+  document.getElementById('m1-n').textContent   = atv;
+}
+
+async function updateStats() {
+  // 1) localStorage
+  try {
+    const r = localStorage.getItem('painel_inv_v3');
+    if (r) { const db = JSON.parse(r); if ((db.operacoes||[]).length) { applyStats(db); return; } }
+  } catch(_) {}
+  // 2) Supabase REST (só funciona após liberar SELECT anônimo na tabela painel_inv)
+  try {
+    const res = await fetch(_SUPA + '/rest/v1/painel_inv?id=eq.1&select=data', {
+      headers: { 'apikey': _KEY, 'Authorization': 'Bearer ' + _KEY }
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (rows[0]?.data) { applyStats(rows[0].data); return; }
+    }
+  } catch(_) {}
 }
 updateStats();
 
