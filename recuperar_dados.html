@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recuperar Dados</title>
+<style>
+  body { font-family: sans-serif; background: #f0f4f8; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+  .box { background: #fff; border-radius: 14px; padding: 32px 28px; max-width: 420px; width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,.12); text-align: center; }
+  h2 { color: #003865; margin-bottom: 8px; }
+  p { color: #6b82a0; font-size: 14px; margin-bottom: 24px; }
+  .btn { background: #003865; color: #fff; border: none; border-radius: 8px; padding: 14px 24px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; }
+  .btn:active { background: #F78344; }
+  .status { margin-top: 20px; font-size: 14px; font-weight: 600; min-height: 24px; }
+  .ok { color: #1E8449; }
+  .err { color: #C0392B; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>🔄 Recuperar Dados</h2>
+  <p>Abra esta página no dispositivo que ainda possui os dados e toque no botão abaixo.</p>
+  <button class="btn" onclick="recuperar()">Restaurar dados agora</button>
+  <div class="status" id="status"></div>
+</div>
+<script>
+async function recuperar() {
+  const el = document.getElementById('status');
+  el.className = 'status';
+  el.textContent = 'Verificando dados locais…';
+
+  const raw = localStorage.getItem('painel_inv_v3');
+  if (!raw) { el.className='status err'; el.textContent='❌ Nenhum dado encontrado neste dispositivo.'; return; }
+
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch(e) { el.className='status err'; el.textContent='❌ Erro ao ler dados locais.'; return; }
+
+  const ops = Array.isArray(parsed) ? parsed : (parsed.operacoes || []);
+  if (!ops.length) { el.className='status err'; el.textContent='❌ Dados locais estão vazios.'; return; }
+
+  el.textContent = `Encontradas ${ops.length} operações. Enviando para o servidor…`;
+
+  try {
+    const KEY = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmd21rbHF6bGZ2bGxzcmt2Z29iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzg4NzIsImV4cCI6MjA5NzgxNDg3Mn0','xwJItVzF3jW46BtMQBLSNj3rT64G0dybPZQZ_k-QlTM'].join('.');
+    const r = await fetch('https://rfwmklqzlfvllsrkvgob.supabase.co/rest/v1/painel_inv?id=eq.1', {
+      method: 'PATCH',
+      headers: {
+        'apikey': KEY,
+        'Authorization': `Bearer ${KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ data: parsed })
+    });
+    if (r.ok) {
+      el.className = 'status ok';
+      el.textContent = `✅ ${ops.length} operações restauradas com sucesso!`;
+    } else {
+      const txt = await r.text();
+      el.className = 'status err';
+      el.textContent = '❌ Erro do servidor: ' + txt;
+    }
+  } catch(e) {
+    el.className = 'status err';
+    el.textContent = '❌ Falha de conexão: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>
