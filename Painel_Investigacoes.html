@@ -652,7 +652,9 @@ const SK='painel_inv_v3';
 function loadData(){try{const r=localStorage.getItem(SK);if(r)return JSON.parse(r);}catch(e){}return getDefaultData();}
 function ic(name,size=14,cls=''){return`<i data-lucide="${name}" style="width:${size}px;height:${size}px;vertical-align:middle;display:inline-block" class="${cls}"></i>`;}
 function _lcIcons(){if(typeof lucide!=='undefined')lucide.createIcons();}
-function saveData(){localStorage.setItem(SK,JSON.stringify(db));var lu=document.getElementById('last-updated');if(lu)lu.textContent='Salvo: '+new Date().toLocaleString('pt-BR');if(typeof pushShared==='function')pushShared();}
+function _autoBackup(){try{const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup_painel_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);}catch(e){}}
+let _lastBackup=0;
+function saveData(){localStorage.setItem(SK,JSON.stringify(db));var lu=document.getElementById('last-updated');if(lu)lu.textContent='Salvo: '+new Date().toLocaleString('pt-BR');if(typeof pushShared==='function')pushShared();const now=Date.now();if(now-_lastBackup>3600000){_lastBackup=now;_autoBackup();}}
 function getDefaultData(){return{
   operacoes:[
     {id:1,nome:'Ponto Cego',local:'Rondonópolis/MT – TRO',fase:'2ª fase em andamento',status:'Em andamento',marco:'Parecer do GAECO e execução das medidas operacionais',pontocego:'Aguardando manifestação do GAECO',objetivo:'Apurar organização envolvida em furtos de grãos por modal ferroviário.',entregas:'✓ Relatório final da 1ª fase entregue ao GAECO\n✓ Levantamento preliminar de envolvidos\n✓ Identificação do modus operandi'},
