@@ -382,13 +382,12 @@ table.det tfoot .td-prej { color: #f4a5a0; }
   } catch(_) {}
 
   try {
-    const SUPA_URL = 'https://rfwmklqzlfvllsrkvgob.supabase.co';
-    const SUPA_KEY = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmd21rbHF6bGZ2bGxzcmt2Z29iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzg4NzIsImV4cCI6MjA5NzgxNDg3Mn0','xwJItVzF3jW46BtMQBLSNj3rT64G0dybPZQZ_k-QlTM'].join('.');
-    const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
-    const { data } = await sb.from('painel_inv').select('data').eq('id', 1).single();
-    if (data?.data) {
-      const ops = Array.isArray(data.data) ? data.data : (data.data.operacoes || []);
-      renderRes(ops); return;
+    const PUBLIC_URL = 'https://rfwmklqzlfvllsrkvgob.supabase.co/storage/v1/object/public/biblioteca/painel_data.json';
+    const resp = await fetch(PUBLIC_URL + '?t=' + Date.now());
+    if (resp.ok) {
+      const json = await resp.json();
+      const ops = Array.isArray(json) ? json : (json.operacoes || []);
+      if (ops.length) { renderRes(ops); return; }
     }
   } catch(_) {}
 

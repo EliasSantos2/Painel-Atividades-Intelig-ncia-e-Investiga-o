@@ -309,10 +309,11 @@ body.edit-mode [data-editable]:hover{background:rgba(247,131,68,.07)!important}
     <h2>Painel de Investigações</h2>
     <p class="sub">Acesso restrito — autentique-se para continuar</p>
     <label>E-mail</label>
-    <input id="auth-email" type="email" autocomplete="username" placeholder="seu@email.com">
+    <input id="auth-email" type="email" autocomplete="username" placeholder="seu@email.com" value="elias.santos@ext.rumolog.com">
     <label>Senha</label>
     <input id="auth-pass" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authLogin()">
-    <button onclick="authLogin()">Entrar</button>
+    <button onclick="authLogin()">Entrar com senha</button>
+    <button onclick="authMagicLink()" style="background:transparent;border:1px solid var(--navy,#003865);color:var(--navy,#003865);margin-top:8px;font-size:13px;padding:10px">Receber link de acesso por e-mail</button>
     <div id="auth-error"></div>
   </div>
 </div>
@@ -904,6 +905,18 @@ async function authLogin(){
   err.textContent='';
   document.getElementById('auth-pass').value='';
 }
+async function authMagicLink(){
+  const client=sb();
+  const err=document.getElementById('auth-error');
+  if(!client){err.textContent='Backend não configurado.';return;}
+  const email=document.getElementById('auth-email').value.trim();
+  if(!email){err.textContent='Informe o e-mail acima.';return;}
+  err.textContent='Enviando link…';
+  const {error}=await client.auth.signInWithOtp({email, options:{emailRedirectTo: window.location.href}});
+  if(error){err.textContent='Erro: '+error.message;return;}
+  err.style.color='#1E8449';
+  err.textContent='✔ Link enviado para '+email+'. Verifique sua caixa de entrada e clique no link para entrar.';
+}
 async function authLogout(){
   const client=sb();
   if(client)await client.auth.signOut();
@@ -940,6 +953,11 @@ async function pushShared(){
     _syncStatus('⟳ Salvando…');
     const {data,error}=await c.from(SHARE_TABLE).upsert({id:1,data:db,updated_at:new Date().toISOString()}).select('updated_at');
     if(!error&&data&&data[0]){ _sharedRev=data[0].updated_at; _syncStatus('✔ Sincronizado'); }
+    // Publica cópia pública no bucket biblioteca para leitura sem autenticação
+    try{
+      const publicJson=new Blob([JSON.stringify({operacoes:db.operacoes||[],tarefas:db.tarefas||[],agenda:db.agenda||[]})],{type:'application/json'});
+      await c.storage.from('biblioteca').upload('painel_data.json',publicJson,{upsert:true,contentType:'application/json'});
+    }catch(pe){console.warn('pushPublic',pe);}
   }catch(e){ console.warn('pushShared',e); _syncStatus(''); }
 }
 async function refreshShared(){
