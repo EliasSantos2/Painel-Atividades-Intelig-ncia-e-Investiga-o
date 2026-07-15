@@ -900,10 +900,12 @@ async function authLogin(){
   const pass=document.getElementById('auth-pass').value;
   if(!email||!pass){err.textContent='Informe e-mail e senha.';return;}
   err.textContent='Entrando…';
-  const {error}=await client.auth.signInWithPassword({email,password:pass});
+  const {data:loginData,error}=await client.auth.signInWithPassword({email,password:pass});
   if(error){err.textContent='Falha no login: '+error.message;return;}
   err.textContent='';
   document.getElementById('auth-pass').value='';
+  _session=loginData.session;
+  reflectAuth();
 }
 async function authMagicLink(){
   const client=sb();
