@@ -899,12 +899,15 @@ async function authLogin(){
   const email=document.getElementById('auth-email').value.trim();
   const pass=document.getElementById('auth-pass').value;
   if(!email||!pass){err.textContent='Informe e-mail e senha.';return;}
-  err.textContent='Entrando…';
+  err.style.color='#c0392b'; err.textContent='Entrando…';
   const {data:loginData,error}=await client.auth.signInWithPassword({email,password:pass});
-  if(error){err.textContent='Falha no login: '+error.message;return;}
+  if(error){err.textContent='❌ '+error.message;return;}
+  // Garante sessão mesmo se loginData.session vier nulo
+  const sess=loginData.session||(await client.auth.getSession()).data.session;
+  if(!sess){err.textContent='❌ Sessão não criada. Verifique a confirmação do e-mail no Supabase.';return;}
   err.textContent='';
   document.getElementById('auth-pass').value='';
-  _session=loginData.session;
+  _session=sess;
   reflectAuth();
 }
 async function authMagicLink(){
