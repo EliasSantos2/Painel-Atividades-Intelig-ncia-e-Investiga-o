@@ -159,10 +159,7 @@ async function _graphGet(url){
   const resp = await fetch(url,{headers:{Authorization:'Bearer '+_token}});
   if(!resp.ok){
     const txt = await resp.text();
-    if(resp.status===404 && _xlsxItem && url.includes(_xlsxItem.id)){
-      console.warn('[XLSX] 404 no item cacheado — limpando cache');
-      _xlsxItem=null; _xlsxRows=null;
-    }
+    if(resp.status===404){ _xlsxRows=null; }
     throw new Error('Graph '+resp.status+': '+txt);
   }
   return resp.json();
@@ -178,11 +175,7 @@ async function _driveSearch(termo){
 }
 
 // ── PLANILHA DE INFRATORES ────────────────────────────────
-let _xlsxItem = null; // {id, driveId}
 let _xlsxRows = null; // cache linhas [{nome,pai,mae,cpf}]
-
-const _COL_PAI = 32; // AG
-const _COL_MAE = 33; // AH
 
 const _COL_PAI = 32; // AG
 const _COL_MAE = 33; // AH
