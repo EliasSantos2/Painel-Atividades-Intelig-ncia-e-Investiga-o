@@ -193,46 +193,60 @@ const _COL_MAE = 33; // AH
 async function _xlsxCarregar(){
   if(_xlsxRows) return _xlsxRows;
   const id = await _xlsxGetId();
+  console.log('[XLSX] ID encontrado:', id);
   const sheets = await _graphGet(`https://graph.microsoft.com/v1.0/me/drive/items/${id}/workbook/worksheets`);
-  const sheetName = encodeURIComponent(sheets.value[0].name);
+  const sheetName = sheets.value[0].name;
+  console.log('[XLSX] Aba:', sheetName);
   const range = await _graphGet(
-    `https://graph.microsoft.com/v1.0/me/drive/items/${id}/workbook/worksheets('${sheetName}')/usedRange(valuesOnly=true)`
+    `https://graph.microsoft.com/v1.0/me/drive/items/${id}/workbook/worksheets('${encodeURIComponent(sheetName)}')/usedRange(valuesOnly=true)`
   );
   const vals = range.values||[];
+  console.log('[XLSX] Total de linhas (com cabeçalho):', vals.length);
   if(vals.length<2) return [];
   const headers = vals[0].map(h=>String(h||'').trim().toLowerCase());
-  // Nome e CPF por cabeçalho
-  const colNome = headers.findIndex(h=>/^nome\b|nome\s+(completo|infrator|do\s+infrator)/.test(h)) ?? headers.findIndex(h=>/nome/.test(h));
-  const colCpf  = headers.findIndex(h=>/cpf/.test(h));
+  console.log('[XLSX] Cabeçalhos AG/AH:', headers[_COL_PAI], '/', headers[_COL_MAE]);
+  // Coluna nome: prioriza cabeçalho, fallback coluna 0
+  let colNome = headers.findIndex(h=>/^nome\b|nome\s+(completo|infrator|do\s+infrator)/.test(h));
+  if(colNome<0) colNome = headers.findIndex(h=>/nome/.test(h));
+  const colCpf = headers.findIndex(h=>/cpf/.test(h));
+  console.log('[XLSX] Coluna nome idx:', colNome, '| CPF idx:', colCpf);
   _xlsxRows = vals.slice(1).map(row=>({
     nome: colNome>=0 ? String(row[colNome]||'').trim() : String(row[0]||'').trim(),
     pai:  String(row[_COL_PAI]||'').trim(),
     mae:  String(row[_COL_MAE]||'').trim(),
     cpf:  colCpf>=0 ? String(row[colCpf]||'').trim() : '',
   })).filter(r=>r.nome);
+  console.log('[XLSX] Linhas carregadas:', _xlsxRows.length);
+  console.log('[XLSX] Amostra (3 primeiras):', _xlsxRows.slice(0,3));
   return _xlsxRows;
 }
 
 // Normaliza nome para comparação (sem acento, minúsculas, espaço simples)
 function _norm(s){ return (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim(); }
 
-// Busca o pesquisado na planilha; retorna {linha, pais, maes}
+// Busca o pesquisado na planilha; retorna {linhas, pais, maes}
 async function _xlsxBuscarPessoa(query){
   try{
     const rows = await _xlsxCarregar();
     const qn = _norm(query);
-    // Busca por nome (parcial) ou CPF
     const matches = rows.filter(r=>
       (r.nome && _norm(r.nome).includes(qn)) ||
       (r.cpf  && r.cpf.replace(/\D/g,'').includes(query.replace(/\D/g,'')))
     );
+    console.log('[XLSX] Busca por "'+query+'" → '+matches.length+' linha(s) encontrada(s)');
+    matches.forEach((r,i)=>console.log('[XLSX] Match '+i+':', JSON.stringify(r)));
     const pais = new Set(), maes = new Set();
     matches.forEach(r=>{
       if(r.pai && r.pai.length>2) pais.add(r.pai);
       if(r.mae && r.mae.length>2) maes.add(r.mae);
     });
+    console.log('[XLSX] Pai(s) extraído(s):', [...pais]);
+    console.log('[XLSX] Mãe(s) extraída(s):', [...maes]);
     return { linhas:matches, pais:[...pais], maes:[...maes] };
-  }catch(e){ return { linhas:[], pais:[], maes:[], erro:e.message }; }
+  }catch(e){
+    console.error('[XLSX] Erro em _xlsxBuscarPessoa:', e);
+    return { linhas:[], pais:[], maes:[], erro:e.message };
+  }
 }
 
 // Busca outros registros na planilha com o mesmo pai ou mãe
@@ -254,8 +268,15 @@ async function _xlsxBuscarVinculos(pais, maes, queryNorm){
       else if(temPai)     { vistos.add(chave); vincPai.push(row); }
       else if(temMae)     { vistos.add(chave); vincMae.push(row); }
     }
+    console.log('[XLSX] Vínculos → ambos:', vincAmbos.length, '| só pai:', vincPai.length, '| só mãe:', vincMae.length);
+    vincAmbos.forEach(r=>console.log('[XLSX] Ambos:', r.nome, '| pai:', r.pai, '| mãe:', r.mae));
+    vincPai.forEach(r=>console.log('[XLSX] Só pai:', r.nome, '| pai:', r.pai));
+    vincMae.forEach(r=>console.log('[XLSX] Só mãe:', r.nome, '| mãe:', r.mae));
     return { vincAmbos, vincPai, vincMae };
-  }catch(e){ return { vincAmbos:[], vincPai:[], vincMae:[] }; }
+  }catch(e){
+    console.error('[XLSX] Erro em _xlsxBuscarVinculos:', e);
+    return { vincAmbos:[], vincPai:[], vincMae:[] };
+  }
 }
 
 // ── EXTRAÇÃO DE FILIAÇÃO DOS DOCUMENTOS ──────────────────
