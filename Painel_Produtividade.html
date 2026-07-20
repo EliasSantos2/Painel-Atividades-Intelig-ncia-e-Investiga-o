@@ -372,38 +372,39 @@ table.det tfoot .td-prej { color: #f4a5a0; }
     lucide.createIcons();
   }
 
+  async function carregarDados() {
+    try {
+      const raw = localStorage.getItem('painel_inv_v3');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const ops = Array.isArray(parsed) ? parsed : (parsed.operacoes || []);
+        if (ops.length) { renderRes(ops); return; }
+      }
+    } catch(_) {}
+
+    try {
+      const PUBLIC_URL = 'https://rfwmklqzlfvllsrkvgob.supabase.co/storage/v1/object/public/biblioteca/painel_data.json';
+      const resp = await fetch(PUBLIC_URL + '?t=' + Date.now());
+      if (resp.ok) {
+        const json = await resp.json();
+        const ops = Array.isArray(json) ? json : (json.operacoes || []);
+        if (ops.length) { renderRes(ops); return; }
+      }
+    } catch(_) {}
+
+    document.getElementById('res-prej').textContent = 'R$ 0,00';
+    document.getElementById('res-proj').textContent = 'R$ 0,00';
+    document.getElementById('res-ops').textContent  = '0';
+    document.getElementById('ops-table-body').innerHTML =
+      '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">Nenhum dado encontrado. Acesse o Módulo de Investigações para registrar operações.</td></tr>';
+  }
+
+  window._recarregarResultados = carregarDados;
   await carregarDados();
 })();
 
-async function carregarDados() {
-  try {
-    const raw = localStorage.getItem('painel_inv_v3');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const ops = Array.isArray(parsed) ? parsed : (parsed.operacoes || []);
-      if (ops.length) { renderRes(ops); return; }
-    }
-  } catch(_) {}
-
-  try {
-    const PUBLIC_URL = 'https://rfwmklqzlfvllsrkvgob.supabase.co/storage/v1/object/public/biblioteca/painel_data.json';
-    const resp = await fetch(PUBLIC_URL + '?t=' + Date.now());
-    if (resp.ok) {
-      const json = await resp.json();
-      const ops = Array.isArray(json) ? json : (json.operacoes || []);
-      if (ops.length) { renderRes(ops); return; }
-    }
-  } catch(_) {}
-
-  document.getElementById('res-prej').textContent = 'R$ 0,00';
-  document.getElementById('res-proj').textContent = 'R$ 0,00';
-  document.getElementById('res-ops').textContent  = '0';
-  document.getElementById('ops-table-body').innerHTML =
-    '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">Nenhum dado encontrado. Acesse o Módulo de Investigações para registrar operações.</td></tr>';
-}
-
 window.addEventListener('storage', function(e) {
-  if (e.key === 'painel_inv_v3') carregarDados();
+  if (e.key === 'painel_inv_v3' && window._recarregarResultados) window._recarregarResultados();
 });
 
 lucide.createIcons();
