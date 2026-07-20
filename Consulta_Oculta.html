@@ -129,10 +129,26 @@ let _token = null;
 async function _getToken(){
   const accounts = _msal.getAllAccounts();
   if(accounts.length){
-    try{ const r=await _msal.acquireTokenSilent({scopes:_SCOPES,account:accounts[0]}); return r.accessToken; }catch(e){}
+    try{ const r=await _msal.acquireTokenSilent({scopes:_SCOPES,account:accounts[0]}); return r.accessToken; }
+    catch(e){
+      // silent falhou — tenta popup; se bloqueado, vai para redirect
+      try{ const r=await _msal.acquireTokenPopup({scopes:_SCOPES,account:accounts[0]}); return r.accessToken; }
+      catch(pe){ if(!pe.errorCode?.includes('popup')) throw pe; }
+    }
   }
-  const r = await _msal.loginPopup({scopes:_SCOPES});
-  return r.accessToken;
+  // Sem conta — tenta popup primeiro, fallback redirect
+  try{
+    const r = await _msal.loginPopup({scopes:_SCOPES});
+    return r.accessToken;
+  }catch(pe){
+    if(pe.errorCode?.includes('popup') || pe.errorCode?.includes('empty_window')){
+      // Popup bloqueado — salva intenção e redireciona
+      sessionStorage.setItem('_co_redirect_intent','1');
+      await _msal.loginRedirect({scopes:_SCOPES});
+      return null; // página vai recarregar
+    }
+    throw pe;
+  }
 }
 
 async function _coLogin(){
@@ -528,21 +544,24 @@ function _coRenderLoading(msg){
 document.addEventListener('DOMContentLoaded', async function(){
   _lc();
   try{
-    await _msal.handleRedirectPromise();
+    const redirectResult = await _msal.handleRedirectPromise();
     const accounts = _msal.getAllAccounts();
+    if(redirectResult?.accessToken){ _token = redirectResult.accessToken; }
     if(accounts.length){
-      _token = await _getToken();
+      if(!_token){
+        try{ const r=await _msal.acquireTokenSilent({scopes:_SCOPES,account:accounts[0]}); _token=r.accessToken; }catch(e){}
+      }
       const btn=document.getElementById('co-login-btn');
       const name=accounts[0]?.name||accounts[0]?.username||'Conectado';
       btn.innerHTML='<i data-lucide="check-circle" style="width:14px;height:14px"></i> '+name;
       btn.className='co-login-btn connected';
       btn.onclick=null;
-      _coSetStatus('✓ Sessão restaurada — sincronizando planilha…');
+      _coSetStatus('✓ Conectado — sincronizando planilha…');
       _lc();
       _xlsxCarregar().then(rows=>{
         _coSetStatus(`✓ Pronto — ${rows.length} infrator(es) carregado(s)`);
       }).catch(e=>{
-        _coSetStatus('Sessão restaurada. Erro ao carregar planilha: '+e.message);
+        _coSetStatus('Conectado. Erro ao carregar planilha: '+e.message);
       });
     }else{
       _coSetStatus('Digite um nome e pressione ➤ para pesquisar');
