@@ -183,23 +183,30 @@ let _xlsxRows = null; // cache linhas [{nome,pai,mae,cpf}]
 const _COL_PAI = 32; // AG
 const _COL_MAE = 33; // AH
 
+// Link de compartilhamento fixo da planilha de infratores
+const _XLSX_SHARE_URL = 'https://1drv.ms/x/c/b476f1a47b64e77b/IQCV_D-uaDZ5TbmNyF3qhvlcAV4eha-61JWJJRvu4izxyT0?e=fTPvR8';
+
+function _encodeShareUrl(url){
+  // Codifica em base64url e adiciona prefixo u! (padrão Graph API)
+  const b64 = btoa(url).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  return 'u!' + b64;
+}
+
 async function _xlsxGetItem(){
   if(_xlsxItem) return _xlsxItem;
-  const termos = ['Cpf - Rondonopolis','CPF Rondonopolis','infratores','infrator','cpf rondonopolis'];
-  for(const termo of termos){
-    try{
-      const items = await _driveSearch(termo);
-      console.log('[XLSX] Busca "'+termo+'" →', items.map(i=>i.name));
-      const f = items.find(i=>/\.(xlsx|xls)$/i.test(i.name||''));
-      if(f){
-        const driveId = f.parentReference?.driveId || null;
-        console.log('[XLSX] Encontrado:', f.name, '| driveId:', driveId, '| itemId:', f.id);
-        _xlsxItem = {id:f.id, driveId};
-        return _xlsxItem;
-      }
-    }catch(e){ console.warn('[XLSX] Erro "'+termo+'":', e.message); }
+  try{
+    const shareId = _encodeShareUrl(_XLSX_SHARE_URL);
+    const info = await _graphGet(
+      `https://graph.microsoft.com/v1.0/shares/${shareId}/driveItem?$select=id,parentReference,name`
+    );
+    const driveId = info.parentReference?.driveId || null;
+    console.log('[XLSX] Planilha via link:', info.name, '| driveId:', driveId, '| id:', info.id);
+    _xlsxItem = {id: info.id, driveId};
+    return _xlsxItem;
+  }catch(e){
+    console.error('[XLSX] Erro ao resolver link compartilhado:', e.message);
+    throw new Error('Não foi possível acessar a planilha pelo link: '+e.message);
   }
-  throw new Error('Planilha não encontrada no OneDrive (esperado: "Cpf - Rondonopolis.xlsx").');
 }
 
 function _xlsxBaseUrl(item){
