@@ -537,13 +537,18 @@ document.addEventListener('DOMContentLoaded', async function(){
       btn.innerHTML='<i data-lucide="check-circle" style="width:14px;height:14px"></i> '+name;
       btn.className='co-login-btn connected';
       btn.onclick=null;
-      _coSetStatus('✓ Sessão restaurada — pronto para pesquisar');
+      _coSetStatus('✓ Sessão restaurada — sincronizando planilha…');
       _lc();
+      _xlsxCarregar().then(rows=>{
+        _coSetStatus(`✓ Pronto — ${rows.length} infrator(es) carregado(s)`);
+      }).catch(e=>{
+        _coSetStatus('Sessão restaurada. Erro ao carregar planilha: '+e.message);
+      });
     }else{
-      _coSetStatus('Clique em "Conectar ao OneDrive" para autenticar');
+      _coSetStatus('Digite um nome e pressione ➤ para pesquisar');
     }
   }catch(e){
-    _coSetStatus('Clique em "Conectar ao OneDrive" para autenticar');
+    _coSetStatus('Digite um nome e pressione ➤ para pesquisar');
   }
 });
 </script>
