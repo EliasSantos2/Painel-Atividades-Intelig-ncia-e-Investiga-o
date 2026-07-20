@@ -390,17 +390,47 @@ async function _coSend(){
     // Resultados diretos
     html += _renderItems(mainItems, `🔎 Arquivos de "${_coEsc(query)}" (${mainItems.length})`, 'var(--navy)', excertos);
 
-    // Vínculos familiares — outras pessoas com o mesmo pai/mãe
+    // 5) Cruzamento: identifica quem aparece em resultados de pai E de mãe ao mesmo tempo
+    // Monta mapa: chaveNome → { via:Set('pai','mae'), dados por tipo }
+    const porPessoa = new Map(); // chave → {nome, vPai:{nomeParente,items,confirmado}, vMae:{...}}
+
     for(const v of vinculados){
-      const ico = v.tipo==='pai'?'👨':'👩';
-      const cor = v.tipo==='pai'?'var(--purple)':'var(--brown)';
-      const label = v.tipo==='pai'?'Pai':'Mãe';
       for(const p of v.pessoas){
-        const tag = p.confirmado ? ' ✓' : '';
-        html += _renderPessoa(p.nome, p.items,
-          `${ico} Possível familiar via ${label} "${_coEsc(v.nomeParente)}" → ${_coEsc(p.nome)}${tag} (${p.items.length} arquivo(s))`,
-          cor);
+        const chave = p.nome.toLowerCase().split(' ').slice(0,2).join(' ');
+        if(!porPessoa.has(chave)) porPessoa.set(chave,{nome:p.nome, vPai:null, vMae:null});
+        const entry = porPessoa.get(chave);
+        if(v.tipo==='pai') entry.vPai = {nomeParente:v.nomeParente, items:p.items, confirmado:p.confirmado};
+        else               entry.vMae = {nomeParente:v.nomeParente, items:p.items, confirmado:p.confirmado};
       }
+    }
+
+    // Separa em: ambos, só pai, só mãe
+    const vincAmbos=[], vincSoPai=[], vincSoMae=[];
+    for(const [,e] of porPessoa){
+      if(e.vPai && e.vMae) vincAmbos.push(e);
+      else if(e.vPai)      vincSoPai.push(e);
+      else                 vincSoMae.push(e);
+    }
+
+    // Renderiza — prioridade: ambos > só pai > só mãe
+    for(const e of vincAmbos){
+      const tag = (e.vPai.confirmado && e.vMae.confirmado)?'✓✓':(e.vPai.confirmado||e.vMae.confirmado)?'✓':'';
+      const allItems = [...e.vPai.items, ...e.vMae.items.filter(i=>!e.vPai.items.find(j=>j.id===i.id))];
+      html += _renderPessoa(e.nome, allItems,
+        `👨👩 Mesmo pai e mãe → <strong>${_coEsc(e.nome)}</strong> ${tag} (pai: ${_coEsc(e.vPai.nomeParente)} · mãe: ${_coEsc(e.vMae.nomeParente)} · ${allItems.length} arquivo(s))`,
+        '#1d8a48');
+    }
+    for(const e of vincSoPai){
+      const tag = e.vPai.confirmado?'✓':'';
+      html += _renderPessoa(e.nome, e.vPai.items,
+        `👨 Mesmo pai "${_coEsc(e.vPai.nomeParente)}" → ${_coEsc(e.nome)} ${tag} (${e.vPai.items.length} arquivo(s))`,
+        'var(--purple)');
+    }
+    for(const e of vincSoMae){
+      const tag = e.vMae.confirmado?'✓':'';
+      html += _renderPessoa(e.nome, e.vMae.items,
+        `👩 Mesma mãe "${_coEsc(e.vMae.nomeParente)}" → ${_coEsc(e.nome)} ${tag} (${e.vMae.items.length} arquivo(s))`,
+        'var(--brown)');
     }
 
     if(!paiList.length && !maeList.length){
@@ -408,7 +438,7 @@ async function _coSend(){
         ℹ️ Nenhum dado de filiação encontrado nos documentos analisados.<br>
         São lidos arquivos DOCX/TXT menores que 3MB que contenham campos como "Nome do Pai", "Nome da Mãe", "Filiação" ou "Filho de".
       </div>`;
-    } else if(!vinculados.length){
+    } else if(!porPessoa.size){
       html += `<div style="font-size:11px;color:var(--text3);margin-top:10px;font-style:italic">
         ℹ️ Filiação identificada, mas não foram encontrados outros documentos no OneDrive com o mesmo pai/mãe.
       </div>`;
