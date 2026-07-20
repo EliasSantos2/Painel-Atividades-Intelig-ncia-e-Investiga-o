@@ -279,51 +279,6 @@ async function _xlsxBuscarVinculos(pais, maes, queryNorm){
   }
 }
 
-// ── EXTRAÇÃO DE FILIAÇÃO DOS DOCUMENTOS ──────────────────
-// Padrões comuns em BOs, relatórios e planilhas brasileiras
-const _FILIA_PATTERNS = [
-  /(?:nome\s+do\s+pai|pai|filia[çc][aã]o\s+paterna?|genitor)[:\s]+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de|da|do|dos|das|e)?\s*[A-ZÀ-Úa-zà-ú]+){1,5})/gi,
-  /(?:nome\s+da\s+m[aã]e|m[aã]e|filia[çc][aã]o\s+materna?|genitora)[:\s]+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de|da|do|dos|das|e)?\s*[A-ZÀ-Úa-zà-ú]+){1,5})/gi,
-  /filho\s+de\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+){1,4})\s+e\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+){1,4})/gi,
-];
-const _PAI_RE  = /(?:nome\s+do\s+pai|pai|filia[çc][aã]o\s+paterna?|genitor)[:\s]+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de|da|do|dos|das|e)?\s*[A-ZÀ-Úa-zà-ú]+){1,5})/gi;
-const _MAE_RE  = /(?:nome\s+da\s+m[aã]e|m[aã]e|filia[çc][aã]o\s+materna?|genitora)[:\s]+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de|da|do|dos|das|e)?\s*[A-ZÀ-Úa-zà-ú]+){1,5})/gi;
-const _FILHO_RE= /filho\s+de\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+){1,4})\s+e\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+){1,4})/gi;
-
-function _extrairFiliacao(texto){
-  const pais = new Set(), maes = new Set();
-  let m;
-  _PAI_RE.lastIndex=0;
-  while((m=_PAI_RE.exec(texto))!==null) pais.add(_limparNome(m[1]));
-  _MAE_RE.lastIndex=0;
-  while((m=_MAE_RE.exec(texto))!==null) maes.add(_limparNome(m[1]));
-  _FILHO_RE.lastIndex=0;
-  while((m=_FILHO_RE.exec(texto))!==null){ pais.add(_limparNome(m[1])); maes.add(_limparNome(m[2])); }
-  return { pais:[...pais].filter(Boolean), maes:[...maes].filter(Boolean) };
-}
-
-function _limparNome(s){
-  return s.trim().replace(/\s+/g,' ').replace(/[^A-Za-zÀ-ú\s]/g,'').trim();
-}
-
-// Lê conteúdo de um único arquivo (apenas DOCX e TXT — leve e rápido)
-async function _lerConteudo(item){
-  const ext = (item.name||'').split('.').pop().toLowerCase();
-  const MAX = 3*1024*1024; // 3 MB
-  if(item.size > MAX) return null;
-  if(!['docx','txt','csv','md','html','htm','xml'].includes(ext)) return null;
-  try{
-    const dlUrl = item['@microsoft.graph.downloadUrl'] ||
-      `https://graph.microsoft.com/v1.0/me/drive/items/${item.id}/content`;
-    if(ext==='docx'){
-      const buf = await (await fetch(dlUrl)).arrayBuffer();
-      const r = await mammoth.extractRawText({arrayBuffer:buf});
-      return r.value;
-    }
-    return await (await fetch(dlUrl)).text();
-  }catch(e){ return null; }
-}
-
 // ── RENDERIZAÇÃO DE RESULTADOS ────────────────────────────
 const _EXT_COR = {PDF:'#C0392B',DOCX:'#2E75B6',XLSX:'#1E8449',XLS:'#1E8449',PPTX:'#C55A11',MSG:'#7030A0'};
 
@@ -351,37 +306,13 @@ function _renderItems(items, secLabel, secColor, excertos){
   return `<div class="co-section-title" style="color:${secColor}">${secLabel}</div>${cards}`;
 }
 
-// ── EXTRAÇÃO DE NOME DO SUJEITO DE UM ARQUIVO ────────────
-// Tenta identificar o nome da pessoa "sobre quem" o arquivo trata.
-// Estratégia: nome na pasta imediata > padrões no texto > nome do arquivo.
-const _NOME_RE = /(?:nome[:\s]+|suspeito[:\s]+|investigado[:\s]+|autuado[:\s]+|infrator[:\s]+)([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de|da|do|dos|das|e)?\s*[A-ZÀ-Úa-zà-ú]+){1,5})/gi;
-
-function _extrairNomeSujeito(item, texto){
-  // 1) Pasta imediata (ex: "Caso 01 - João Silva")
-  const pasta = item.parentReference?.path ? decodeURIComponent(item.parentReference.path) : '';
-  const pastaMatch = pasta.match(/[\/\\]([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+){1,4})\s*$/);
-  if(pastaMatch) return _limparNome(pastaMatch[1]);
-
-  // 2) Padrão "nome:", "suspeito:", etc. no texto
-  if(texto){
-    _NOME_RE.lastIndex=0;
-    const m=_NOME_RE.exec(texto);
-    if(m) return _limparNome(m[1]);
-  }
-
-  // 3) Nome do arquivo sem extensão
-  const sem = (item.name||'').replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').trim();
-  if(sem.length>3) return _limparNome(sem);
-  return null;
-}
-
 // ── BUSCA PRINCIPAL ───────────────────────────────────────
 async function _coSend(){
   const inp = document.getElementById('co-input');
   const query = inp.value.trim();
   if(!query) return;
   inp.value='';
-  _coRenderMsg('user',_coEsc(query));
+  _coRenderMsg('user', _coEsc(query));
 
   if(!_token){
     _coRenderMsg('bot','<div class="co-empty">🔒 Conecte ao OneDrive primeiro.</div>');
@@ -391,181 +322,93 @@ async function _coSend(){
   const loadEl = _coRenderLoading('Buscando arquivos no OneDrive…');
 
   try{
-    // 1) Busca principal pelo nome pesquisado
+    // PASSO 1 — Arquivos do pesquisado no OneDrive
     const mainItems = await _driveSearch(query);
-    _coSetStatus(`${mainItems.length} arquivo(s) encontrado(s) — analisando filiação…`);
-    loadEl.querySelector('span').textContent = `${mainItems.length} arquivo(s) encontrado(s). Lendo documentos para extrair filiação…`;
+    loadEl.querySelector('span').textContent = `${mainItems.length} arquivo(s) encontrado(s). Consultando planilha de infratores…`;
 
-    if(!mainItems.length){
-      loadEl.remove();
-      _coRenderMsg('bot','<div class="co-empty">🔍 Nenhum arquivo encontrado para "<em>'+_coEsc(query)+'</em>".</div>');
-      return;
-    }
-
-    // 2a) Lê documentos legíveis para extrair pai e mãe do pesquisado
-    const todosFiliacos = { pais: new Set(), maes: new Set() };
-    const excertos = {};
-
-    const paraLer = mainItems
-      .filter(i=>['docx','txt','csv','md','html','htm'].includes((i.name||'').split('.').pop().toLowerCase()) && (i.size||0)<3e6)
-      .slice(0,6);
-
-    for(const item of paraLer){
-      const texto = await _lerConteudo(item);
-      if(!texto) continue;
-      const {pais,maes} = _extrairFiliacao(texto);
-      pais.forEach(p=>todosFiliacos.pais.add(p));
-      maes.forEach(m=>todosFiliacos.maes.add(m));
-      const trechoMatch = texto.match(/.{0,80}(?:pai|m[aã]e|filho\s+de|filia[çc][aã]o).{0,100}/i);
-      if(trechoMatch && (pais.length||maes.length))
-        excertos[item.id] = trechoMatch[0].replace(/[\r\n]+/g,' ').trim();
-    }
-
-    // 2b) Consulta a planilha de infratores para obter pai/mãe do pesquisado
-    loadEl.querySelector('span').textContent = 'Consultando planilha de infratores…';
+    // PASSO 2 — Linha do pesquisado na planilha → AG (pai) e AH (mãe)
     const xlsxPessoa = await _xlsxBuscarPessoa(query);
-    if(xlsxPessoa.erro){
-      loadEl.querySelector('span').textContent = `Planilha: ${xlsxPessoa.erro} — usando apenas documentos.`;
-    } else {
-      xlsxPessoa.pais.forEach(p=>todosFiliacos.pais.add(p));
-      xlsxPessoa.maes.forEach(m=>todosFiliacos.maes.add(m));
+    const paiList = xlsxPessoa.pais;
+    const maeList = xlsxPessoa.maes;
+
+    // PASSO 3 — Varre toda a planilha: quem mais tem o mesmo AG ou AH?
+    const { vincAmbos, vincPai, vincMae } = await _xlsxBuscarVinculos(paiList, maeList, _norm(query));
+    const totalVinc = vincAmbos.length + vincPai.length + vincMae.length;
+
+    loadEl.querySelector('span').textContent = `${totalVinc} vínculo(s) encontrado(s). Buscando arquivos no OneDrive…`;
+
+    // PASSO 4 — Para cada pessoa vinculada, busca os arquivos dela no OneDrive
+    const mainIds = new Set(mainItems.map(i=>i.id));
+    const resultadosVinc = [];
+
+    for(const row of vincAmbos){
+      const arqs = (await _driveSearch(row.nome)).filter(i=>!mainIds.has(i.id));
+      resultadosVinc.push({row, tipo:'ambos', arqs});
     }
-
-    loadEl.querySelector('span').textContent = 'Buscando vínculos familiares na planilha e no OneDrive…';
-
-    const paiList = [...todosFiliacos.pais];
-    const maeList = [...todosFiliacos.maes];
-
-    // 3) Busca vínculos familiares — planilha + OneDrive
-
-    const mainIds  = new Set(mainItems.map(i=>i.id));
-    const queryNorm = _norm(query);
-
-    // porPessoa: chave → {nome, vPai:{nomeParente,items,confirmado,fontes[]}, vMae:{...}}
-    const porPessoa = new Map();
-
-    function _addVinc(nomePessoa, tipo, nomeParente, item, confirmado, fonte){
-      const chave = _norm(nomePessoa).split(' ').slice(0,2).join(' ');
-      if(!porPessoa.has(chave)) porPessoa.set(chave,{nome:nomePessoa, vPai:null, vMae:null});
-      const e = porPessoa.get(chave);
-      const key = tipo==='pai'?'vPai':'vMae';
-      if(!e[key]) e[key]={nomeParente, items:[], confirmado:false, fontes:new Set()};
-      if(item) e[key].items.push(item);
-      if(confirmado) e[key].confirmado=true;
-      if(fonte) e[key].fontes.add(fonte);
+    for(const row of vincPai){
+      const arqs = (await _driveSearch(row.nome)).filter(i=>!mainIds.has(i.id));
+      resultadosVinc.push({row, tipo:'pai', arqs});
     }
-
-    // 3a) Vínculos da PLANILHA DE INFRATORES
-    if(paiList.length||maeList.length){
-      const xlsxVinc = await _xlsxBuscarVinculos(paiList, maeList, queryNorm);
-
-      for(const row of xlsxVinc.vincAmbos){
-        _addVinc(row.nome,'pai', row.pai||paiList[0], null, true, 'planilha');
-        _addVinc(row.nome,'mae', row.mae||maeList[0], null, true, 'planilha');
-      }
-      for(const row of xlsxVinc.vincPai){
-        const pai = paiList.find(p=>_norm(p)===_norm(row.pai))||row.pai||paiList[0];
-        _addVinc(row.nome,'pai', pai, null, true, 'planilha');
-      }
-      for(const row of xlsxVinc.vincMae){
-        const mae = maeList.find(m=>_norm(m)===_norm(row.mae))||row.mae||maeList[0];
-        _addVinc(row.nome,'mae', mae, null, true, 'planilha');
-      }
+    for(const row of vincMae){
+      const arqs = (await _driveSearch(row.nome)).filter(i=>!mainIds.has(i.id));
+      resultadosVinc.push({row, tipo:'mae', arqs});
     }
-
-    // 3b) Vínculos pelo ONEDRIVE — busca arquivos que mencionem o nome do pai/mãe
-    async function _processarParenteOneDrive(nomeParente, tipo){
-      const itemsParente = await _driveSearch(nomeParente);
-      const itemsNovos   = itemsParente.filter(i=>!mainIds.has(i.id));
-      if(!itemsNovos.length) return;
-
-      for(const item of itemsNovos.slice(0,10)){
-        let texto = null;
-        const ext=(item.name||'').split('.').pop().toLowerCase();
-        if(['docx','txt','csv','md','html','htm'].includes(ext) && (item.size||0)<3e6)
-          texto = await _lerConteudo(item);
-
-        const nomeSuj = _extrairNomeSujeito(item, texto);
-        if(!nomeSuj) continue;
-        if(_norm(nomeSuj).includes(queryNorm)||queryNorm.includes(_norm(nomeSuj).split(' ')[0])) continue;
-
-        let confirmado = false;
-        if(texto){
-          const {pais:p2,maes:m2} = _extrairFiliacao(texto);
-          confirmado=(tipo==='pai'?p2:m2).some(n=>_norm(n).includes(_norm(nomeParente).split(' ')[0]));
-        }
-        _addVinc(nomeSuj, tipo, nomeParente, item, confirmado, 'onedrive');
-      }
-    }
-
-    for(const pai of paiList.slice(0,3)) await _processarParenteOneDrive(pai,'pai');
-    for(const mae of maeList.slice(0,3)) await _processarParenteOneDrive(mae,'mae');
 
     loadEl.remove();
 
-    // 4) Monta HTML
+    // PASSO 5 — Monta HTML
     let html = '';
 
-    // Banner
-    if(paiList.length||maeList.length){
+    // Banner de filiação da planilha
+    if(paiList.length || maeList.length){
       html += `<div class="co-vinc-banner">
-        🔗 <strong>Filiação detectada nos documentos de "${_coEsc(query)}":</strong>
-        ${paiList.length?`<br>👨 <strong>Pai:</strong> ${paiList.map(_coEsc).join(' · ')}`:''}
-        ${maeList.length?`<br>👩 <strong>Mãe:</strong> ${maeList.map(_coEsc).join(' · ')}`:''}
+        🔗 <strong>Filiação de "${_coEsc(query)}" (planilha de infratores):</strong>
+        ${paiList.length ? `<br>👨 <strong>Pai (AG):</strong> ${paiList.map(_coEsc).join(' · ')}` : ''}
+        ${maeList.length ? `<br>👩 <strong>Mãe (AH):</strong> ${maeList.map(_coEsc).join(' · ')}` : ''}
+      </div>`;
+    } else if(xlsxPessoa.erro){
+      html += `<div class="co-vinc-banner" style="border-color:#c0392b;background:rgba(192,57,43,.06)">
+        ⚠️ Planilha: ${_coEsc(xlsxPessoa.erro)}
       </div>`;
     }
 
-    // Resultados diretos
-    html += _renderItems(mainItems, `🔎 Arquivos de "${_coEsc(query)}" (${mainItems.length})`, 'var(--navy)', excertos);
-
-    // 4) Separa vínculos em: ambos pai+mãe / só pai / só mãe — prioridade: ambos primeiro
-    const vincAmbos=[], vincSoPai=[], vincSoMae=[];
-    for(const [,e] of porPessoa){
-      if(e.vPai && e.vMae) vincAmbos.push(e);
-      else if(e.vPai)      vincSoPai.push(e);
-      else                 vincSoMae.push(e);
+    // Arquivos diretos do pesquisado
+    if(mainItems.length){
+      html += _renderItems(mainItems, `🔎 Arquivos de "${_coEsc(query)}" (${mainItems.length})`, 'var(--navy)');
+    } else {
+      html += `<div class="co-empty">🔍 Nenhum arquivo encontrado para "${_coEsc(query)}" no OneDrive.</div>`;
     }
 
-    function _fonteTag(v){
-      const f=[...(v.fontes||[])];
-      if(f.includes('planilha')&&f.includes('onedrive')) return ' 📋🗂';
-      if(f.includes('planilha')) return ' 📋';
-      if(f.includes('onedrive')) return ' 🗂';
-      return '';
+    // Vínculos — ambos (verde) > só pai (roxo) > só mãe (marrom)
+    for(const {row, tipo, arqs} of resultadosVinc){
+      let label, cor;
+      if(tipo === 'ambos'){
+        cor = '#1d8a48';
+        label = `👨👩 Possível vínculo detectado — mesmo pai e mãe<br>
+          <strong style="font-size:13px">${_coEsc(row.nome)}</strong><br>
+          <small style="font-weight:400">Pai: ${_coEsc(row.pai)} &nbsp;·&nbsp; Mãe: ${_coEsc(row.mae)}</small>`;
+      } else if(tipo === 'pai'){
+        cor = 'var(--purple)';
+        label = `👨 Possível vínculo detectado — mesmo pai<br>
+          <strong style="font-size:13px">${_coEsc(row.nome)}</strong><br>
+          <small style="font-weight:400">Pai: ${_coEsc(row.pai)}</small>`;
+      } else {
+        cor = 'var(--brown)';
+        label = `👩 Possível vínculo detectado — mesma mãe<br>
+          <strong style="font-size:13px">${_coEsc(row.nome)}</strong><br>
+          <small style="font-weight:400">Mãe: ${_coEsc(row.mae)}</small>`;
+      }
+      html += _renderPessoa(row.nome, arqs, label, cor);
     }
 
-    // Renderiza — prioridade: ambos > só pai > só mãe
-    for(const e of vincAmbos){
-      const conf = (e.vPai.confirmado&&e.vMae.confirmado)?'✓✓':(e.vPai.confirmado||e.vMae.confirmado)?'✓':'';
-      const ft   = _fonteTag(e.vPai)+_fonteTag(e.vMae);
-      const allIt = [...e.vPai.items, ...e.vMae.items.filter(i=>!e.vPai.items.find(j=>j.id===i.id))];
-      html += _renderPessoa(e.nome, allIt,
-        `👨👩 Mesmo pai e mãe → <strong>${_coEsc(e.nome)}</strong> ${conf}${ft}<br><small style="font-weight:400">Pai: ${_coEsc(e.vPai.nomeParente)} · Mãe: ${_coEsc(e.vMae.nomeParente)}${allIt.length?` · ${allIt.length} arquivo(s)`:''}</small>`,
-        '#1d8a48');
-    }
-    for(const e of vincSoPai){
-      const conf = e.vPai.confirmado?'✓':'';
-      const ft   = _fonteTag(e.vPai);
-      html += _renderPessoa(e.nome, e.vPai.items,
-        `👨 Mesmo pai → <strong>${_coEsc(e.nome)}</strong> ${conf}${ft}<br><small style="font-weight:400">Pai: ${_coEsc(e.vPai.nomeParente)}${e.vPai.items.length?` · ${e.vPai.items.length} arquivo(s)`:''}</small>`,
-        'var(--purple)');
-    }
-    for(const e of vincSoMae){
-      const conf = e.vMae.confirmado?'✓':'';
-      const ft   = _fonteTag(e.vMae);
-      html += _renderPessoa(e.nome, e.vMae.items,
-        `👩 Mesma mãe → <strong>${_coEsc(e.nome)}</strong> ${conf}${ft}<br><small style="font-weight:400">Mãe: ${_coEsc(e.vMae.nomeParente)}${e.vMae.items.length?` · ${e.vMae.items.length} arquivo(s)`:''}</small>`,
-        'var(--brown)');
-    }
-
-    if(!paiList.length && !maeList.length){
+    // Mensagens de status
+    if(!xlsxPessoa.erro && !paiList.length && !maeList.length){
       html += `<div style="font-size:11px;color:var(--text3);margin-top:10px;font-style:italic">
-        ℹ️ Nenhum dado de filiação encontrado nos documentos nem na planilha de infratores.<br>
-        Verifique se a planilha possui colunas "Nome do Pai" / "Nome da Mãe" e se os documentos DOCX/TXT têm campos de filiação.
+        ℹ️ "${_coEsc(query)}" não encontrado na planilha de infratores ou colunas AG/AH estão vazias.
       </div>`;
-    } else if(!porPessoa.size){
+    } else if(totalVinc === 0 && (paiList.length || maeList.length)){
       html += `<div style="font-size:11px;color:var(--text3);margin-top:10px;font-style:italic">
-        ℹ️ Filiação identificada (${paiList.map(_coEsc).join(', ')||'—'} / ${maeList.map(_coEsc).join(', ')||'—'}), mas nenhum outro registro com o mesmo pai/mãe foi encontrado.
+        ℹ️ Nenhum outro infrator na planilha compartilha o mesmo pai ou mãe de "${_coEsc(query)}".
       </div>`;
     }
 
