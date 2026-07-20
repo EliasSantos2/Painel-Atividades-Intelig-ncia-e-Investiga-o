@@ -185,37 +185,30 @@ async function _xlsxGetId(){
   throw new Error('Planilha de infratores não encontrada. Tente nomear o arquivo com "infratores" ou "CPF Rondonópolis".');
 }
 
-// Detecta qual coluna corresponde a nome/pai/mãe com base no cabeçalho
-function _xlsxDetectCols(headers){
-  const col=(re)=>{ const i=headers.findIndex(h=>re.test(h)); return i>=0?i:null; };
-  return {
-    nome: col(/^nome\b|^nome\s+completo|^nome\s+infrator|^nome\s+do\s+infrator/i) ?? col(/nome/i),
-    pai:  col(/nome\s+do\s+pai|^pai\b|filia[çc][aã]o\s+paterna?|genitor\b/i),
-    mae:  col(/nome\s+da\s+m[aã]e|^m[aã]e\b|filia[çc][aã]o\s+materna?|genitora\b/i),
-    cpf:  col(/cpf/i),
-  };
-}
+// Colunas fixas: AG=32 (pai), AH=33 (mãe)
+// Nome e CPF detectados pelo cabeçalho como fallback
+const _COL_PAI = 32; // AG
+const _COL_MAE = 33; // AH
 
 async function _xlsxCarregar(){
   if(_xlsxRows) return _xlsxRows;
   const id = await _xlsxGetId();
-  // Lista worksheets
   const sheets = await _graphGet(`https://graph.microsoft.com/v1.0/me/drive/items/${id}/workbook/worksheets`);
   const sheetName = encodeURIComponent(sheets.value[0].name);
-  // Lê range inteiro
   const range = await _graphGet(
     `https://graph.microsoft.com/v1.0/me/drive/items/${id}/workbook/worksheets('${sheetName}')/usedRange(valuesOnly=true)`
   );
   const vals = range.values||[];
   if(vals.length<2) return [];
-  const headers = vals[0].map(h=>String(h||'').trim());
-  _xlsxCols = _xlsxDetectCols(headers);
+  const headers = vals[0].map(h=>String(h||'').trim().toLowerCase());
+  // Nome e CPF por cabeçalho
+  const colNome = headers.findIndex(h=>/^nome\b|nome\s+(completo|infrator|do\s+infrator)/.test(h)) ?? headers.findIndex(h=>/nome/.test(h));
+  const colCpf  = headers.findIndex(h=>/cpf/.test(h));
   _xlsxRows = vals.slice(1).map(row=>({
-    _raw: row,
-    nome: _xlsxCols.nome!==null ? String(row[_xlsxCols.nome]||'').trim() : '',
-    pai:  _xlsxCols.pai !==null ? String(row[_xlsxCols.pai ]||'').trim() : '',
-    mae:  _xlsxCols.mae !==null ? String(row[_xlsxCols.mae ]||'').trim() : '',
-    cpf:  _xlsxCols.cpf !==null ? String(row[_xlsxCols.cpf ]||'').trim() : '',
+    nome: colNome>=0 ? String(row[colNome]||'').trim() : String(row[0]||'').trim(),
+    pai:  String(row[_COL_PAI]||'').trim(),
+    mae:  String(row[_COL_MAE]||'').trim(),
+    cpf:  colCpf>=0 ? String(row[colCpf]||'').trim() : '',
   })).filter(r=>r.nome);
   return _xlsxRows;
 }
