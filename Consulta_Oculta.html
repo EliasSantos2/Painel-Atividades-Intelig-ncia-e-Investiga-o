@@ -156,7 +156,15 @@ async function _coLogin(){
 // ── GRAPH ────────────────────────────────────────────────
 async function _graphGet(url){
   const resp = await fetch(url,{headers:{Authorization:'Bearer '+_token}});
-  if(!resp.ok) throw new Error('Graph '+resp.status+': '+await resp.text());
+  if(!resp.ok){
+    const txt = await resp.text();
+    // Se 404 na planilha, limpa cache para forçar nova busca
+    if(resp.status===404 && _xlsxId && url.includes(_xlsxId)){
+      console.warn('[XLSX] 404 no item cacheado — limpando cache');
+      _xlsxId=null; _xlsxRows=null;
+    }
+    throw new Error('Graph '+resp.status+': '+txt);
+  }
   return resp.json();
 }
 
@@ -176,13 +184,17 @@ let _xlsxCols = null;  // mapeamento de colunas detectadas
 
 async function _xlsxGetId(){
   if(_xlsxId) return _xlsxId;
-  // Tenta nomes conhecidos
-  for(const termo of ['infratores','Cpf - Rondonopolis','cpf rondonopolis','infrator']){
-    const items = await _driveSearch(termo);
-    const f = items.find(i=>/\.(xlsx|xls)$/i.test(i.name||''));
-    if(f){ _xlsxId=f.id; return _xlsxId; }
+  // Busca direta pelo nome exato conhecido na raiz do OneDrive
+  const termos = ['Cpf - Rondonopolis','CPF Rondonopolis','infratores','infrator','cpf rondonopolis'];
+  for(const termo of termos){
+    try{
+      const items = await _driveSearch(termo);
+      console.log('[XLSX] Busca "'+termo+'" → '+items.length+' arquivo(s):', items.map(i=>i.name));
+      const f = items.find(i=>/\.(xlsx|xls)$/i.test(i.name||''));
+      if(f){ console.log('[XLSX] Planilha encontrada:', f.name, f.id); _xlsxId=f.id; return _xlsxId; }
+    }catch(e){ console.warn('[XLSX] Erro buscando "'+termo+'":', e.message); }
   }
-  throw new Error('Planilha de infratores não encontrada. Tente nomear o arquivo com "infratores" ou "CPF Rondonópolis".');
+  throw new Error('Planilha de infratores não encontrada. Verifique o nome do arquivo no OneDrive (esperado: "Cpf - Rondonopolis.xlsx" ou similar).');
 }
 
 // Colunas fixas: AG=32 (pai), AH=33 (mãe)
