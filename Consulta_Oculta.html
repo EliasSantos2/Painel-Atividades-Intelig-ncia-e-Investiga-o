@@ -308,25 +308,18 @@ async function _xlsxCarregar(){
 
   const headers = vals[0].map(h=>String(h||'').trim().toLowerCase());
 
-  // Encontra colunas pelo cabeçalho — com fallback para AG(32)/AH(33)
-  let colNome = headers.findIndex(h=>/^nome\b/.test(h));
-  if(colNome<0) colNome = headers.findIndex(h=>/nome\s*(completo|infrator)/.test(h));
-  if(colNome<0) colNome = headers.findIndex(h=>/^nome/.test(h));
+  // Coluna NOME — busca pelo cabeçalho, fallback coluna 0
+  let colNome = headers.findIndex(h=>/^nome/.test(h));
   if(colNome<0) colNome = 0;
 
+  // CPF — busca pelo cabeçalho
   const colCpf = headers.findIndex(h=>/^cpf/.test(h));
 
-  // Busca coluna de PAI (filiacao pai, nome do pai, pai, etc.)
-  let colPai = headers.findIndex(h=>/filia[cç][aã]o\s*(pai|paterna)|nome\s*do\s*pai|^pai$/.test(h));
-  if(colPai<0) colPai = headers.findIndex(h=>/pai/.test(h) && !/e-?mail|pais\s*(de\s*origem)?$/.test(h));
-  if(colPai<0) colPai = _COL_PAI; // fallback AG
+  // PAI e MÃE — sempre AG(32) e AH(33) conforme a planilha de infratores
+  const colPai = _COL_PAI; // AG = 32
+  const colMae = _COL_MAE; // AH = 33
 
-  // Busca coluna de MÃE (filiacao mae, nome da mae, mae, etc.)
-  let colMae = headers.findIndex(h=>/filia[cç][aã]o\s*(m[aã]e|materna)|nome\s*da?\s*m[aã]e|^m[aã]e$/.test(h));
-  if(colMae<0) colMae = headers.findIndex(h=>/m[aã]e/.test(h) && !/e-?mail/.test(h));
-  if(colMae<0) colMae = _COL_MAE; // fallback AH
-
-  console.log('[XLSX] Colunas → nome:', colNome, '| cpf:', colCpf, '| pai:', colPai, '("'+headers[colPai]+'") | mae:', colMae, '("'+headers[colMae]+'")');
+  console.log('[XLSX] Cols → nome:', colNome, '("'+headers[colNome]+'") | pai (AG=32):"'+headers[colPai]+'" | mae (AH=33):"'+headers[colMae]+'"');
 
   _xlsxRows = vals.slice(1).map(row=>({
     nome: String(row[colNome]||'').trim(),
@@ -335,71 +328,90 @@ async function _xlsxCarregar(){
     cpf:  colCpf >= 0 ? String(row[colCpf]||'').trim() : '',
   })).filter(r => r.nome);
 
-  console.log('[XLSX] Linhas carregadas:', _xlsxRows.length);
-  console.log('[XLSX] Amostra (5 primeiros):', _xlsxRows.slice(0,5));
+  // Constrói mapa de vínculos (mesma lógica da teia de infratores)
+  // porMae / porPai → { nomeNorm_pai_ou_mae -> [nomeNorm_infrator, ...] }
+  _xlsxPorMae = {};
+  _xlsxPorPai = {};
+  _xlsxRows.forEach(r=>{
+    const k = _normU(r.nome);
+    if(!k) return;
+    const m = _normU(r.mae), p = _normU(r.pai);
+    if(m && !_invalido(m)){ (_xlsxPorMae[m] = _xlsxPorMae[m]||[]).push(k); }
+    if(p && !_invalido(p)){ (_xlsxPorPai[p] = _xlsxPorPai[p]||[]).push(k); }
+  });
+
+  console.log('[XLSX] Linhas carregadas:', _xlsxRows.length,
+    '| grupos mãe:', Object.keys(_xlsxPorMae).length,
+    '| grupos pai:', Object.keys(_xlsxPorPai).length);
   return _xlsxRows;
 }
 
-// Normaliza nome para comparação (sem acento, minúsculas, espaço simples)
-function _norm(s){ return (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim(); }
+// Normaliza: sem acento, maiúsculo, espaço simples (igual à teia de infratores)
+function _normU(s){ return (s||'').toString().normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/\s+/g,' ').trim(); }
+// Versão minúscula para comparações internas
+function _norm(s){ return _normU(s).toLowerCase(); }
 
-// Valores genéricos que NÃO devem ser tratados como nome de pai/mãe
-const _INVALIDOS = /^(nao\s*informado|n\.?i\.?|ignorado|desconhecido|sem\s*informa|nenhum|indefinido|s\.?n\.?|[x\-\.]+)$/i;
-function _nomeValido(s){ const n=_norm(s); return n.length>=5 && !_INVALIDOS.test(n); }
+// Valores genéricos a ignorar como pai/mãe
+const _INV_RE = /^(N\.?A\.?O?\s*INF|NAO\s*INFORMADO|N\.?I\.?|IGNORADO|DESCONHECIDO|SEM\s*INFO|NENHUM|INDEFINIDO|S\.?N\.?|[-X.]+|\d+)$/;
+function _invalido(s){ return !s || s.length < 4 || _INV_RE.test(s.toUpperCase().trim()); }
 
-// Busca o pesquisado na planilha; retorna {linhas, pais, maes}
+// Mapas pré-construídos ao carregar a planilha
+let _xlsxPorMae = {}, _xlsxPorPai = {};
+
+// Busca o pesquisado na planilha; retorna {linhas, paiNorms, maeNorms}
 async function _xlsxBuscarPessoa(query){
   try{
     const rows = await _xlsxCarregar();
-    const qn = _norm(query);
-    const isCpf = /^\d{6,}$/.test(query.replace(/\D/g,''));
-    // Prefere match exato de nome; fallback: contém
-    let matches = rows.filter(r=> r.nome && _norm(r.nome)===qn);
+    const qn = _normU(query);
+    // Match exato primeiro; fallback: contém
+    let matches = rows.filter(r=> _normU(r.nome)===qn);
     if(!matches.length)
-      matches = rows.filter(r=>
-        (r.nome && _norm(r.nome).includes(qn)) ||
-        (isCpf && r.cpf && r.cpf.replace(/\D/g,'').includes(query.replace(/\D/g,'')))
-      );
-    console.log('[XLSX] Busca "'+query+'" → '+matches.length+' linha(s)');
-    const pais = new Set(), maes = new Set();
+      matches = rows.filter(r=> _normU(r.nome).includes(qn) ||
+        (r.cpf && r.cpf.replace(/\D/g,'').includes(query.replace(/\D/g,''))));
+    console.log('[XLSX] "'+query+'" → '+matches.length+' linha(s)');
+    const paiNorms = new Set(), maeNorms = new Set();
     matches.forEach(r=>{
-      if(_nomeValido(r.pai)) pais.add(r.pai.trim());
-      if(_nomeValido(r.mae)) maes.add(r.mae.trim());
+      const p=_normU(r.pai), m=_normU(r.mae);
+      if(!_invalido(p)) paiNorms.add(p);
+      if(!_invalido(m)) maeNorms.add(m);
     });
-    console.log('[XLSX] Pai(s):', [...pais], '| Mãe(s):', [...maes]);
-    return { linhas:matches, pais:[...pais], maes:[...maes] };
+    console.log('[XLSX] pais:', [...paiNorms], '| maes:', [...maeNorms]);
+    return { linhas:matches, paiNorms:[...paiNorms], maeNorms:[...maeNorms] };
   }catch(e){
-    console.error('[XLSX] Erro em _xlsxBuscarPessoa:', e);
-    return { linhas:[], pais:[], maes:[], erro:e.message };
+    return { linhas:[], paiNorms:[], maeNorms:[], erro:e.message };
   }
 }
 
-// Busca outros registros na planilha com o mesmo pai ou mãe
-async function _xlsxBuscarVinculos(pais, maes, queryNorm){
+// Busca vínculos usando os mapas pré-construídos (mesma lógica da teia)
+async function _xlsxBuscarVinculos(paiNorms, maeNorms, queryNormU){
   try{
+    await _xlsxCarregar(); // garante que mapas estão prontos
     const rows = await _xlsxCarregar();
-    const vincPai=[], vincMae=[], vincAmbos=[];
+    const vincAmbos=[], vincPai=[], vincMae=[];
     const vistos = new Set();
 
+    // Conjunto de nomes com mesmo pai
+    const comPai = new Set();
+    paiNorms.forEach(p=>{ (_xlsxPorPai[p]||[]).forEach(n=>comPai.add(n)); });
+    // Conjunto de nomes com mesma mãe
+    const comMae = new Set();
+    maeNorms.forEach(m=>{ (_xlsxPorMae[m]||[]).forEach(n=>comMae.add(n)); });
+
     for(const row of rows){
-      if(!row.nome || _norm(row.nome)===queryNorm) continue;
-      const chave = _norm(row.nome);
-      if(vistos.has(chave)) continue;
-
-      const temPai = pais.some(p=>p && row.pai && _norm(row.pai)===_norm(p));
-      const temMae = maes.some(m=>m && row.mae && _norm(row.mae)===_norm(m));
-
-      if(temPai && temMae){ vistos.add(chave); vincAmbos.push(row); }
-      else if(temPai)     { vistos.add(chave); vincPai.push(row); }
-      else if(temMae)     { vistos.add(chave); vincMae.push(row); }
+      const k = _normU(row.nome);
+      if(!k || k===queryNormU || vistos.has(k)) continue;
+      const tp = comPai.has(k), tm = comMae.has(k);
+      if(tp || tm){
+        vistos.add(k);
+        if(tp && tm) vincAmbos.push(row);
+        else if(tp)  vincPai.push(row);
+        else         vincMae.push(row);
+      }
     }
-    console.log('[XLSX] Vínculos → ambos:', vincAmbos.length, '| só pai:', vincPai.length, '| só mãe:', vincMae.length);
-    vincAmbos.forEach(r=>console.log('[XLSX] Ambos:', r.nome, '| pai:', r.pai, '| mãe:', r.mae));
-    vincPai.forEach(r=>console.log('[XLSX] Só pai:', r.nome, '| pai:', r.pai));
-    vincMae.forEach(r=>console.log('[XLSX] Só mãe:', r.nome, '| mãe:', r.mae));
+    console.log('[XLSX] Vínculos → ambos:', vincAmbos.length, '| pai:', vincPai.length, '| mae:', vincMae.length);
     return { vincAmbos, vincPai, vincMae };
   }catch(e){
-    console.error('[XLSX] Erro em _xlsxBuscarVinculos:', e);
+    console.error('[XLSX] _xlsxBuscarVinculos erro:', e);
     return { vincAmbos:[], vincPai:[], vincMae:[] };
   }
 }
@@ -454,11 +466,10 @@ async function _coSend(){
 
     // PASSO 2 — Linha do pesquisado na planilha → AG (pai) e AH (mãe)
     const xlsxPessoa = await _xlsxBuscarPessoa(query);
-    const paiList = xlsxPessoa.pais;
-    const maeList = xlsxPessoa.maes;
+    const { paiNorms, maeNorms } = xlsxPessoa;
 
-    // PASSO 3 — Varre toda a planilha: quem mais tem o mesmo AG ou AH?
-    const { vincAmbos, vincPai, vincMae } = await _xlsxBuscarVinculos(paiList, maeList, _norm(query));
+    // PASSO 3 — Usa mapas pré-construídos para encontrar vínculos
+    const { vincAmbos, vincPai, vincMae } = await _xlsxBuscarVinculos(paiNorms, maeNorms, _normU(query));
     const totalVinc = vincAmbos.length + vincPai.length + vincMae.length;
 
     loadEl.querySelector('span').textContent = `${totalVinc} vínculo(s) encontrado(s). Buscando arquivos no OneDrive…`;
