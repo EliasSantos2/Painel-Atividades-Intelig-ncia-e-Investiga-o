@@ -11,7 +11,6 @@
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="infratores_enc.js"></script>
 <style>
 :root{
@@ -376,16 +375,14 @@ async function _coSend(){
     // PASSO 5 — Monta HTML
     let html = '';
 
-    // Banner de filiação da planilha
-    if(paiList.length || maeList.length){
+    // Banner de filiação (dados de infratores)
+    if(paiNorms.length || maeNorms.length){
+      const paiOrig = xlsxPessoa.linhas[0]?.pai || paiNorms[0] || '';
+      const maeOrig = xlsxPessoa.linhas[0]?.mae || maeNorms[0] || '';
       html += `<div class="co-vinc-banner">
-        🔗 <strong>Filiação de "${_coEsc(query)}" (planilha de infratores):</strong>
-        ${paiList.length ? `<br>👨 <strong>Pai (AG):</strong> ${paiList.map(_coEsc).join(' · ')}` : ''}
-        ${maeList.length ? `<br>👩 <strong>Mãe (AH):</strong> ${maeList.map(_coEsc).join(' · ')}` : ''}
-      </div>`;
-    } else if(xlsxPessoa.erro){
-      html += `<div class="co-vinc-banner" style="border-color:#c0392b;background:rgba(192,57,43,.06)">
-        ⚠️ Planilha: ${_coEsc(xlsxPessoa.erro)}
+        🔗 <strong>Filiação de "${_coEsc(query)}" (infratores):</strong>
+        ${paiNorms.length ? `<br>👨 <strong>Pai:</strong> ${_coEsc(paiOrig)}` : ''}
+        ${maeNorms.length ? `<br>👩 <strong>Mãe:</strong> ${_coEsc(maeOrig)}` : ''}
       </div>`;
     }
 
@@ -419,11 +416,12 @@ async function _coSend(){
     }
 
     // Mensagens de status
-    if(!xlsxPessoa.erro && !paiList.length && !maeList.length){
-      html += `<div style="font-size:11px;color:var(--text3);margin-top:10px;font-style:italic">
-        ℹ️ "${_coEsc(query)}" não encontrado na planilha de infratores ou colunas AG/AH estão vazias.
-      </div>`;
-    } else if(totalVinc === 0 && (paiList.length || maeList.length)){
+    if(!paiNorms.length && !maeNorms.length){
+      const motivo = !_infRows
+        ? 'Informe a senha dos infratores para habilitar vínculos.'
+        : `"${_coEsc(query)}" não encontrado na base de infratores ou sem dados de filiação.`;
+      html += `<div style="font-size:11px;color:var(--text3);margin-top:10px;font-style:italic">ℹ️ ${motivo}</div>`;
+    } else if(totalVinc === 0 && (paiNorms.length || maeNorms.length)){
       html += `<div style="font-size:11px;color:var(--text3);margin-top:10px;font-style:italic">
         ℹ️ Nenhum outro infrator na planilha compartilha o mesmo pai ou mãe de "${_coEsc(query)}".
       </div>`;
