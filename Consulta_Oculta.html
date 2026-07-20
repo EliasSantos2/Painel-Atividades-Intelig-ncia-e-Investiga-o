@@ -241,6 +241,30 @@ function _renderItems(items, secLabel, secColor, excertos){
   return `<div class="co-section-title" style="color:${secColor}">${secLabel}</div>${cards}`;
 }
 
+// ── EXTRAÇÃO DE NOME DO SUJEITO DE UM ARQUIVO ────────────
+// Tenta identificar o nome da pessoa "sobre quem" o arquivo trata.
+// Estratégia: nome na pasta imediata > padrões no texto > nome do arquivo.
+const _NOME_RE = /(?:nome[:\s]+|suspeito[:\s]+|investigado[:\s]+|autuado[:\s]+|infrator[:\s]+)([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de|da|do|dos|das|e)?\s*[A-ZÀ-Úa-zà-ú]+){1,5})/gi;
+
+function _extrairNomeSujeito(item, texto){
+  // 1) Pasta imediata (ex: "Caso 01 - João Silva")
+  const pasta = item.parentReference?.path ? decodeURIComponent(item.parentReference.path) : '';
+  const pastaMatch = pasta.match(/[\/\\]([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+){1,4})\s*$/);
+  if(pastaMatch) return _limparNome(pastaMatch[1]);
+
+  // 2) Padrão "nome:", "suspeito:", etc. no texto
+  if(texto){
+    _NOME_RE.lastIndex=0;
+    const m=_NOME_RE.exec(texto);
+    if(m) return _limparNome(m[1]);
+  }
+
+  // 3) Nome do arquivo sem extensão
+  const sem = (item.name||'').replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').trim();
+  if(sem.length>3) return _limparNome(sem);
+  return null;
+}
+
 // ── BUSCA PRINCIPAL ───────────────────────────────────────
 async function _coSend(){
   const inp = document.getElementById('co-input');
@@ -257,16 +281,24 @@ async function _coSend(){
   const loadEl = _coRenderLoading('Buscando arquivos no OneDrive…');
 
   try{
-    // 1) Busca principal
+    // 1) Busca principal pelo nome pesquisado
     const mainItems = await _driveSearch(query);
     _coSetStatus(`${mainItems.length} arquivo(s) encontrado(s) — analisando filiação…`);
-    if(loadEl) loadEl.querySelector('span').textContent = `${mainItems.length} arquivo(s) encontrado(s). Analisando filiação nos documentos…`;
+    loadEl.querySelector('span').textContent = `${mainItems.length} arquivo(s) encontrado(s). Lendo documentos para extrair filiação…`;
 
-    // 2) Lê conteúdo dos arquivos menores para extrair filiação
+    if(!mainItems.length){
+      loadEl.remove();
+      _coRenderMsg('bot','<div class="co-empty">🔍 Nenhum arquivo encontrado para "<em>'+_coEsc(query)+'</em>".</div>');
+      return;
+    }
+
+    // 2) Lê documentos legíveis para extrair pai e mãe do pesquisado
     const todosFiliacos = { pais: new Set(), maes: new Set() };
-    const excertos = {}; // id → trecho com filiação encontrado
+    const excertos = {};
 
-    const paraLer = mainItems.filter(i=>['docx','txt','csv','md','html','htm'].includes((i.name||'').split('.').pop().toLowerCase()) && (i.size||0)<3e6).slice(0,6);
+    const paraLer = mainItems
+      .filter(i=>['docx','txt','csv','md','html','htm'].includes((i.name||'').split('.').pop().toLowerCase()) && (i.size||0)<3e6)
+      .slice(0,6);
 
     for(const item of paraLer){
       const texto = await _lerConteudo(item);
@@ -274,56 +306,112 @@ async function _coSend(){
       const {pais,maes} = _extrairFiliacao(texto);
       pais.forEach(p=>todosFiliacos.pais.add(p));
       maes.forEach(m=>todosFiliacos.maes.add(m));
-      // Trecho com contexto de filiação para mostrar no card
       const trechoMatch = texto.match(/.{0,80}(?:pai|m[aã]e|filho\s+de|filia[çc][aã]o).{0,100}/i);
-      if(trechoMatch && (pais.length||maes.length)) excertos[item.id] = trechoMatch[0].replace(/[\r\n]+/g,' ').trim();
+      if(trechoMatch && (pais.length||maes.length))
+        excertos[item.id] = trechoMatch[0].replace(/[\r\n]+/g,' ').trim();
     }
 
-    loadEl.remove();
-
-    if(!mainItems.length){
-      _coRenderMsg('bot','<div class="co-empty">🔍 Nenhum arquivo encontrado para "<em>'+_coEsc(query)+'</em>".</div>');
-      return;
-    }
+    loadEl.querySelector('span').textContent = 'Buscando outros documentos com o mesmo pai/mãe…';
 
     const paiList = [...todosFiliacos.pais];
     const maeList = [...todosFiliacos.maes];
 
-    // 3) Busca pelos parentes encontrados
-    const resPais = [], resMaes = [];
-    for(const pai of paiList.slice(0,3)){
-      const items = await _driveSearch(pai);
-      const novos = items.filter(i=>!mainItems.find(m=>m.id===i.id));
-      if(novos.length) resPais.push({nome:pai, items:novos});
+    // 3) Para cada pai/mãe encontrado, busca NO ONEDRIVE outros arquivos que mencionem esse nome
+    //    Desses arquivos, extrai o NOME DA PESSOA (sujeito do arquivo) que também tem esse pai/mãe
+    //    Excluindo o próprio pesquisado e arquivos já listados nos resultados principais
+
+    const mainIds = new Set(mainItems.map(i=>i.id));
+    const queryNorm = query.trim().toLowerCase();
+
+    // vinculados: { nomeParente, tipo('pai'|'mae'), pessoas:[{nome,items:[]}] }
+    const vinculados = [];
+
+    async function _processarParente(nomeParente, tipo){
+      // Busca arquivos que mencionem esse pai/mãe
+      const itemsParente = await _driveSearch(nomeParente);
+      // Exclui os da busca principal
+      const itemsNovos = itemsParente.filter(i=>!mainIds.has(i.id));
+      if(!itemsNovos.length) return;
+
+      // Agrupa por possível pessoa (usando pasta ou nome do arquivo)
+      // Para cada arquivo, tenta extrair o nome do sujeito e verifica se ele também tem esse pai/mãe
+      const pessoasMap = new Map(); // nome normalizado → {nome, items[], confirmado}
+
+      for(const item of itemsNovos.slice(0,10)){
+        let texto = null;
+        const ext = (item.name||'').split('.').pop().toLowerCase();
+        if(['docx','txt','csv','md','html','htm'].includes(ext) && (item.size||0)<3e6){
+          texto = await _lerConteudo(item);
+        }
+
+        const nomeSuj = _extrairNomeSujeito(item, texto);
+        if(!nomeSuj) continue;
+        const nomeSujNorm = nomeSuj.toLowerCase().trim();
+
+        // Não inclui o próprio pesquisado
+        if(nomeSujNorm.includes(queryNorm) || queryNorm.includes(nomeSujNorm.split(' ')[0])) continue;
+
+        // Verifica se o arquivo confirma o mesmo pai/mãe
+        let confirmado = false;
+        if(texto){
+          const {pais:p2, maes:m2} = _extrairFiliacao(texto);
+          confirmado = (tipo==='pai' ? p2 : m2).some(n=>n.toLowerCase().includes(nomeParente.toLowerCase().split(' ')[0]));
+        }
+
+        const chave = nomeSujNorm.split(' ').slice(0,2).join(' ');
+        if(!pessoasMap.has(chave)) pessoasMap.set(chave,{nome:nomeSuj, items:[], confirmado});
+        pessoasMap.get(chave).items.push(item);
+        if(confirmado) pessoasMap.get(chave).confirmado = true;
+      }
+
+      if(pessoasMap.size){
+        const pessoas = [...pessoasMap.values()];
+        vinculados.push({nomeParente, tipo, pessoas});
+      }
     }
-    for(const mae of maeList.slice(0,3)){
-      const items = await _driveSearch(mae);
-      const novos = items.filter(i=>!mainItems.find(m=>m.id===i.id));
-      if(novos.length) resMaes.push({nome:mae, items:novos});
-    }
+
+    for(const pai of paiList.slice(0,3)) await _processarParente(pai,'pai');
+    for(const mae of maeList.slice(0,3)) await _processarParente(mae,'mae');
+
+    loadEl.remove();
 
     // 4) Monta HTML
     let html = '';
 
-    // Banner de filiação detectada
+    // Banner
     if(paiList.length||maeList.length){
       html += `<div class="co-vinc-banner">
-        🔗 <strong>Vínculos detectados nos documentos:</strong>
+        🔗 <strong>Filiação detectada nos documentos de "${_coEsc(query)}":</strong>
         ${paiList.length?`<br>👨 <strong>Pai:</strong> ${paiList.map(_coEsc).join(' · ')}`:''}
         ${maeList.length?`<br>👩 <strong>Mãe:</strong> ${maeList.map(_coEsc).join(' · ')}`:''}
       </div>`;
     }
 
-    html += _renderItems(mainItems, `🔎 Resultado direto — "${query}" (${mainItems.length} arquivo(s))`, 'var(--navy)', excertos);
-    resPais.forEach(r=>{
-      html += _renderItems(r.items, `👨 Via pai: ${r.nome} (${r.items.length} arquivo(s))`, 'var(--purple)');
-    });
-    resMaes.forEach(r=>{
-      html += _renderItems(r.items, `👩 Via mãe: ${r.nome} (${r.items.length} arquivo(s))`, 'var(--brown)');
-    });
+    // Resultados diretos
+    html += _renderItems(mainItems, `🔎 Arquivos de "${_coEsc(query)}" (${mainItems.length})`, 'var(--navy)', excertos);
+
+    // Vínculos familiares — outras pessoas com o mesmo pai/mãe
+    for(const v of vinculados){
+      const ico = v.tipo==='pai'?'👨':'👩';
+      const cor = v.tipo==='pai'?'var(--purple)':'var(--brown)';
+      const label = v.tipo==='pai'?'Pai':'Mãe';
+      for(const p of v.pessoas){
+        const tag = p.confirmado ? ' ✓' : '';
+        html += _renderPessoa(p.nome, p.items,
+          `${ico} Possível familiar via ${label} "${_coEsc(v.nomeParente)}" → ${_coEsc(p.nome)}${tag} (${p.items.length} arquivo(s))`,
+          cor);
+      }
+    }
 
     if(!paiList.length && !maeList.length){
-      html += `<div style="font-size:11px;color:var(--text3);margin-top:8px;font-style:italic">Nenhum dado de filiação encontrado nos documentos analisados (apenas arquivos DOCX/TXT menores que 3MB são lidos para extração).</div>`;
+      html += `<div style="font-size:11px;color:var(--text3);margin-top:10px;font-style:italic">
+        ℹ️ Nenhum dado de filiação encontrado nos documentos analisados.<br>
+        São lidos arquivos DOCX/TXT menores que 3MB que contenham campos como "Nome do Pai", "Nome da Mãe", "Filiação" ou "Filho de".
+      </div>`;
+    } else if(!vinculados.length){
+      html += `<div style="font-size:11px;color:var(--text3);margin-top:10px;font-style:italic">
+        ℹ️ Filiação identificada, mas não foram encontrados outros documentos no OneDrive com o mesmo pai/mãe.
+      </div>`;
     }
 
     _coRenderMsg('bot', html);
@@ -334,6 +422,27 @@ async function _coSend(){
     _coRenderMsg('bot','<div class="co-empty">⚠️ Erro: '+_coEsc(e.message)+'</div>');
     _coSetStatus('Erro na busca');
   }
+}
+
+// Renderiza bloco de uma pessoa vinculada (seus arquivos)
+function _renderPessoa(nome, items, secLabel, secColor){
+  const cards = items.slice(0,5).map(r=>{
+    const name=r.name||'—', url=r.webUrl||'#';
+    const mod=r.lastModifiedDateTime?new Date(r.lastModifiedDateTime).toLocaleDateString('pt-BR'):'';
+    const pasta=r.parentReference?.path?decodeURIComponent(r.parentReference.path).replace(/^.*?root:/,'')||'/':'/';
+    const ext=name.split('.').pop().toUpperCase();
+    const cor=_EXT_COR[ext]||'var(--navy)';
+    return `<div class="co-result">
+      <div class="co-result-hdr">
+        <span style="background:${cor};color:#fff;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:3px;flex-shrink:0">${_coEsc(ext)}</span>
+        <a href="${_coEsc(url)}" target="_blank" style="font-weight:700;font-size:12.5px;color:var(--navy);text-decoration:none">${_coEsc(name)}</a>
+        <span class="co-result-path" title="${_coEsc(pasta)}">${_coEsc(pasta)}</span>
+        ${mod?`<span class="co-result-score">${mod}</span>`:''}
+      </div>
+      <a href="${_coEsc(url)}" target="_blank" style="display:inline-block;margin-top:6px;font-size:11px;color:var(--navy2);text-decoration:none;font-weight:600">↗ Abrir no OneDrive</a>
+    </div>`;
+  }).join('');
+  return `<div class="co-section-title" style="color:${secColor}">${secLabel}</div>${cards}`;
 }
 
 // ── HELPERS ──────────────────────────────────────────────
