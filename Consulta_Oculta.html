@@ -239,6 +239,8 @@ async function _xlsxCarregar(){
 
   let buf = null, fileName = 'Cpf - Rondonopolis.xlsx';
 
+  const _erros = [];
+
   // 1) Resolve pelo link de compartilhamento → baixa diretamente com auth
   try{
     const b64 = btoa(_XLSX_LINK).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
@@ -247,20 +249,20 @@ async function _xlsxCarregar(){
       `?$select=name,id,parentReference,@microsoft.graph.downloadUrl`
     );
     if(info.name) fileName = info.name;
-    // Tenta downloadUrl pré-assinada primeiro (sem auth)
     if(info['@microsoft.graph.downloadUrl']){
-      try{ buf = await _xlsxBaixar(info['@microsoft.graph.downloadUrl'], false); }catch(e){}
+      try{ buf = await _xlsxBaixar(info['@microsoft.graph.downloadUrl'], false); }
+      catch(e){ _erros.push('preSignedUrl: '+e.message); }
     }
-    // Fallback: download via Graph com auth
     if(!buf && info.id){
       const driveId = info.parentReference?.driveId;
       const contentUrl = driveId
         ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${info.id}/content`
         : `https://graph.microsoft.com/v1.0/me/drive/items/${info.id}/content`;
-      buf = await _xlsxBaixar(contentUrl, true);
+      try{ buf = await _xlsxBaixar(contentUrl, true); }
+      catch(e){ _erros.push('contentUrl: '+e.message); }
     }
     if(buf) console.log('[XLSX] Baixado via link compartilhado:', fileName);
-  }catch(e){ console.warn('[XLSX] Link compartilhado falhou:', e.message); }
+  }catch(e){ _erros.push('shareLink: '+e.message); }
 
   // 2) Fallback: busca por nome + baixa com auth
   if(!buf){
@@ -282,15 +284,18 @@ async function _xlsxCarregar(){
             const contentUrl = driveId
               ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${f.id}/content`
               : `https://graph.microsoft.com/v1.0/me/drive/items/${f.id}/content`;
-            buf = await _xlsxBaixar(contentUrl, true);
+            try{ buf = await _xlsxBaixar(contentUrl, true); }
+            catch(e){ _erros.push('busca "'+termo+'": '+e.message); }
           }
           if(buf){ console.log('[XLSX] Encontrado por busca:', fileName); break; }
+        } else {
+          _erros.push('busca "'+termo+'": nenhum xlsx encontrado');
         }
-      }catch(e){ console.warn('[XLSX] Busca "'+termo+'":', e.message); }
+      }catch(e){ _erros.push('busca "'+termo+'": '+e.message); }
     }
   }
 
-  if(!buf) throw new Error('Planilha não encontrada no OneDrive.');
+  if(!buf) throw new Error('Planilha não encontrada. Detalhes: '+_erros.join(' | '));
 
   console.log('[XLSX] Baixando', fileName, '…');
 
