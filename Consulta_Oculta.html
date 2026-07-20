@@ -11,6 +11,7 @@
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
 :root{
   --navy:#003865;--navy2:#00284a;--navy-light:#e8f0f8;
@@ -183,71 +184,66 @@ let _xlsxRows = null; // cache linhas [{nome,pai,mae,cpf}]
 const _COL_PAI = 32; // AG
 const _COL_MAE = 33; // AH
 
-// Link de compartilhamento fixo da planilha de infratores
+// Planilha de infratores — download direto via token e parse com SheetJS
 const _XLSX_SHARE_URL = 'https://1drv.ms/x/c/b476f1a47b64e77b/IQCV_D-uaDZ5TbmNyF3qhvlcAV4eha-61JWJJRvu4izxyT0?e=fTPvR8';
 
-function _encodeShareUrl(url){
-  // Codifica em base64url e adiciona prefixo u! (padrão Graph API)
-  const b64 = btoa(url).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  return 'u!' + b64;
-}
-
-async function _xlsxGetItem(){
-  if(_xlsxItem) return _xlsxItem;
-  try{
-    const shareId = _encodeShareUrl(_XLSX_SHARE_URL);
-    const info = await _graphGet(
-      `https://graph.microsoft.com/v1.0/shares/${shareId}/driveItem?$select=id,parentReference,name`
-    );
-    const driveId = info.parentReference?.driveId || null;
-    console.log('[XLSX] Planilha via link:', info.name, '| driveId:', driveId, '| id:', info.id);
-    _xlsxItem = {id: info.id, driveId};
-    return _xlsxItem;
-  }catch(e){
-    console.error('[XLSX] Erro ao resolver link compartilhado:', e.message);
-    throw new Error('Não foi possível acessar a planilha pelo link: '+e.message);
-  }
-}
-
-function _xlsxBaseUrl(item){
-  return item.driveId
-    ? `https://graph.microsoft.com/v1.0/drives/${item.driveId}/items/${item.id}`
-    : `https://graph.microsoft.com/v1.0/me/drive/items/${item.id}`;
-}
+const _COL_PAI = 32; // AG
+const _COL_MAE = 33; // AH
 
 async function _xlsxCarregar(){
   if(_xlsxRows) return _xlsxRows;
-  const item = await _xlsxGetItem();
-  const base = _xlsxBaseUrl(item);
-  console.log('[XLSX] URL base:', base);
 
-  const sheets = await _graphGet(`${base}/workbook/worksheets`);
-  const sheetName = sheets.value[0].name;
-  console.log('[XLSX] Aba:', sheetName);
+  // Resolve o link compartilhado para obter a URL de download
+  const b64 = btoa(_XLSX_SHARE_URL).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  const shareId = 'u!' + b64;
 
-  const range = await _graphGet(
-    `${base}/workbook/worksheets('${encodeURIComponent(sheetName)}')/usedRange(valuesOnly=true)`
+  console.log('[XLSX] Resolvendo link compartilhado…');
+  const info = await _graphGet(
+    `https://graph.microsoft.com/v1.0/shares/${shareId}/driveItem?$select=id,name,parentReference,@microsoft.graph.downloadUrl`
   );
-  const vals = range.values||[];
+  console.log('[XLSX] Arquivo:', info.name, '| id:', info.id);
+
+  // Obtém URL de download (pré-assinada, sem autenticação)
+  let dlUrl = info['@microsoft.graph.downloadUrl'];
+  if(!dlUrl){
+    // Fallback: busca via drives endpoint
+    const driveId = info.parentReference?.driveId;
+    const base = driveId
+      ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${info.id}`
+      : `https://graph.microsoft.com/v1.0/me/drive/items/${info.id}`;
+    const item2 = await _graphGet(`${base}?$select=@microsoft.graph.downloadUrl`);
+    dlUrl = item2['@microsoft.graph.downloadUrl'];
+  }
+  if(!dlUrl) throw new Error('Não foi possível obter URL de download da planilha.');
+
+  console.log('[XLSX] Baixando arquivo…');
+  const buf = await (await fetch(dlUrl)).arrayBuffer();
+
+  console.log('[XLSX] Parseando com SheetJS…');
+  const wb = XLSX.read(buf, {type:'array'});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const vals = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+
   console.log('[XLSX] Linhas (incl. cabeçalho):', vals.length);
-  if(vals.length<2) return [];
+  if(vals.length < 2) return [];
 
   const headers = vals[0].map(h=>String(h||'').trim().toLowerCase());
-  console.log('[XLSX] AG:', headers[_COL_PAI], '| AH:', headers[_COL_MAE]);
+  console.log('[XLSX] AG(32):', headers[_COL_PAI], '| AH(33):', headers[_COL_MAE]);
 
   let colNome = headers.findIndex(h=>/^nome\b|nome\s+(completo|infrator)/.test(h));
-  if(colNome<0) colNome = headers.findIndex(h=>/nome/.test(h));
+  if(colNome < 0) colNome = headers.findIndex(h=>/nome/.test(h));
   const colCpf = headers.findIndex(h=>/cpf/.test(h));
   console.log('[XLSX] colNome:', colNome, '| colCpf:', colCpf);
 
   _xlsxRows = vals.slice(1).map(row=>({
-    nome: String(row[colNome>=0?colNome:0]||'').trim(),
+    nome: String(row[colNome >= 0 ? colNome : 0]||'').trim(),
     pai:  String(row[_COL_PAI]||'').trim(),
     mae:  String(row[_COL_MAE]||'').trim(),
-    cpf:  colCpf>=0 ? String(row[colCpf]||'').trim() : '',
-  })).filter(r=>r.nome);
+    cpf:  colCpf >= 0 ? String(row[colCpf]||'').trim() : '',
+  })).filter(r => r.nome);
+
   console.log('[XLSX] Linhas carregadas:', _xlsxRows.length);
-  console.log('[XLSX] Amostra:', _xlsxRows.slice(0,3));
+  console.log('[XLSX] Amostra (3 primeiras):', _xlsxRows.slice(0,3));
   return _xlsxRows;
 }
 
