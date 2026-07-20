@@ -107,14 +107,9 @@ main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden
         <textarea id="co-input" class="co-input" rows="2"
           placeholder="Nome, CPF ou termo para pesquisar… (Enter para enviar)"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_coSend()}"></textarea>
-        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-          <button class="co-send-btn" onclick="_coSend()" title="Pesquisar" style="width:auto;padding:0 16px;gap:6px;font-size:12px;font-weight:700">
-            <i data-lucide="search" style="width:15px;height:15px"></i> Pesquisar
-          </button>
-          <button id="co-login-btn2" class="co-login-btn" onclick="_coLogin()" style="font-size:11px;padding:6px 12px;gap:5px">
-            <i data-lucide="log-in" style="width:12px;height:12px"></i> Conectar OneDrive
-          </button>
-        </div>
+        <button class="co-send-btn" onclick="_coSend()" title="Enviar">
+          ➤
+        </button>
       </div>
     </div>
   </div>
