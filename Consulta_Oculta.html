@@ -85,6 +85,31 @@ main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden
 .co-input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,56,101,.08);}
 .co-send-btn{background:var(--navy);color:#fff;border:none;border-radius:8px;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;align-self:flex-end;}
 .co-send-btn:hover{background:var(--navy2);}
+
+/* ── LAYOUT COM PAINEL DE VÍNCULOS ── */
+.co-layout{display:flex;flex:1;overflow:hidden;min-height:0;}
+.co-chat{display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
+
+/* ── PAINEL VÍNCULOS ── */
+.vinc-panel{width:300px;flex-shrink:0;border-left:1px solid var(--border);background:var(--bg3);display:flex;flex-direction:column;overflow:hidden;}
+.vinc-header{padding:10px 14px;background:var(--navy);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.vinc-body{flex:1;overflow-y:auto;padding:12px;}
+.vinc-form{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;}
+.vinc-form label{display:block;font-size:10.5px;font-weight:700;color:var(--text2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
+.vinc-form input{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;margin-bottom:8px;font-family:Arial,sans-serif;}
+.vinc-form input:focus{outline:none;border-color:var(--navy);}
+.vinc-add-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:6px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;}
+.vinc-add-btn:hover{background:var(--navy2);}
+.vinc-list-title{font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.vinc-card{background:#fff;border:1px solid var(--border);border-radius:7px;padding:9px 11px;margin-bottom:7px;position:relative;}
+.vinc-card-name{font-weight:700;font-size:12px;color:var(--navy);margin-bottom:5px;}
+.vinc-rel{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);margin-top:3px;}
+.vinc-rel-tag{background:var(--navy-light);color:var(--navy);font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;white-space:nowrap;}
+.vinc-del{position:absolute;top:7px;right:8px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;line-height:1;}
+.vinc-del:hover{color:#c0392b;}
+.vinc-search-btn{background:var(--orange);color:#fff;border:none;border-radius:4px;padding:2px 7px;font-size:10.5px;font-weight:700;cursor:pointer;margin-left:4px;}
+.vinc-search-btn:hover{background:var(--orange-h);}
+.vinc-match{background:rgba(247,131,68,.1);border-left:3px solid var(--orange);padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:11.5px;color:var(--text);}
 </style>
 </head>
 <body>
@@ -121,24 +146,51 @@ main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden
       <span id="co-badge" class="co-badge" style="display:none"></span>
     </div>
 
-    <div class="co-chat">
-      <div id="co-messages" class="co-messages">
-        <div class="co-msg-system">
-          <strong>Bem-vindo à Consulta Oculta.</strong><br><br>
-          Clique em <strong>Conectar ao OneDrive</strong> para autenticar. A busca é feita diretamente nos servidores da Microsoft — <strong>nenhum arquivo é baixado</strong>, não importa o tamanho ou quantidade.<br><br>
-          Formatos suportados: <strong>PDF · DOCX · XLSX · XLS · TXT · CSV · e-mails</strong><br>
-          <span style="font-size:11px;color:var(--text3)">A pesquisa usa a API Microsoft Search (Graph) — os mesmos resultados do campo de busca do OneDrive, direto no servidor.</span>
+    <div class="co-layout">
+
+      <!-- CHAT PRINCIPAL -->
+      <div class="co-chat">
+        <div id="co-messages" class="co-messages">
+          <div class="co-msg-system">
+            <strong>Bem-vindo à Consulta Oculta.</strong><br><br>
+            Clique em <strong>Conectar ao OneDrive</strong> para autenticar. A busca é feita diretamente nos servidores da Microsoft — <strong>nenhum arquivo é baixado</strong>.<br><br>
+            <strong>Vínculo familiar:</strong> cadastre pai/mãe no painel à direita. Ao pesquisar um nome, os parentes são buscados automaticamente e os resultados são agrupados por grau de parentesco.
+          </div>
+        </div>
+        <div class="co-input-wrap">
+          <textarea id="co-input" class="co-input" rows="2"
+            placeholder="Nome, CPF ou termo para pesquisar… (Enter para enviar)"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_coSend()}"></textarea>
+          <button class="co-send-btn" onclick="_coSend()" title="Enviar">
+            <i data-lucide="send" style="width:16px;height:16px"></i>
+          </button>
         </div>
       </div>
-      <div class="co-input-wrap">
-        <textarea id="co-input" class="co-input" rows="2"
-          placeholder="Digite sua pergunta sobre os documentos… (Enter para enviar, Shift+Enter para nova linha)"
-          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_coSend()}"></textarea>
-        <button class="co-send-btn" onclick="_coSend()" title="Enviar">
-          <i data-lucide="send" style="width:16px;height:16px"></i>
-        </button>
+
+      <!-- PAINEL VÍNCULOS FAMILIARES -->
+      <div class="vinc-panel">
+        <div class="vinc-header">
+          <i data-lucide="git-branch" style="width:13px;height:13px"></i>
+          Vínculos Familiares
+        </div>
+        <div class="vinc-body">
+          <div class="vinc-form">
+            <label>Nome do Suspeito / Infrator</label>
+            <input id="vinc-nome" placeholder="Ex: João da Silva" autocomplete="off">
+            <label>Nome do Pai</label>
+            <input id="vinc-pai" placeholder="Ex: Antônio da Silva" autocomplete="off">
+            <label>Nome da Mãe</label>
+            <input id="vinc-mae" placeholder="Ex: Maria da Silva" autocomplete="off">
+            <label>Observação (opcional)</label>
+            <input id="vinc-obs" placeholder="Ex: irmão também investigado" autocomplete="off">
+            <button class="vinc-add-btn" onclick="_vincAdd()">+ Cadastrar Vínculo</button>
+          </div>
+          <div class="vinc-list-title">Vínculos cadastrados</div>
+          <div id="vinc-list"></div>
+        </div>
       </div>
-    </div>
+
+    </div><!-- /.co-layout -->
 
   </div>
 </main>
@@ -199,11 +251,98 @@ async function _graphGet(url){
   return resp.json();
 }
 
-async function _coSend(){
-  const inp = document.getElementById('co-input');
-  const query = inp.value.trim();
+// ── VÍNCULOS FAMILIARES ──────────────────────────────────
+const _VINC_KEY = 'co_vinculos_v1';
+let _vinculos = [];
+
+function _vincLoad(){
+  try{ _vinculos = JSON.parse(localStorage.getItem(_VINC_KEY)||'[]'); }catch(_){ _vinculos=[]; }
+  _vincRender();
+}
+
+function _vincSave(){ localStorage.setItem(_VINC_KEY, JSON.stringify(_vinculos)); }
+
+function _vincAdd(){
+  const nome = document.getElementById('vinc-nome').value.trim();
+  if(!nome){ alert('Informe o nome do suspeito.'); return; }
+  const pai  = document.getElementById('vinc-pai').value.trim();
+  const mae  = document.getElementById('vinc-mae').value.trim();
+  const obs  = document.getElementById('vinc-obs').value.trim();
+  if(!pai && !mae){ alert('Informe ao menos o nome do pai ou da mãe.'); return; }
+  _vinculos.push({ id: Date.now(), nome, pai, mae, obs });
+  _vincSave();
+  _vincRender();
+  ['vinc-nome','vinc-pai','vinc-mae','vinc-obs'].forEach(id => document.getElementById(id).value='');
+}
+
+function _vincDel(id){
+  _vinculos = _vinculos.filter(v => v.id !== id);
+  _vincSave();
+  _vincRender();
+}
+
+function _vincRender(){
+  const el = document.getElementById('vinc-list');
+  if(!el) return;
+  if(!_vinculos.length){
+    el.innerHTML = '<div style="font-size:11.5px;color:var(--text3);text-align:center;padding:16px">Nenhum vínculo cadastrado</div>';
+    return;
+  }
+  el.innerHTML = _vinculos.map(v=>`
+    <div class="vinc-card">
+      <button class="vinc-del" onclick="_vincDel(${v.id})" title="Remover">×</button>
+      <div class="vinc-card-name">👤 ${_coEsc(v.nome)}</div>
+      ${v.pai?`<div class="vinc-rel"><span class="vinc-rel-tag">PAI</span>${_coEsc(v.pai)}
+        <button class="vinc-search-btn" onclick="_coSearchDirect('${v.pai.replace(/'/g,"\\'")}')">buscar</button></div>`:''}
+      ${v.mae?`<div class="vinc-rel"><span class="vinc-rel-tag">MÃE</span>${_coEsc(v.mae)}
+        <button class="vinc-search-btn" onclick="_coSearchDirect('${v.mae.replace(/'/g,"\\'")}')">buscar</button></div>`:''}
+      ${v.obs?`<div style="font-size:10.5px;color:var(--text3);margin-top:5px;font-style:italic">${_coEsc(v.obs)}</div>`:''}
+    </div>`).join('');
+}
+
+// Retorna vínculos que batem com a query (nome do suspeito está na query)
+function _vincMatch(query){
+  const q = query.toLowerCase();
+  return _vinculos.filter(v => q.includes(v.nome.toLowerCase()) || v.nome.toLowerCase().includes(q));
+}
+
+// ── BUSCA (principal + vínculos) ─────────────────────────
+async function _driveSearch(termo){
+  const enc = encodeURIComponent(termo);
+  const data = await _graphGet(
+    `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${enc}')`+
+    `?$top=20&$select=name,webUrl,lastModifiedDateTime,parentReference,file`
+  );
+  return (data.value || []).filter(i => i.file);
+}
+
+function _renderItems(items, label, labelColor){
+  if(!items.length) return '';
+  const extColor = {PDF:'#C0392B',DOCX:'#2E75B6',XLSX:'#1E8449',XLS:'#1E8449',PPTX:'#C55A11',MSG:'#7030A0'};
+  return `
+    <div style="font-size:11px;font-weight:700;color:${labelColor};text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px;padding-left:2px">${label} — ${items.length} arquivo(s)</div>`+
+    items.map(r=>{
+      const name = r.name||'—', url=r.webUrl||'#';
+      const mod  = r.lastModifiedDateTime ? new Date(r.lastModifiedDateTime).toLocaleDateString('pt-BR'):'';
+      const pasta= r.parentReference?.path ? decodeURIComponent(r.parentReference.path).replace(/^.*?root:/,'')||'/':'/';
+      const ext  = name.split('.').pop().toUpperCase();
+      const cor  = extColor[ext]||'var(--navy)';
+      return `<div class="co-result">
+        <div class="co-result-hdr">
+          <span style="background:${cor};color:#fff;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:3px;flex-shrink:0">${_coEsc(ext)}</span>
+          <a href="${_coEsc(url)}" target="_blank" class="co-result-name" style="text-decoration:none;color:var(--navy)">${_coEsc(name)}</a>
+          <span class="co-result-path" title="${_coEsc(pasta)}">${_coEsc(pasta)}</span>
+          ${mod?`<span class="co-result-score">${mod}</span>`:''}
+        </div>
+        <a href="${_coEsc(url)}" target="_blank" style="display:inline-block;margin-top:6px;font-size:11px;color:var(--navy2);text-decoration:none;font-weight:600">↗ Abrir no OneDrive</a>
+      </div>`;
+    }).join('');
+}
+
+async function _coSend(){ await _coSearchDirect(document.getElementById('co-input').value.trim()); document.getElementById('co-input').value=''; }
+
+async function _coSearchDirect(query){
   if(!query) return;
-  inp.value = '';
   _coRenderMsg('user', _coEsc(query));
 
   if(!_token){
@@ -211,46 +350,53 @@ async function _coSend(){
     return;
   }
 
-  const loadEl = _coRenderLoading('Pesquisando no OneDrive…');
+  // Detecta vínculos familiares que coincidem com a pesquisa
+  const matches = _vincMatch(query);
+
+  const loadEl = _coRenderLoading(matches.length
+    ? `Pesquisando "${query}" + ${matches.length} vínculo(s) familiar(es)…`
+    : `Pesquisando no OneDrive…`);
+
   try{
-    const enc = encodeURIComponent(query);
-    const data = await _graphGet(
-      `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${enc}')`+
-      `?$top=20&$select=name,webUrl,lastModifiedDateTime,size,parentReference,file`
-    );
+    // Busca principal
+    const mainItems = await _driveSearch(query);
+
+    // Buscas por parentes (pai e mãe de cada vínculo encontrado)
+    const familyResults = [];
+    for(const v of matches){
+      if(v.pai){
+        const items = await _driveSearch(v.pai);
+        if(items.length) familyResults.push({ label:`PAI de ${v.nome}: ${v.pai}`, items, color:'#7030A0' });
+      }
+      if(v.mae){
+        const items = await _driveSearch(v.mae);
+        if(items.length) familyResults.push({ label:`MÃE de ${v.nome}: ${v.mae}`, items, color:'#C55A11' });
+      }
+    }
 
     loadEl.remove();
-    const items = (data.value || []).filter(i => i.file); // só arquivos, não pastas
-    const total = items.length;
 
-    if(!total){
-      _coRenderMsg('bot','<div class="co-empty">🔍 Nenhum arquivo encontrado para "<em>'+_coEsc(query)+'</em>" no OneDrive.</div>');
+    if(!mainItems.length && !familyResults.length){
+      _coRenderMsg('bot','<div class="co-empty">🔍 Nenhum arquivo encontrado para "<em>'+_coEsc(query)+'</em>".</div>');
       return;
     }
 
-    const extColor = {PDF:'#C0392B',DOCX:'#2E75B6',XLSX:'#1E8449',XLS:'#1E8449',PPTX:'#C55A11',MSG:'#7030A0'};
-    const html =
-      `<div class="co-results-header">Encontrei <strong>${total}</strong> arquivo(s) para "<em>${_coEsc(query)}</em>":</div>`+
-      items.map(r=>{
-        const name = r.name || '—';
-        const url  = r.webUrl || '#';
-        const mod  = r.lastModifiedDateTime ? new Date(r.lastModifiedDateTime).toLocaleDateString('pt-BR') : '';
-        const pasta = r.parentReference?.path ? decodeURIComponent(r.parentReference.path).replace(/^.*?root:/,'') || '/' : '/';
-        const ext = name.split('.').pop().toUpperCase();
-        const cor = extColor[ext] || 'var(--navy)';
-        return `
-        <div class="co-result">
-          <div class="co-result-hdr">
-            <span style="background:${cor};color:#fff;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:3px;flex-shrink:0">${_coEsc(ext)}</span>
-            <a href="${_coEsc(url)}" target="_blank" class="co-result-name" style="text-decoration:none;color:var(--navy)">${_coEsc(name)}</a>
-            <span class="co-result-path" title="${_coEsc(pasta)}">${_coEsc(pasta)}</span>
-            ${mod?`<span class="co-result-score">${mod}</span>`:''}
-          </div>
-          <a href="${_coEsc(url)}" target="_blank" style="display:inline-block;margin-top:6px;font-size:11px;color:var(--navy2);text-decoration:none;font-weight:600">↗ Abrir no OneDrive</a>
-        </div>`;
-      }).join('');
+    // Alerta de vínculos encontrados
+    let vincHtml = '';
+    if(matches.length){
+      vincHtml = matches.map(v=>`
+        <div class="vinc-match">
+          <strong>🔗 Vínculo detectado:</strong> ${_coEsc(v.nome)}
+          ${v.pai?` · <span style="color:#7030A0;font-weight:700">Pai: ${_coEsc(v.pai)}</span>`:''}
+          ${v.mae?` · <span style="color:#C55A11;font-weight:700">Mãe: ${_coEsc(v.mae)}</span>`:''}
+          ${v.obs?` <em style="color:var(--text3)">(${_coEsc(v.obs)})</em>`:''}
+        </div>`).join('');
+    }
 
-    _coRenderMsg('bot', html);
+    const mainHtml  = mainItems.length  ? _renderItems(mainItems, `🔎 Resultado direto: "${query}"`, 'var(--navy)') : '';
+    const famHtml   = familyResults.map(f => _renderItems(f.items, f.label, f.color)).join('');
+
+    _coRenderMsg('bot', vincHtml + mainHtml + famHtml);
     _lc();
   }catch(e){
     loadEl.remove();
@@ -287,6 +433,7 @@ function _lc(){ if(typeof lucide!=='undefined') lucide.createIcons(); }
 // ── INIT ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function(){
   _lc();
+  _vincLoad();
   try{
     await _msal.handleRedirectPromise();
     const accounts = _msal.getAllAccounts();
