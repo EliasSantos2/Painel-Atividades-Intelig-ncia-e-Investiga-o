@@ -247,26 +247,46 @@ let _xlsxPorMae = {}, _xlsxPorPai = {};
 // Dados decriptografados dos infratores (preenchido por _coUnlockInf)
 let _infRows = null;
 
-// Busca o pesquisado nos infratores; retorna {linhas, paiNorms, maeNorms}
+// Busca o pesquisado nos infratores — apenas match exato de nome ou CPF
 function _xlsxBuscarPessoa(query){
   if(!_infRows) return { linhas:[], paiNorms:[], maeNorms:[] };
   const qn = _normU(query);
+  const isCpf = /^\d{6,}$/.test(query.replace(/\D/g,''));
+
+  // Tenta match exato primeiro
   let matches = _infRows.filter(r=> _normU(r.nome)===qn);
-  if(!matches.length)
-    matches = _infRows.filter(r=> _normU(r.nome).includes(qn) ||
-      (r.cpf && r.cpf.replace(/\D/g,'').includes(query.replace(/\D/g,''))));
+  // Fallback: busca por CPF (apenas se parece CPF)
+  if(!matches.length && isCpf)
+    matches = _infRows.filter(r=> r.cpf && r.cpf.replace(/\D/g,'')===query.replace(/\D/g,''));
+  // Fallback: todas as palavras do query presentes no nome (não "contém substring")
+  if(!matches.length){
+    const palavras = qn.split(' ').filter(p=>p.length>=3);
+    if(palavras.length >= 2)
+      matches = _infRows.filter(r=>{ const n=_normU(r.nome); return palavras.every(p=>n.includes(p)); });
+  }
+
   console.log('[INF] "'+query+'" → '+matches.length+' linha(s)');
+
+  // Coleta pai/mãe — mas só se o valor NÃO for ubíquo (aparece em <= 15 pessoas)
+  const paiCount = {}, maeCount = {};
+  _infRows.forEach(r=>{
+    const p=_normU(r.pai), m=_normU(r.mae);
+    if(p && !_invalido(p)) paiCount[p]=(paiCount[p]||0)+1;
+    if(m && !_invalido(m)) maeCount[m]=(maeCount[m]||0)+1;
+  });
+
   const paiNorms = new Set(), maeNorms = new Set();
   matches.forEach(r=>{
     const p=_normU(r.pai), m=_normU(r.mae);
-    if(!_invalido(p)) paiNorms.add(p);
-    if(!_invalido(m)) maeNorms.add(m);
+    // Aceita apenas se não for inválido e aparecer em <= 15 registros (nome familiar real)
+    if(!_invalido(p) && (paiCount[p]||0) <= 15) paiNorms.add(p);
+    if(!_invalido(m) && (maeCount[m]||0) <= 15) maeNorms.add(m);
   });
-  console.log('[INF] pais:', [...paiNorms], '| maes:', [...maeNorms]);
+  console.log('[INF] pais válidos:', [...paiNorms], '| maes válidas:', [...maeNorms]);
   return { linhas:matches, paiNorms:[...paiNorms], maeNorms:[...maeNorms] };
 }
 
-// Busca vínculos usando os mapas pré-construídos (mesma lógica da teia)
+// Busca vínculos usando os mapas pré-construídos
 function _xlsxBuscarVinculos(paiNorms, maeNorms, queryNormU){
   if(!_infRows || (!paiNorms.length && !maeNorms.length))
     return { vincAmbos:[], vincPai:[], vincMae:[] };
@@ -278,7 +298,6 @@ function _xlsxBuscarVinculos(paiNorms, maeNorms, queryNormU){
 
   const vincAmbos=[], vincPai=[], vincMae=[];
   const vistos = new Set();
-  // Usa _infRows para ter objeto completo (nome, mae, pai)
   const porNome = {};
   _infRows.forEach(r=>{ const k=_normU(r.nome); if(k && !porNome[k]) porNome[k]=r; });
 
