@@ -184,42 +184,37 @@ let _xlsxRows = null; // cache linhas [{nome,pai,mae,cpf}]
 const _COL_PAI = 32; // AG
 const _COL_MAE = 33; // AH
 
-// Planilha de infratores — download direto via token e parse com SheetJS
-const _XLSX_SHARE_URL = 'https://1drv.ms/x/c/b476f1a47b64e77b/IQCV_D-uaDZ5TbmNyF3qhvlcAV4eha-61JWJJRvu4izxyT0?e=fTPvR8';
-
 const _COL_PAI = 32; // AG
 const _COL_MAE = 33; // AH
 
 async function _xlsxCarregar(){
   if(_xlsxRows) return _xlsxRows;
 
-  // Resolve o link compartilhado para obter a URL de download
-  const b64 = btoa(_XLSX_SHARE_URL).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  const shareId = 'u!' + b64;
-
-  console.log('[XLSX] Resolvendo link compartilhado…');
-  const info = await _graphGet(
-    `https://graph.microsoft.com/v1.0/shares/${shareId}/driveItem?$select=id,name,parentReference,@microsoft.graph.downloadUrl`
-  );
-  console.log('[XLSX] Arquivo:', info.name, '| id:', info.id);
-
-  // Obtém URL de download (pré-assinada, sem autenticação)
-  let dlUrl = info['@microsoft.graph.downloadUrl'];
-  if(!dlUrl){
-    // Fallback: busca via drives endpoint
-    const driveId = info.parentReference?.driveId;
-    const base = driveId
-      ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${info.id}`
-      : `https://graph.microsoft.com/v1.0/me/drive/items/${info.id}`;
-    const item2 = await _graphGet(`${base}?$select=@microsoft.graph.downloadUrl`);
-    dlUrl = item2['@microsoft.graph.downloadUrl'];
+  // Busca a planilha no OneDrive do usuário autenticado
+  let dlUrl = null, fileName = '';
+  const termos = ['Cpf - Rondonopolis','CPF Rondonopolis','infratores','infrator'];
+  for(const termo of termos){
+    try{
+      const enc = encodeURIComponent(termo);
+      const resp = await _graphGet(
+        `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${enc}')`+
+        `?$top=10&$select=name,file,size,@microsoft.graph.downloadUrl`
+      );
+      const f = (resp.value||[]).find(i=>i.file && /\.(xlsx|xls)$/i.test(i.name||''));
+      if(f && f['@microsoft.graph.downloadUrl']){
+        dlUrl = f['@microsoft.graph.downloadUrl'];
+        fileName = f.name;
+        console.log('[XLSX] Encontrado:', fileName);
+        break;
+      }
+    }catch(e){ console.warn('[XLSX] Busca "'+termo+'":', e.message); }
   }
-  if(!dlUrl) throw new Error('Não foi possível obter URL de download da planilha.');
 
-  console.log('[XLSX] Baixando arquivo…');
+  if(!dlUrl) throw new Error('Planilha de infratores não encontrada no OneDrive. Certifique-se de que o arquivo "Cpf - Rondonopolis.xlsx" está sincronizado.');
+
+  console.log('[XLSX] Baixando', fileName, '…');
   const buf = await (await fetch(dlUrl)).arrayBuffer();
 
-  console.log('[XLSX] Parseando com SheetJS…');
   const wb = XLSX.read(buf, {type:'array'});
   const ws = wb.Sheets[wb.SheetNames[0]];
   const vals = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
@@ -243,7 +238,7 @@ async function _xlsxCarregar(){
   })).filter(r => r.nome);
 
   console.log('[XLSX] Linhas carregadas:', _xlsxRows.length);
-  console.log('[XLSX] Amostra (3 primeiras):', _xlsxRows.slice(0,3));
+  console.log('[XLSX] Amostra:', _xlsxRows.slice(0,3));
   return _xlsxRows;
 }
 
