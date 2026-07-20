@@ -192,13 +192,9 @@ async function _coLogin(){
 }
 
 // ── GRAPH API ────────────────────────────────────────────
-// ── BUSCA SERVER-SIDE (Microsoft Graph Search API) ───────
-async function _graphPost(url, body){
-  const resp = await fetch(url,{
-    method:'POST',
-    headers:{Authorization:'Bearer '+_token,'Content-Type':'application/json'},
-    body: JSON.stringify(body)
-  });
+// ── BUSCA SERVER-SIDE (OneDrive drive search — funciona com MSA) ─────
+async function _graphGet(url){
+  const resp = await fetch(url,{headers:{Authorization:'Bearer '+_token}});
   if(!resp.ok) throw new Error('Graph '+resp.status+': '+await resp.text());
   return resp.json();
 }
@@ -215,37 +211,31 @@ async function _coSend(){
     return;
   }
 
-  const loadEl = _coRenderLoading('Pesquisando nos servidores Microsoft…');
+  const loadEl = _coRenderLoading('Pesquisando no OneDrive…');
   try{
-    const data = await _graphPost('https://graph.microsoft.com/v1.0/search/query',{
-      requests:[{
-        entityTypes:['driveItem'],
-        query:{ queryString: query },
-        from: 0,
-        size: 15,
-        fields:['name','webUrl','lastModifiedDateTime','size','parentReference','summary']
-      }]
-    });
+    const enc = encodeURIComponent(query);
+    const data = await _graphGet(
+      `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${enc}')`+
+      `?$top=20&$select=name,webUrl,lastModifiedDateTime,size,parentReference,file`
+    );
 
     loadEl.remove();
-    const hits = data?.value?.[0]?.hitsContainers?.[0]?.hits || [];
-    const total = data?.value?.[0]?.hitsContainers?.[0]?.total || 0;
+    const items = (data.value || []).filter(i => i.file); // só arquivos, não pastas
+    const total = items.length;
 
-    if(!hits.length){
-      _coRenderMsg('bot','<div class="co-empty">🔍 Nenhum resultado para "<em>'+_coEsc(query)+'</em>" no OneDrive.</div>');
+    if(!total){
+      _coRenderMsg('bot','<div class="co-empty">🔍 Nenhum arquivo encontrado para "<em>'+_coEsc(query)+'</em>" no OneDrive.</div>');
       return;
     }
 
     const extColor = {PDF:'#C0392B',DOCX:'#2E75B6',XLSX:'#1E8449',XLS:'#1E8449',PPTX:'#C55A11',MSG:'#7030A0'};
     const html =
-      `<div class="co-results-header">Encontrei <strong>${total}</strong> arquivo(s) — exibindo os ${hits.length} mais relevantes para "<em>${_coEsc(query)}</em>":</div>`+
-      hits.map(h=>{
-        const r = h.resource || {};
+      `<div class="co-results-header">Encontrei <strong>${total}</strong> arquivo(s) para "<em>${_coEsc(query)}</em>":</div>`+
+      items.map(r=>{
         const name = r.name || '—';
         const url  = r.webUrl || '#';
         const mod  = r.lastModifiedDateTime ? new Date(r.lastModifiedDateTime).toLocaleDateString('pt-BR') : '';
-        const pasta = r.parentReference?.path ? decodeURIComponent(r.parentReference.path).replace(/^.*?root:/,'') : '';
-        const trecho = h.summary || '';
+        const pasta = r.parentReference?.path ? decodeURIComponent(r.parentReference.path).replace(/^.*?root:/,'') || '/' : '/';
         const ext = name.split('.').pop().toUpperCase();
         const cor = extColor[ext] || 'var(--navy)';
         return `
@@ -256,7 +246,6 @@ async function _coSend(){
             <span class="co-result-path" title="${_coEsc(pasta)}">${_coEsc(pasta)}</span>
             ${mod?`<span class="co-result-score">${mod}</span>`:''}
           </div>
-          ${trecho?`<div class="co-excerpt">${trecho}</div>`:''}
           <a href="${_coEsc(url)}" target="_blank" style="display:inline-block;margin-top:6px;font-size:11px;color:var(--navy2);text-decoration:none;font-weight:600">↗ Abrir no OneDrive</a>
         </div>`;
       }).join('');
@@ -265,7 +254,7 @@ async function _coSend(){
     _lc();
   }catch(e){
     loadEl.remove();
-    _coRenderMsg('bot','<div class="co-empty">⚠️ Erro na busca: '+_coEsc(e.message)+'<br><span style="font-size:11px">Verifique se a permissão <strong>Files.Read.All</strong> está concedida no Azure.</span></div>');
+    _coRenderMsg('bot','<div class="co-empty">⚠️ Erro na busca: '+_coEsc(e.message)+'</div>');
   }
 }
 
