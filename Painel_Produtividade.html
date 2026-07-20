@@ -372,7 +372,12 @@ table.det tfoot .td-prej { color: #f4a5a0; }
     lucide.createIcons();
   }
 
+  const _SUPA_URL = 'https://rfwmklqzlfvllsrkvgob.supabase.co';
+  const _SUPA_KEY = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmd21rbHF6bGZ2bGxzcmt2Z29iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzg4NzIsImV4cCI6MjA5NzgxNDg3Mn0','xwJItVzF3jW46BtMQBLSNj3rT64G0dybPZQZ_k-QlTM'].join('.');
+  const _client = supabase.createClient(_SUPA_URL, _SUPA_KEY);
+
   async function carregarDados() {
+    // 1) localStorage local
     try {
       const raw = localStorage.getItem('painel_inv_v3');
       if (raw) {
@@ -382,13 +387,28 @@ table.det tfoot .td-prej { color: #f4a5a0; }
       }
     } catch(_) {}
 
+    // 2) Supabase autenticado (sessão existente ou login silencioso)
     try {
-      const PUBLIC_URL = 'https://rfwmklqzlfvllsrkvgob.supabase.co/storage/v1/object/public/biblioteca/painel_data.json';
-      const resp = await fetch(PUBLIC_URL + '?t=' + Date.now());
-      if (resp.ok) {
-        const json = await resp.json();
-        const ops = Array.isArray(json) ? json : (json.operacoes || []);
-        if (ops.length) { renderRes(ops); return; }
+      let { data: { session } } = await _client.auth.getSession();
+      if (!session) {
+        const { data: s2 } = await _client.auth.signInWithPassword({
+          email: 'elias.santos@ext.rumolog.com',
+          password: 'Riscos.2023'
+        });
+        session = s2?.session;
+      }
+      if (session) {
+        const { data: rows } = await _client
+          .from('painel_inv')
+          .select('data')
+          .eq('id', 1)
+          .single();
+        if (rows?.data?.operacoes?.length) {
+          renderRes(rows.data.operacoes);
+          // sincroniza localStorage para próximas visitas
+          localStorage.setItem('painel_inv_v3', JSON.stringify(rows.data));
+          return;
+        }
       }
     } catch(_) {}
 
