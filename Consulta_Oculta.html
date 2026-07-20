@@ -195,13 +195,18 @@ async function _coUnlockInf(){
     const pt   = await crypto.subtle.decrypt({name:'AES-CBC',iv:bits.slice(32,48)}, key, ct);
     const obj  = JSON.parse(new TextDecoder().decode(pt));
     _infRows   = Array.isArray(obj) ? obj : (obj.infratores||[]);
-    // Constrói mapas pai/mãe → [nomes]
+    // Constrói mapas: pai/mãe, boletim, organização → [nomes]
     _xlsxPorMae = {}; _xlsxPorPai = {};
+    _porBo = {}; _porOrg = {};
     _infRows.forEach(r=>{
       const k=_normU(r.nome); if(!k) return;
       const m=_normU(r.mae), p=_normU(r.pai);
       if(m && !_invalido(m)){ (_xlsxPorMae[m]=_xlsxPorMae[m]||[]).push(k); }
       if(p && !_invalido(p)){ (_xlsxPorPai[p]=_xlsxPorPai[p]||[]).push(k); }
+      const bo = String(r.bo||'').trim();
+      const org = _normU(r.org||'');
+      if(bo)  { (_porBo[bo]  = _porBo[bo]  ||[]).push(k); }
+      if(org && org.length>2){ (_porOrg[org]= _porOrg[org]||[]).push(k); }
     });
     inp.value = ''; inp.style.display='none';
     btn.style.background='#005CA9';
@@ -241,8 +246,9 @@ function _norm(s){ return _normU(s).toLowerCase(); }
 const _INV_RE = /^(N\.?A\.?O?\s*INF|NAO\s*INFORMADO|N\.?I\.?|IGNORADO|DESCONHECIDO|SEM\s*INFO|NENHUM|INDEFINIDO|S\.?N\.?|[-X.]+|\d+)$/;
 function _invalido(s){ return !s || s.length < 4 || _INV_RE.test(s.toUpperCase().trim()); }
 
-// Mapas pré-construídos ao carregar a planilha
+// Mapas pré-construídos ao carregar os infratores
 let _xlsxPorMae = {}, _xlsxPorPai = {};
+let _porBo = {}, _porOrg = {};
 
 // Dados decriptografados dos infratores (preenchido por _coUnlockInf)
 let _infRows = null;
@@ -282,36 +288,70 @@ function _xlsxBuscarPessoa(query){
     if(!_invalido(p) && (paiCount[p]||0) <= 15) paiNorms.add(p);
     if(!_invalido(m) && (maeCount[m]||0) <= 15) maeNorms.add(m);
   });
-  console.log('[INF] pais válidos:', [...paiNorms], '| maes válidas:', [...maeNorms]);
-  return { linhas:matches, paiNorms:[...paiNorms], maeNorms:[...maeNorms] };
+  // Coleta boletins e organizações do pesquisado
+  const boNums = new Set(), orgNorms = new Set();
+  matches.forEach(r=>{
+    const bo = String(r.bo||'').trim();
+    const org = _normU(r.org||'');
+    if(bo) boNums.add(bo);
+    if(org && org.length>2) orgNorms.add(org);
+  });
+  console.log('[INF] pais:', [...paiNorms], '| maes:', [...maeNorms], '| BOs:', [...boNums], '| orgs:', [...orgNorms]);
+  return { linhas:matches, paiNorms:[...paiNorms], maeNorms:[...maeNorms], boNums:[...boNums], orgNorms:[...orgNorms] };
 }
 
-// Busca vínculos usando os mapas pré-construídos
-function _xlsxBuscarVinculos(paiNorms, maeNorms, queryNormU){
-  if(!_infRows || (!paiNorms.length && !maeNorms.length))
-    return { vincAmbos:[], vincPai:[], vincMae:[] };
+// Busca vínculos: familiar (pai/mãe), quadrilha (BO) e organização
+function _xlsxBuscarVinculos(paiNorms, maeNorms, boNums, orgNorms, queryNormU){
+  if(!_infRows) return { vincAmbos:[], vincPai:[], vincMae:[], vincBO:[], vincOrg:[] };
 
-  const comPai = new Set();
-  paiNorms.forEach(p=>{ (_xlsxPorPai[p]||[]).forEach(n=>comPai.add(n)); });
-  const comMae = new Set();
-  maeNorms.forEach(m=>{ (_xlsxPorMae[m]||[]).forEach(n=>comMae.add(n)); });
-
-  const vincAmbos=[], vincPai=[], vincMae=[];
-  const vistos = new Set();
   const porNome = {};
   _infRows.forEach(r=>{ const k=_normU(r.nome); if(k && !porNome[k]) porNome[k]=r; });
 
+  // ── Vínculos familiares ──────────────────────────────────
+  const comPai = new Set(), comMae = new Set();
+  paiNorms.forEach(p=>{ (_xlsxPorPai[p]||[]).forEach(n=>comPai.add(n)); });
+  maeNorms.forEach(m=>{ (_xlsxPorMae[m]||[]).forEach(n=>comMae.add(n)); });
+
+  const vincAmbos=[], vincPai=[], vincMae=[];
+  const vistosFam = new Set();
   for(const k of new Set([...comPai,...comMae])){
-    if(k===queryNormU || vistos.has(k)) continue;
-    vistos.add(k);
-    const row = porNome[k] || {nome:k, pai:'', mae:''};
+    if(k===queryNormU || vistosFam.has(k)) continue;
+    vistosFam.add(k);
+    const row = porNome[k]||{nome:k,pai:'',mae:''};
     const tp=comPai.has(k), tm=comMae.has(k);
     if(tp && tm) vincAmbos.push(row);
     else if(tp)  vincPai.push(row);
     else         vincMae.push(row);
   }
-  console.log('[INF] Vínculos → ambos:', vincAmbos.length, '| pai:', vincPai.length, '| mae:', vincMae.length);
-  return { vincAmbos, vincPai, vincMae };
+
+  // ── Vínculos de quadrilha (mesmo B.O.) ──────────────────
+  const comBO = new Set();
+  boNums.forEach(bo=>{ (_porBo[bo]||[]).forEach(n=>comBO.add(n)); });
+  const vincBO = [];
+  const vistosBO = new Set();
+  for(const k of comBO){
+    if(k===queryNormU || vistosBO.has(k)) continue;
+    vistosBO.add(k);
+    // Descobre quais BOs compartilhados
+    const bos = boNums.filter(bo=>(_porBo[bo]||[]).includes(k));
+    vincBO.push({ ...(porNome[k]||{nome:k}), _boVinc: bos });
+  }
+
+  // ── Vínculos de organização criminosa ───────────────────
+  const comOrg = new Set();
+  orgNorms.forEach(o=>{ (_porOrg[o]||[]).forEach(n=>comOrg.add(n)); });
+  const vincOrg = [];
+  const vistosOrg = new Set();
+  for(const k of comOrg){
+    if(k===queryNormU || vistosOrg.has(k) || vistosFam.has(k) || vistosBO.has(k)) continue;
+    vistosOrg.add(k);
+    const orgs = orgNorms.filter(o=>(_porOrg[o]||[]).includes(k));
+    vincOrg.push({ ...(porNome[k]||{nome:k}), _orgVinc: orgs });
+  }
+
+  console.log('[INF] Familiares→ ambos:', vincAmbos.length, 'pai:', vincPai.length, 'mae:', vincMae.length,
+    '| Quadrilha:', vincBO.length, '| Org:', vincOrg.length);
+  return { vincAmbos, vincPai, vincMae, vincBO, vincOrg };
 }
 
 // ── RENDERIZAÇÃO DE RESULTADOS ────────────────────────────
@@ -362,17 +402,18 @@ async function _coSend(){
     const mainItems = await _driveSearch(query);
     loadEl.querySelector('span').textContent = `${mainItems.length} arquivo(s) encontrado(s). Consultando planilha de infratores…`;
 
-    // PASSO 2 — Linha do pesquisado na planilha → AG (pai) e AH (mãe)
+    // PASSO 2 — Busca pesquisado nos infratores
     const xlsxPessoa = _xlsxBuscarPessoa(query);
-    const { paiNorms, maeNorms } = xlsxPessoa;
+    const { paiNorms, maeNorms, boNums, orgNorms } = xlsxPessoa;
 
-    // PASSO 3 — Usa mapas pré-construídos para encontrar vínculos
-    const { vincAmbos, vincPai, vincMae } = _xlsxBuscarVinculos(paiNorms, maeNorms, _normU(query));
-    const totalVinc = vincAmbos.length + vincPai.length + vincMae.length;
+    // PASSO 3 — Vínculos: familiar, quadrilha (BO), organização
+    const { vincAmbos, vincPai, vincMae, vincBO, vincOrg } =
+      _xlsxBuscarVinculos(paiNorms, maeNorms, boNums, orgNorms, _normU(query));
+    const totalVinc = vincAmbos.length + vincPai.length + vincMae.length + vincBO.length + vincOrg.length;
 
     loadEl.querySelector('span').textContent = `${totalVinc} vínculo(s) encontrado(s). Buscando arquivos no OneDrive…`;
 
-    // PASSO 4 — Para cada pessoa vinculada, busca os arquivos dela no OneDrive
+    // PASSO 4 — Busca arquivos no OneDrive para cada vinculado
     const mainIds = new Set(mainItems.map(i=>i.id));
     const resultadosVinc = [];
 
@@ -387,6 +428,14 @@ async function _coSend(){
     for(const row of vincMae){
       const arqs = (await _driveSearch(row.nome)).filter(i=>!mainIds.has(i.id));
       resultadosVinc.push({row, tipo:'mae', arqs});
+    }
+    for(const row of vincBO){
+      const arqs = (await _driveSearch(row.nome)).filter(i=>!mainIds.has(i.id));
+      resultadosVinc.push({row, tipo:'bo', arqs});
+    }
+    for(const row of vincOrg){
+      const arqs = (await _driveSearch(row.nome)).filter(i=>!mainIds.has(i.id));
+      resultadosVinc.push({row, tipo:'org', arqs});
     }
 
     loadEl.remove();
@@ -412,37 +461,44 @@ async function _coSend(){
       html += `<div class="co-empty">🔍 Nenhum arquivo encontrado para "${_coEsc(query)}" no OneDrive.</div>`;
     }
 
-    // Vínculos — ambos (verde) > só pai (roxo) > só mãe (marrom)
+    // Vínculos
     for(const {row, tipo, arqs} of resultadosVinc){
       let label, cor;
       if(tipo === 'ambos'){
         cor = '#1d8a48';
-        label = `👨👩 Possível vínculo detectado — mesmo pai e mãe<br>
+        label = `👨👩 Vínculo familiar — mesmo pai e mãe<br>
           <strong style="font-size:13px">${_coEsc(row.nome)}</strong><br>
           <small style="font-weight:400">Pai: ${_coEsc(row.pai)} &nbsp;·&nbsp; Mãe: ${_coEsc(row.mae)}</small>`;
       } else if(tipo === 'pai'){
         cor = 'var(--purple)';
-        label = `👨 Possível vínculo detectado — mesmo pai<br>
+        label = `👨 Vínculo familiar — mesmo pai<br>
           <strong style="font-size:13px">${_coEsc(row.nome)}</strong><br>
           <small style="font-weight:400">Pai: ${_coEsc(row.pai)}</small>`;
-      } else {
+      } else if(tipo === 'mae'){
         cor = 'var(--brown)';
-        label = `👩 Possível vínculo detectado — mesma mãe<br>
+        label = `👩 Vínculo familiar — mesma mãe<br>
           <strong style="font-size:13px">${_coEsc(row.nome)}</strong><br>
           <small style="font-weight:400">Mãe: ${_coEsc(row.mae)}</small>`;
+      } else if(tipo === 'bo'){
+        cor = '#c0392b';
+        label = `🚨 Vínculo de quadrilha — mesma ocorrência (B.O.)<br>
+          <strong style="font-size:13px">${_coEsc(row.nome)}</strong><br>
+          <small style="font-weight:400">B.O.(s): ${(row._boVinc||[]).map(_coEsc).join(' · ')}</small>`;
+      } else {
+        cor = '#7f8c8d';
+        label = `🏴 Vínculo de organização criminosa<br>
+          <strong style="font-size:13px">${_coEsc(row.nome)}</strong><br>
+          <small style="font-weight:400">Org.: ${(row._orgVinc||[]).map(_coEsc).join(' · ')}</small>`;
       }
       html += _renderPessoa(row.nome, arqs, label, cor);
     }
 
     // Mensagens de status
-    if(!paiNorms.length && !maeNorms.length){
-      const motivo = !_infRows
-        ? 'Informe a senha dos infratores para habilitar vínculos.'
-        : `"${_coEsc(query)}" não encontrado na base de infratores ou sem dados de filiação.`;
-      html += `<div style="font-size:11px;color:var(--text3);margin-top:10px;font-style:italic">ℹ️ ${motivo}</div>`;
-    } else if(totalVinc === 0 && (paiNorms.length || maeNorms.length)){
+    if(!_infRows){
+      html += `<div style="font-size:11px;color:var(--text3);margin-top:10px;font-style:italic">ℹ️ Informe a senha dos infratores para habilitar vínculos.</div>`;
+    } else if(totalVinc === 0){
       html += `<div style="font-size:11px;color:var(--text3);margin-top:10px;font-style:italic">
-        ℹ️ Nenhum outro infrator na planilha compartilha o mesmo pai ou mãe de "${_coEsc(query)}".
+        ℹ️ Nenhum vínculo encontrado para "${_coEsc(query)}" na base de infratores.
       </div>`;
     }
 
