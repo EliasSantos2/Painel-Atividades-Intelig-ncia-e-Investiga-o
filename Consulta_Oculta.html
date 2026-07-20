@@ -329,24 +329,30 @@ async function _xlsxCarregar(){
 // Normaliza nome para comparação (sem acento, minúsculas, espaço simples)
 function _norm(s){ return (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim(); }
 
+// Valores genéricos que NÃO devem ser tratados como nome de pai/mãe
+const _INVALIDOS = /^(nao\s*informado|n\.?i\.?|ignorado|desconhecido|sem\s*informa|nenhum|indefinido|s\.?n\.?|[x\-\.]+)$/i;
+function _nomeValido(s){ const n=_norm(s); return n.length>=5 && !_INVALIDOS.test(n); }
+
 // Busca o pesquisado na planilha; retorna {linhas, pais, maes}
 async function _xlsxBuscarPessoa(query){
   try{
     const rows = await _xlsxCarregar();
     const qn = _norm(query);
-    const matches = rows.filter(r=>
-      (r.nome && _norm(r.nome).includes(qn)) ||
-      (r.cpf  && r.cpf.replace(/\D/g,'').includes(query.replace(/\D/g,'')))
-    );
-    console.log('[XLSX] Busca por "'+query+'" → '+matches.length+' linha(s) encontrada(s)');
-    matches.forEach((r,i)=>console.log('[XLSX] Match '+i+':', JSON.stringify(r)));
+    const isCpf = /^\d{6,}$/.test(query.replace(/\D/g,''));
+    // Prefere match exato de nome; fallback: contém
+    let matches = rows.filter(r=> r.nome && _norm(r.nome)===qn);
+    if(!matches.length)
+      matches = rows.filter(r=>
+        (r.nome && _norm(r.nome).includes(qn)) ||
+        (isCpf && r.cpf && r.cpf.replace(/\D/g,'').includes(query.replace(/\D/g,'')))
+      );
+    console.log('[XLSX] Busca "'+query+'" → '+matches.length+' linha(s)');
     const pais = new Set(), maes = new Set();
     matches.forEach(r=>{
-      if(r.pai && r.pai.length>2) pais.add(r.pai);
-      if(r.mae && r.mae.length>2) maes.add(r.mae);
+      if(_nomeValido(r.pai)) pais.add(r.pai.trim());
+      if(_nomeValido(r.mae)) maes.add(r.mae.trim());
     });
-    console.log('[XLSX] Pai(s) extraído(s):', [...pais]);
-    console.log('[XLSX] Mãe(s) extraída(s):', [...maes]);
+    console.log('[XLSX] Pai(s):', [...pais], '| Mãe(s):', [...maes]);
     return { linhas:matches, pais:[...pais], maes:[...maes] };
   }catch(e){
     console.error('[XLSX] Erro em _xlsxBuscarPessoa:', e);
