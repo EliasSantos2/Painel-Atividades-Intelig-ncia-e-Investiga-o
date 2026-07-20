@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -10,10 +10,12 @@
 <title>Consulta Oculta — Rumo Logística</title>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <style>
 :root{
   --navy:#003865;--navy2:#00284a;--navy-light:#e8f0f8;
   --orange:#F78344;--orange-h:#e06d30;
+  --purple:#7030A0;--brown:#C55A11;
   --bg:#f0f3f8;--bg2:#fff;--bg3:#f5f7fc;--border:#dde3ee;
   --text:#1a2535;--text2:#5a6e8c;--text3:#8a9bb5;
   --green:#1d8a48;
@@ -23,38 +25,22 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;}
 body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;font-size:14px;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;}
-
-/* ── HEADER ── */
 header{background:var(--navy);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:58px;box-shadow:0 2px 12px rgba(0,0,0,.22);flex-shrink:0;}
 .header-left{display:flex;align-items:center;gap:14px;}
 .header-logo{width:3px;height:32px;background:var(--orange);border-radius:2px;flex-shrink:0;}
 .header-title h1{font-size:14px;font-weight:700;color:#fff;letter-spacing:.2px;}
-.header-title p{font-size:10.5px;color:rgba(255,255,255,.5);margin-top:1px;letter-spacing:.1px;}
+.header-title p{font-size:10.5px;color:rgba(255,255,255,.5);margin-top:1px;}
 .accent-bar{height:3px;background:linear-gradient(90deg,var(--orange) 0%,#f9b98a 60%,transparent 100%);flex-shrink:0;}
-
-/* ── NAV ── */
 nav{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:2px;box-shadow:var(--shadow-sm);flex-shrink:0;}
 nav a.nav-back{display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;font-weight:600;padding:0 16px;height:46px;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .18s;}
 nav a.nav-back:hover{color:var(--navy);}
-nav button.nav-tab{background:none;border:none;color:var(--text2);padding:0 18px;height:46px;cursor:pointer;font-size:12.5px;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .18s;letter-spacing:.1px;display:inline-flex;align-items:center;gap:7px;}
-nav button.nav-tab.active{color:var(--navy);border-bottom-color:var(--orange);}
-
-/* ── MAIN ── */
 main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
 .co-wrap{display:flex;flex-direction:column;flex:1;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;min-height:0;}
-
-/* ── BARRA DE AÇÃO ── */
 .co-pick-bar{padding:10px 18px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap;}
 .co-login-btn{background:var(--navy);color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.15s;white-space:nowrap;}
 .co-login-btn:hover{background:var(--navy2);}
 .co-login-btn.connected{background:var(--green);}
-.co-index-btn{background:var(--orange);color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;white-space:nowrap;}
-.co-index-btn:hover{background:var(--orange-h);}
-.co-index-btn:disabled{opacity:.45;cursor:not-allowed;}
 .co-status{color:var(--text2);font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.co-badge{background:var(--navy-light);color:var(--navy);font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;display:none;}
-
-/* ── CHAT ── */
 .co-chat{display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
 .co-messages{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;}
 .co-msg-system{background:var(--navy-light);border-left:3px solid var(--navy);padding:12px 16px;border-radius:6px;font-size:12.5px;color:var(--text2);line-height:1.65;}
@@ -65,51 +51,19 @@ main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden
 .co-dot:nth-child(2){animation-delay:.18s;}
 .co-dot:nth-child(3){animation-delay:.36s;}
 @keyframes co-bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px);opacity:1}}
-
-/* ── RESULTS ── */
-.co-results-header{margin-bottom:12px;color:var(--text2);font-size:12.5px;}
 .co-result{border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;background:#fff;}
-.co-result:last-child{margin-bottom:0;}
 .co-result-hdr{display:flex;align-items:center;gap:7px;margin-bottom:6px;flex-wrap:wrap;}
-.co-result-name{font-weight:700;font-size:12.5px;color:var(--navy);}
 .co-result-path{color:var(--text3);font-size:10.5px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .co-result-score{background:var(--navy-light);color:var(--navy);font-size:10.5px;padding:2px 8px;border-radius:10px;font-weight:700;white-space:nowrap;}
-.co-excerpt{font-size:11.5px;color:var(--text2);line-height:1.65;border-left:2px solid var(--border);padding:4px 0 4px 10px;margin-top:7px;}
-.co-excerpt mark{background:#fff3cd;color:inherit;border-radius:2px;padding:0 2px;font-weight:600;}
 .co-empty{text-align:center;padding:40px;color:var(--text3);font-size:13px;}
-.co-progress{font-size:11.5px;color:var(--text2);background:var(--navy-light);border-radius:6px;padding:8px 14px;margin-top:6px;line-height:1.5;}
-
-/* ── INPUT ── */
+.co-excerpt{font-size:11.5px;color:var(--text2);line-height:1.65;border-left:2px solid var(--border);padding:4px 0 4px 10px;margin-top:6px;font-style:italic;}
+.co-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:10px 2px 6px;margin-top:4px;}
+.co-vinc-banner{background:rgba(112,48,160,.08);border-left:3px solid var(--purple);padding:8px 12px;border-radius:5px;margin-bottom:10px;font-size:12px;color:var(--text);}
 .co-input-wrap{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:10px;background:#fff;flex-shrink:0;}
 .co-input{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;resize:none;font-family:Arial,sans-serif;transition:.15s;line-height:1.5;}
 .co-input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,56,101,.08);}
 .co-send-btn{background:var(--navy);color:#fff;border:none;border-radius:8px;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;align-self:flex-end;}
 .co-send-btn:hover{background:var(--navy2);}
-
-/* ── LAYOUT COM PAINEL DE VÍNCULOS ── */
-.co-layout{display:flex;flex:1;overflow:hidden;min-height:0;}
-.co-chat{display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
-
-/* ── PAINEL VÍNCULOS ── */
-.vinc-panel{width:300px;flex-shrink:0;border-left:1px solid var(--border);background:var(--bg3);display:flex;flex-direction:column;overflow:hidden;}
-.vinc-header{padding:10px 14px;background:var(--navy);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;flex-shrink:0;}
-.vinc-body{flex:1;overflow-y:auto;padding:12px;}
-.vinc-form{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;}
-.vinc-form label{display:block;font-size:10.5px;font-weight:700;color:var(--text2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
-.vinc-form input{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;margin-bottom:8px;font-family:Arial,sans-serif;}
-.vinc-form input:focus{outline:none;border-color:var(--navy);}
-.vinc-add-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:6px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;}
-.vinc-add-btn:hover{background:var(--navy2);}
-.vinc-list-title{font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
-.vinc-card{background:#fff;border:1px solid var(--border);border-radius:7px;padding:9px 11px;margin-bottom:7px;position:relative;}
-.vinc-card-name{font-weight:700;font-size:12px;color:var(--navy);margin-bottom:5px;}
-.vinc-rel{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);margin-top:3px;}
-.vinc-rel-tag{background:var(--navy-light);color:var(--navy);font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;white-space:nowrap;}
-.vinc-del{position:absolute;top:7px;right:8px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;line-height:1;}
-.vinc-del:hover{color:#c0392b;}
-.vinc-search-btn{background:var(--orange);color:#fff;border:none;border-radius:4px;padding:2px 7px;font-size:10.5px;font-weight:700;cursor:pointer;margin-left:4px;}
-.vinc-search-btn:hover{background:var(--orange-h);}
-.vinc-match{background:rgba(247,131,68,.1);border-left:3px solid var(--orange);padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:11.5px;color:var(--text);}
 </style>
 </head>
 <body>
@@ -119,7 +73,7 @@ main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden
     <div class="header-logo"></div>
     <div class="header-title">
       <h1>Consulta Oculta</h1>
-      <p>Busca inteligente em documentos do OneDrive</p>
+      <p>Busca com análise automática de vínculos familiares</p>
     </div>
   </div>
   <div style="color:rgba(255,255,255,.4);font-size:11px">Rumo Logística · Núcleo de Inteligência</div>
@@ -130,83 +84,42 @@ main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden
   <a href="index.html" class="nav-back">
     <i data-lucide="arrow-left" style="width:14px;height:14px"></i> Início
   </a>
-  <button class="nav-tab active">
-    <i data-lucide="search" style="width:14px;height:14px"></i> Consulta Oculta
-  </button>
 </nav>
 
 <main>
   <div class="co-wrap">
-
     <div class="co-pick-bar">
       <button class="co-login-btn" id="co-login-btn" onclick="_coLogin()">
         <i data-lucide="log-in" style="width:14px;height:14px"></i> Conectar ao OneDrive
       </button>
       <span id="co-status" class="co-status">Clique em "Conectar ao OneDrive" para autenticar</span>
-      <span id="co-badge" class="co-badge" style="display:none"></span>
     </div>
-
-    <div class="co-layout">
-
-      <!-- CHAT PRINCIPAL -->
-      <div class="co-chat">
-        <div id="co-messages" class="co-messages">
-          <div class="co-msg-system">
-            <strong>Bem-vindo à Consulta Oculta.</strong><br><br>
-            Clique em <strong>Conectar ao OneDrive</strong> para autenticar. A busca é feita diretamente nos servidores da Microsoft — <strong>nenhum arquivo é baixado</strong>.<br><br>
-            <strong>Vínculo familiar:</strong> cadastre pai/mãe no painel à direita. Ao pesquisar um nome, os parentes são buscados automaticamente e os resultados são agrupados por grau de parentesco.
-          </div>
-        </div>
-        <div class="co-input-wrap">
-          <textarea id="co-input" class="co-input" rows="2"
-            placeholder="Nome, CPF ou termo para pesquisar… (Enter para enviar)"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_coSend()}"></textarea>
-          <button class="co-send-btn" onclick="_coSend()" title="Enviar">
-            <i data-lucide="send" style="width:16px;height:16px"></i>
-          </button>
+    <div class="co-chat">
+      <div id="co-messages" class="co-messages">
+        <div class="co-msg-system">
+          <strong>Bem-vindo à Consulta Oculta.</strong><br><br>
+          Conecte ao OneDrive e pesquise por nome, CPF ou qualquer termo.<br><br>
+          <strong>Análise automática de vínculos:</strong> o sistema lê os documentos encontrados, extrai automaticamente os nomes de pai e mãe (filiação) e busca documentos relacionados a esses parentes — sem nenhum cadastro manual necessário.
         </div>
       </div>
-
-      <!-- PAINEL VÍNCULOS FAMILIARES -->
-      <div class="vinc-panel">
-        <div class="vinc-header">
-          <i data-lucide="git-branch" style="width:13px;height:13px"></i>
-          Vínculos Familiares
-        </div>
-        <div class="vinc-body">
-          <div class="vinc-form">
-            <label>Nome do Suspeito / Infrator</label>
-            <input id="vinc-nome" placeholder="Ex: João da Silva" autocomplete="off">
-            <label>Nome do Pai</label>
-            <input id="vinc-pai" placeholder="Ex: Antônio da Silva" autocomplete="off">
-            <label>Nome da Mãe</label>
-            <input id="vinc-mae" placeholder="Ex: Maria da Silva" autocomplete="off">
-            <label>Observação (opcional)</label>
-            <input id="vinc-obs" placeholder="Ex: irmão também investigado" autocomplete="off">
-            <button class="vinc-add-btn" onclick="_vincAdd()">+ Cadastrar Vínculo</button>
-          </div>
-          <div class="vinc-list-title">Vínculos cadastrados</div>
-          <div id="vinc-list"></div>
-        </div>
+      <div class="co-input-wrap">
+        <textarea id="co-input" class="co-input" rows="2"
+          placeholder="Nome, CPF ou termo para pesquisar… (Enter para enviar)"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_coSend()}"></textarea>
+        <button class="co-send-btn" onclick="_coSend()" title="Enviar">
+          <i data-lucide="send" style="width:16px;height:16px"></i>
+        </button>
       </div>
-
-    </div><!-- /.co-layout -->
-
+    </div>
   </div>
 </main>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────
 const _CLIENT_ID = '8a8629c6-71a2-45f0-b26d-519f44373b68';
 const _SCOPES    = ['Files.Read.All','Sites.Read.All'];
 
-// ── MSAL ─────────────────────────────────────────────────
 const _msal = new msal.PublicClientApplication({
-  auth:{
-    clientId: _CLIENT_ID,
-    authority:'https://login.microsoftonline.com/common',
-    redirectUri: location.origin + location.pathname
-  },
+  auth:{ clientId:_CLIENT_ID, authority:'https://login.microsoftonline.com/common', redirectUri:location.origin+location.pathname },
   cache:{ cacheLocation:'localStorage', storeAuthStateInCookie:false }
 });
 
@@ -215,10 +128,7 @@ let _token = null;
 async function _getToken(){
   const accounts = _msal.getAllAccounts();
   if(accounts.length){
-    try{
-      const r = await _msal.acquireTokenSilent({scopes:_SCOPES, account:accounts[0]});
-      return r.accessToken;
-    }catch(e){}
+    try{ const r=await _msal.acquireTokenSilent({scopes:_SCOPES,account:accounts[0]}); return r.accessToken; }catch(e){}
   }
   const r = await _msal.loginPopup({scopes:_SCOPES});
   return r.accessToken;
@@ -235,218 +145,236 @@ async function _coLogin(){
     btn.className = 'co-login-btn connected';
     btn.onclick = null;
     _coSetStatus('✓ Autenticado — pronto para pesquisar');
-    _coRenderMsg('system','✅ Conectado ao OneDrive.<br>Digite qualquer termo no campo abaixo para pesquisar nos seus arquivos — nenhum arquivo será baixado.');
+    _coRenderMsg('system','✅ Conectado. Digite um nome ou CPF para pesquisar. O sistema analisará os documentos e identificará vínculos familiares automaticamente.');
     _lc();
   }catch(e){
-    _coSetStatus('Erro de autenticação: ' + e.message);
-    _coRenderMsg('system','⚠️ Falha na autenticação: <em>'+_coEsc(e.message)+'</em><br>Verifique se o popup foi bloqueado pelo navegador.');
+    _coSetStatus('Erro de autenticação: '+e.message);
+    _coRenderMsg('system','⚠️ Falha na autenticação: <em>'+_coEsc(e.message)+'</em>');
   }
 }
 
-// ── GRAPH API ────────────────────────────────────────────
-// ── BUSCA SERVER-SIDE (OneDrive drive search — funciona com MSA) ─────
+// ── GRAPH ────────────────────────────────────────────────
 async function _graphGet(url){
   const resp = await fetch(url,{headers:{Authorization:'Bearer '+_token}});
   if(!resp.ok) throw new Error('Graph '+resp.status+': '+await resp.text());
   return resp.json();
 }
 
-// ── VÍNCULOS FAMILIARES ──────────────────────────────────
-const _VINC_KEY = 'co_vinculos_v1';
-let _vinculos = [];
-
-function _vincLoad(){
-  try{ _vinculos = JSON.parse(localStorage.getItem(_VINC_KEY)||'[]'); }catch(_){ _vinculos=[]; }
-  _vincRender();
-}
-
-function _vincSave(){ localStorage.setItem(_VINC_KEY, JSON.stringify(_vinculos)); }
-
-function _vincAdd(){
-  const nome = document.getElementById('vinc-nome').value.trim();
-  if(!nome){ alert('Informe o nome do suspeito.'); return; }
-  const pai  = document.getElementById('vinc-pai').value.trim();
-  const mae  = document.getElementById('vinc-mae').value.trim();
-  const obs  = document.getElementById('vinc-obs').value.trim();
-  if(!pai && !mae){ alert('Informe ao menos o nome do pai ou da mãe.'); return; }
-  _vinculos.push({ id: Date.now(), nome, pai, mae, obs });
-  _vincSave();
-  _vincRender();
-  ['vinc-nome','vinc-pai','vinc-mae','vinc-obs'].forEach(id => document.getElementById(id).value='');
-}
-
-function _vincDel(id){
-  _vinculos = _vinculos.filter(v => v.id !== id);
-  _vincSave();
-  _vincRender();
-}
-
-function _vincRender(){
-  const el = document.getElementById('vinc-list');
-  if(!el) return;
-  if(!_vinculos.length){
-    el.innerHTML = '<div style="font-size:11.5px;color:var(--text3);text-align:center;padding:16px">Nenhum vínculo cadastrado</div>';
-    return;
-  }
-  el.innerHTML = _vinculos.map(v=>`
-    <div class="vinc-card">
-      <button class="vinc-del" onclick="_vincDel(${v.id})" title="Remover">×</button>
-      <div class="vinc-card-name">👤 ${_coEsc(v.nome)}</div>
-      ${v.pai?`<div class="vinc-rel"><span class="vinc-rel-tag">PAI</span>${_coEsc(v.pai)}
-        <button class="vinc-search-btn" onclick="_coSearchDirect('${v.pai.replace(/'/g,"\\'")}')">buscar</button></div>`:''}
-      ${v.mae?`<div class="vinc-rel"><span class="vinc-rel-tag">MÃE</span>${_coEsc(v.mae)}
-        <button class="vinc-search-btn" onclick="_coSearchDirect('${v.mae.replace(/'/g,"\\'")}')">buscar</button></div>`:''}
-      ${v.obs?`<div style="font-size:10.5px;color:var(--text3);margin-top:5px;font-style:italic">${_coEsc(v.obs)}</div>`:''}
-    </div>`).join('');
-}
-
-// Retorna vínculos que batem com a query (nome do suspeito está na query)
-function _vincMatch(query){
-  const q = query.toLowerCase();
-  return _vinculos.filter(v => q.includes(v.nome.toLowerCase()) || v.nome.toLowerCase().includes(q));
-}
-
-// ── BUSCA (principal + vínculos) ─────────────────────────
 async function _driveSearch(termo){
   const enc = encodeURIComponent(termo);
   const data = await _graphGet(
     `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${enc}')`+
-    `?$top=20&$select=name,webUrl,lastModifiedDateTime,parentReference,file`
+    `?$top=25&$select=name,webUrl,lastModifiedDateTime,size,parentReference,file,@microsoft.graph.downloadUrl`
   );
-  return (data.value || []).filter(i => i.file);
+  return (data.value||[]).filter(i=>i.file);
 }
 
-function _renderItems(items, label, labelColor){
+// ── EXTRAÇÃO DE FILIAÇÃO DOS DOCUMENTOS ──────────────────
+// Padrões comuns em BOs, relatórios e planilhas brasileiras
+const _FILIA_PATTERNS = [
+  /(?:nome\s+do\s+pai|pai|filia[çc][aã]o\s+paterna?|genitor)[:\s]+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de|da|do|dos|das|e)?\s*[A-ZÀ-Úa-zà-ú]+){1,5})/gi,
+  /(?:nome\s+da\s+m[aã]e|m[aã]e|filia[çc][aã]o\s+materna?|genitora)[:\s]+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de|da|do|dos|das|e)?\s*[A-ZÀ-Úa-zà-ú]+){1,5})/gi,
+  /filho\s+de\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+){1,4})\s+e\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+){1,4})/gi,
+];
+const _PAI_RE  = /(?:nome\s+do\s+pai|pai|filia[çc][aã]o\s+paterna?|genitor)[:\s]+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de|da|do|dos|das|e)?\s*[A-ZÀ-Úa-zà-ú]+){1,5})/gi;
+const _MAE_RE  = /(?:nome\s+da\s+m[aã]e|m[aã]e|filia[çc][aã]o\s+materna?|genitora)[:\s]+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de|da|do|dos|das|e)?\s*[A-ZÀ-Úa-zà-ú]+){1,5})/gi;
+const _FILHO_RE= /filho\s+de\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+){1,4})\s+e\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+){1,4})/gi;
+
+function _extrairFiliacao(texto){
+  const pais = new Set(), maes = new Set();
+  let m;
+  _PAI_RE.lastIndex=0;
+  while((m=_PAI_RE.exec(texto))!==null) pais.add(_limparNome(m[1]));
+  _MAE_RE.lastIndex=0;
+  while((m=_MAE_RE.exec(texto))!==null) maes.add(_limparNome(m[1]));
+  _FILHO_RE.lastIndex=0;
+  while((m=_FILHO_RE.exec(texto))!==null){ pais.add(_limparNome(m[1])); maes.add(_limparNome(m[2])); }
+  return { pais:[...pais].filter(Boolean), maes:[...maes].filter(Boolean) };
+}
+
+function _limparNome(s){
+  return s.trim().replace(/\s+/g,' ').replace(/[^A-Za-zÀ-ú\s]/g,'').trim();
+}
+
+// Lê conteúdo de um único arquivo (apenas DOCX e TXT — leve e rápido)
+async function _lerConteudo(item){
+  const ext = (item.name||'').split('.').pop().toLowerCase();
+  const MAX = 3*1024*1024; // 3 MB
+  if(item.size > MAX) return null;
+  if(!['docx','txt','csv','md','html','htm','xml'].includes(ext)) return null;
+  try{
+    const dlUrl = item['@microsoft.graph.downloadUrl'] ||
+      `https://graph.microsoft.com/v1.0/me/drive/items/${item.id}/content`;
+    if(ext==='docx'){
+      const buf = await (await fetch(dlUrl)).arrayBuffer();
+      const r = await mammoth.extractRawText({arrayBuffer:buf});
+      return r.value;
+    }
+    return await (await fetch(dlUrl)).text();
+  }catch(e){ return null; }
+}
+
+// ── RENDERIZAÇÃO DE RESULTADOS ────────────────────────────
+const _EXT_COR = {PDF:'#C0392B',DOCX:'#2E75B6',XLSX:'#1E8449',XLS:'#1E8449',PPTX:'#C55A11',MSG:'#7030A0'};
+
+function _renderItems(items, secLabel, secColor, excertos){
+  excertos = excertos||{};
   if(!items.length) return '';
-  const extColor = {PDF:'#C0392B',DOCX:'#2E75B6',XLSX:'#1E8449',XLS:'#1E8449',PPTX:'#C55A11',MSG:'#7030A0'};
-  return `
-    <div style="font-size:11px;font-weight:700;color:${labelColor};text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px;padding-left:2px">${label} — ${items.length} arquivo(s)</div>`+
-    items.map(r=>{
-      const name = r.name||'—', url=r.webUrl||'#';
-      const mod  = r.lastModifiedDateTime ? new Date(r.lastModifiedDateTime).toLocaleDateString('pt-BR'):'';
-      const pasta= r.parentReference?.path ? decodeURIComponent(r.parentReference.path).replace(/^.*?root:/,'')||'/':'/';
-      const ext  = name.split('.').pop().toUpperCase();
-      const cor  = extColor[ext]||'var(--navy)';
-      return `<div class="co-result">
-        <div class="co-result-hdr">
-          <span style="background:${cor};color:#fff;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:3px;flex-shrink:0">${_coEsc(ext)}</span>
-          <a href="${_coEsc(url)}" target="_blank" class="co-result-name" style="text-decoration:none;color:var(--navy)">${_coEsc(name)}</a>
-          <span class="co-result-path" title="${_coEsc(pasta)}">${_coEsc(pasta)}</span>
-          ${mod?`<span class="co-result-score">${mod}</span>`:''}
-        </div>
-        <a href="${_coEsc(url)}" target="_blank" style="display:inline-block;margin-top:6px;font-size:11px;color:var(--navy2);text-decoration:none;font-weight:600">↗ Abrir no OneDrive</a>
-      </div>`;
-    }).join('');
+  const cards = items.map(r=>{
+    const name=r.name||'—', url=r.webUrl||'#';
+    const mod=r.lastModifiedDateTime?new Date(r.lastModifiedDateTime).toLocaleDateString('pt-BR'):'';
+    const pasta=r.parentReference?.path?decodeURIComponent(r.parentReference.path).replace(/^.*?root:/,'')||'/':'/';
+    const ext=name.split('.').pop().toUpperCase();
+    const cor=_EXT_COR[ext]||'var(--navy)';
+    const exc=excertos[r.id]||'';
+    return `<div class="co-result">
+      <div class="co-result-hdr">
+        <span style="background:${cor};color:#fff;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:3px;flex-shrink:0">${_coEsc(ext)}</span>
+        <a href="${_coEsc(url)}" target="_blank" style="font-weight:700;font-size:12.5px;color:var(--navy);text-decoration:none">${_coEsc(name)}</a>
+        <span class="co-result-path" title="${_coEsc(pasta)}">${_coEsc(pasta)}</span>
+        ${mod?`<span class="co-result-score">${mod}</span>`:''}
+      </div>
+      ${exc?`<div class="co-excerpt">${_coEsc(exc)}</div>`:''}
+      <a href="${_coEsc(url)}" target="_blank" style="display:inline-block;margin-top:6px;font-size:11px;color:var(--navy2);text-decoration:none;font-weight:600">↗ Abrir no OneDrive</a>
+    </div>`;
+  }).join('');
+  return `<div class="co-section-title" style="color:${secColor}">${secLabel}</div>${cards}`;
 }
 
-async function _coSend(){ await _coSearchDirect(document.getElementById('co-input').value.trim()); document.getElementById('co-input').value=''; }
-
-async function _coSearchDirect(query){
+// ── BUSCA PRINCIPAL ───────────────────────────────────────
+async function _coSend(){
+  const inp = document.getElementById('co-input');
+  const query = inp.value.trim();
   if(!query) return;
-  _coRenderMsg('user', _coEsc(query));
+  inp.value='';
+  _coRenderMsg('user',_coEsc(query));
 
   if(!_token){
-    _coRenderMsg('bot','<div class="co-empty">🔒 Conecte ao OneDrive primeiro para pesquisar.</div>');
+    _coRenderMsg('bot','<div class="co-empty">🔒 Conecte ao OneDrive primeiro.</div>');
     return;
   }
 
-  // Detecta vínculos familiares que coincidem com a pesquisa
-  const matches = _vincMatch(query);
-
-  const loadEl = _coRenderLoading(matches.length
-    ? `Pesquisando "${query}" + ${matches.length} vínculo(s) familiar(es)…`
-    : `Pesquisando no OneDrive…`);
+  const loadEl = _coRenderLoading('Buscando arquivos no OneDrive…');
 
   try{
-    // Busca principal
+    // 1) Busca principal
     const mainItems = await _driveSearch(query);
+    _coSetStatus(`${mainItems.length} arquivo(s) encontrado(s) — analisando filiação…`);
+    if(loadEl) loadEl.querySelector('span').textContent = `${mainItems.length} arquivo(s) encontrado(s). Analisando filiação nos documentos…`;
 
-    // Buscas por parentes (pai e mãe de cada vínculo encontrado)
-    const familyResults = [];
-    for(const v of matches){
-      if(v.pai){
-        const items = await _driveSearch(v.pai);
-        if(items.length) familyResults.push({ label:`PAI de ${v.nome}: ${v.pai}`, items, color:'#7030A0' });
-      }
-      if(v.mae){
-        const items = await _driveSearch(v.mae);
-        if(items.length) familyResults.push({ label:`MÃE de ${v.nome}: ${v.mae}`, items, color:'#C55A11' });
-      }
+    // 2) Lê conteúdo dos arquivos menores para extrair filiação
+    const todosFiliacos = { pais: new Set(), maes: new Set() };
+    const excertos = {}; // id → trecho com filiação encontrado
+
+    const paraLer = mainItems.filter(i=>['docx','txt','csv','md','html','htm'].includes((i.name||'').split('.').pop().toLowerCase()) && (i.size||0)<3e6).slice(0,6);
+
+    for(const item of paraLer){
+      const texto = await _lerConteudo(item);
+      if(!texto) continue;
+      const {pais,maes} = _extrairFiliacao(texto);
+      pais.forEach(p=>todosFiliacos.pais.add(p));
+      maes.forEach(m=>todosFiliacos.maes.add(m));
+      // Trecho com contexto de filiação para mostrar no card
+      const trechoMatch = texto.match(/.{0,80}(?:pai|m[aã]e|filho\s+de|filia[çc][aã]o).{0,100}/i);
+      if(trechoMatch && (pais.length||maes.length)) excertos[item.id] = trechoMatch[0].replace(/[\r\n]+/g,' ').trim();
     }
 
     loadEl.remove();
 
-    if(!mainItems.length && !familyResults.length){
+    if(!mainItems.length){
       _coRenderMsg('bot','<div class="co-empty">🔍 Nenhum arquivo encontrado para "<em>'+_coEsc(query)+'</em>".</div>');
       return;
     }
 
-    // Alerta de vínculos encontrados
-    let vincHtml = '';
-    if(matches.length){
-      vincHtml = matches.map(v=>`
-        <div class="vinc-match">
-          <strong>🔗 Vínculo detectado:</strong> ${_coEsc(v.nome)}
-          ${v.pai?` · <span style="color:#7030A0;font-weight:700">Pai: ${_coEsc(v.pai)}</span>`:''}
-          ${v.mae?` · <span style="color:#C55A11;font-weight:700">Mãe: ${_coEsc(v.mae)}</span>`:''}
-          ${v.obs?` <em style="color:var(--text3)">(${_coEsc(v.obs)})</em>`:''}
-        </div>`).join('');
+    const paiList = [...todosFiliacos.pais];
+    const maeList = [...todosFiliacos.maes];
+
+    // 3) Busca pelos parentes encontrados
+    const resPais = [], resMaes = [];
+    for(const pai of paiList.slice(0,3)){
+      const items = await _driveSearch(pai);
+      const novos = items.filter(i=>!mainItems.find(m=>m.id===i.id));
+      if(novos.length) resPais.push({nome:pai, items:novos});
+    }
+    for(const mae of maeList.slice(0,3)){
+      const items = await _driveSearch(mae);
+      const novos = items.filter(i=>!mainItems.find(m=>m.id===i.id));
+      if(novos.length) resMaes.push({nome:mae, items:novos});
     }
 
-    const mainHtml  = mainItems.length  ? _renderItems(mainItems, `🔎 Resultado direto: "${query}"`, 'var(--navy)') : '';
-    const famHtml   = familyResults.map(f => _renderItems(f.items, f.label, f.color)).join('');
+    // 4) Monta HTML
+    let html = '';
 
-    _coRenderMsg('bot', vincHtml + mainHtml + famHtml);
+    // Banner de filiação detectada
+    if(paiList.length||maeList.length){
+      html += `<div class="co-vinc-banner">
+        🔗 <strong>Vínculos detectados nos documentos:</strong>
+        ${paiList.length?`<br>👨 <strong>Pai:</strong> ${paiList.map(_coEsc).join(' · ')}`:''}
+        ${maeList.length?`<br>👩 <strong>Mãe:</strong> ${maeList.map(_coEsc).join(' · ')}`:''}
+      </div>`;
+    }
+
+    html += _renderItems(mainItems, `🔎 Resultado direto — "${query}" (${mainItems.length} arquivo(s))`, 'var(--navy)', excertos);
+    resPais.forEach(r=>{
+      html += _renderItems(r.items, `👨 Via pai: ${r.nome} (${r.items.length} arquivo(s))`, 'var(--purple)');
+    });
+    resMaes.forEach(r=>{
+      html += _renderItems(r.items, `👩 Via mãe: ${r.nome} (${r.items.length} arquivo(s))`, 'var(--brown)');
+    });
+
+    if(!paiList.length && !maeList.length){
+      html += `<div style="font-size:11px;color:var(--text3);margin-top:8px;font-style:italic">Nenhum dado de filiação encontrado nos documentos analisados (apenas arquivos DOCX/TXT menores que 3MB são lidos para extração).</div>`;
+    }
+
+    _coRenderMsg('bot', html);
+    _coSetStatus('✓ Busca concluída');
     _lc();
   }catch(e){
-    loadEl.remove();
-    _coRenderMsg('bot','<div class="co-empty">⚠️ Erro na busca: '+_coEsc(e.message)+'</div>');
+    if(loadEl.parentNode) loadEl.remove();
+    _coRenderMsg('bot','<div class="co-empty">⚠️ Erro: '+_coEsc(e.message)+'</div>');
+    _coSetStatus('Erro na busca');
   }
 }
 
 // ── HELPERS ──────────────────────────────────────────────
 function _coEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-function _coRenderMsg(role, html){
-  const list = document.getElementById('co-messages');
-  const div = document.createElement('div');
-  div.className = 'co-msg-'+(role==='user'?'user':role==='system'?'system':'bot');
-  div.innerHTML = html;
+function _coSetStatus(msg){const el=document.getElementById('co-status');if(el)el.textContent=msg;}
+function _lc(){if(typeof lucide!=='undefined')lucide.createIcons();}
+function _coRenderMsg(role,html){
+  const list=document.getElementById('co-messages');
+  const div=document.createElement('div');
+  div.className='co-msg-'+(role==='user'?'user':role==='system'?'system':'bot');
+  div.innerHTML=html;
   list.appendChild(div);
-  list.scrollTop = list.scrollHeight;
+  list.scrollTop=list.scrollHeight;
   return div;
 }
-
 function _coRenderLoading(msg){
-  const list = document.getElementById('co-messages');
-  const div = document.createElement('div');
-  div.className = 'co-msg-loading';
-  div.innerHTML = `<div class="co-dot"></div><div class="co-dot"></div><div class="co-dot"></div><span style="font-size:12px;color:var(--text2);margin-left:6px">${msg}</span>`;
+  const list=document.getElementById('co-messages');
+  const div=document.createElement('div');
+  div.className='co-msg-loading';
+  div.innerHTML=`<div class="co-dot"></div><div class="co-dot"></div><div class="co-dot"></div><span style="font-size:12px;color:var(--text2);margin-left:6px">${msg}</span>`;
   list.appendChild(div);
-  list.scrollTop = list.scrollHeight;
+  list.scrollTop=list.scrollHeight;
   return div;
 }
 
-function _coSetStatus(msg){ const el=document.getElementById('co-status'); if(el) el.textContent=msg; }
-function _lc(){ if(typeof lucide!=='undefined') lucide.createIcons(); }
-
-// ── INIT ──────────────────────────────────────────────────
+// ── INIT ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function(){
   _lc();
-  _vincLoad();
   try{
     await _msal.handleRedirectPromise();
     const accounts = _msal.getAllAccounts();
     if(accounts.length){
       _token = await _getToken();
-      const btn = document.getElementById('co-login-btn');
-      const name = accounts[0]?.name || accounts[0]?.username || 'Conectado';
-      btn.innerHTML = '<i data-lucide="check-circle" style="width:14px;height:14px"></i> '+name;
-      btn.className = 'co-login-btn connected';
-      btn.onclick = null;
+      const btn=document.getElementById('co-login-btn');
+      const name=accounts[0]?.name||accounts[0]?.username||'Conectado';
+      btn.innerHTML='<i data-lucide="check-circle" style="width:14px;height:14px"></i> '+name;
+      btn.className='co-login-btn connected';
+      btn.onclick=null;
       _coSetStatus('✓ Sessão restaurada — pronto para pesquisar');
       _lc();
-    } else {
+    }else{
       _coSetStatus('Clique em "Conectar ao OneDrive" para autenticar');
     }
   }catch(e){
@@ -455,11 +383,11 @@ document.addEventListener('DOMContentLoaded', async function(){
 });
 </script>
 <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .catch(err => console.warn('SW:', err));
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(err=>console.warn('SW:',err));
   });
 }
-</script></body>
+</script>
+</body>
 </html>
