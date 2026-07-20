@@ -307,22 +307,36 @@ async function _xlsxCarregar(){
   if(vals.length < 2) return [];
 
   const headers = vals[0].map(h=>String(h||'').trim().toLowerCase());
-  console.log('[XLSX] AG(32):', headers[_COL_PAI], '| AH(33):', headers[_COL_MAE]);
 
-  let colNome = headers.findIndex(h=>/^nome\b|nome\s+(completo|infrator)/.test(h));
-  if(colNome < 0) colNome = headers.findIndex(h=>/nome/.test(h));
-  const colCpf = headers.findIndex(h=>/cpf/.test(h));
-  console.log('[XLSX] colNome:', colNome, '| colCpf:', colCpf);
+  // Encontra colunas pelo cabeçalho — com fallback para AG(32)/AH(33)
+  let colNome = headers.findIndex(h=>/^nome\b/.test(h));
+  if(colNome<0) colNome = headers.findIndex(h=>/nome\s*(completo|infrator)/.test(h));
+  if(colNome<0) colNome = headers.findIndex(h=>/^nome/.test(h));
+  if(colNome<0) colNome = 0;
+
+  const colCpf = headers.findIndex(h=>/^cpf/.test(h));
+
+  // Busca coluna de PAI (filiacao pai, nome do pai, pai, etc.)
+  let colPai = headers.findIndex(h=>/filia[cç][aã]o\s*(pai|paterna)|nome\s*do\s*pai|^pai$/.test(h));
+  if(colPai<0) colPai = headers.findIndex(h=>/pai/.test(h) && !/e-?mail|pais\s*(de\s*origem)?$/.test(h));
+  if(colPai<0) colPai = _COL_PAI; // fallback AG
+
+  // Busca coluna de MÃE (filiacao mae, nome da mae, mae, etc.)
+  let colMae = headers.findIndex(h=>/filia[cç][aã]o\s*(m[aã]e|materna)|nome\s*da?\s*m[aã]e|^m[aã]e$/.test(h));
+  if(colMae<0) colMae = headers.findIndex(h=>/m[aã]e/.test(h) && !/e-?mail/.test(h));
+  if(colMae<0) colMae = _COL_MAE; // fallback AH
+
+  console.log('[XLSX] Colunas → nome:', colNome, '| cpf:', colCpf, '| pai:', colPai, '("'+headers[colPai]+'") | mae:', colMae, '("'+headers[colMae]+'")');
 
   _xlsxRows = vals.slice(1).map(row=>({
-    nome: String(row[colNome >= 0 ? colNome : 0]||'').trim(),
-    pai:  String(row[_COL_PAI]||'').trim(),
-    mae:  String(row[_COL_MAE]||'').trim(),
+    nome: String(row[colNome]||'').trim(),
+    pai:  String(row[colPai]||'').trim(),
+    mae:  String(row[colMae]||'').trim(),
     cpf:  colCpf >= 0 ? String(row[colCpf]||'').trim() : '',
   })).filter(r => r.nome);
 
   console.log('[XLSX] Linhas carregadas:', _xlsxRows.length);
-  console.log('[XLSX] Amostra:', _xlsxRows.slice(0,3));
+  console.log('[XLSX] Amostra (5 primeiros):', _xlsxRows.slice(0,5));
   return _xlsxRows;
 }
 
