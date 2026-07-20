@@ -372,6 +372,10 @@ table.det tfoot .td-prej { color: #f4a5a0; }
     lucide.createIcons();
   }
 
+  await carregarDados();
+})();
+
+async function carregarDados() {
   try {
     const raw = localStorage.getItem('painel_inv_v3');
     if (raw) {
@@ -396,7 +400,11 @@ table.det tfoot .td-prej { color: #f4a5a0; }
   document.getElementById('res-ops').textContent  = '0';
   document.getElementById('ops-table-body').innerHTML =
     '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">Nenhum dado encontrado. Acesse o Módulo de Investigações para registrar operações.</td></tr>';
-})();
+}
+
+window.addEventListener('storage', function(e) {
+  if (e.key === 'painel_inv_v3') carregarDados();
+});
 
 lucide.createIcons();
 </script>
