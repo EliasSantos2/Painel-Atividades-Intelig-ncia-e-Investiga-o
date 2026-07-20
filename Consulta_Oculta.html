@@ -89,11 +89,8 @@ main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden
 
 <main>
   <div class="co-wrap">
-    <div class="co-pick-bar">
-      <button class="co-login-btn" id="co-login-btn" onclick="_coLogin()">
-        <i data-lucide="log-in" style="width:14px;height:14px"></i> Conectar ao OneDrive
-      </button>
-      <span id="co-status" class="co-status">Clique em "Conectar ao OneDrive" para autenticar</span>
+    <div class="co-pick-bar" style="padding:6px 18px">
+      <span id="co-status" class="co-status">Aguardando autenticação…</span>
     </div>
     <div class="co-chat">
       <div id="co-messages" class="co-messages">
@@ -339,8 +336,9 @@ async function _coSend(){
   _coRenderMsg('user', _coEsc(query));
 
   if(!_token){
-    _coRenderMsg('bot','<div class="co-empty">🔒 Conecte ao OneDrive primeiro.</div>');
-    return;
+    _coSetStatus('Autenticando…');
+    try{ _token = await _getToken(); _coSetStatus('✓ Conectado'); }
+    catch(e){ _coRenderMsg('bot','<div class="co-empty">🔒 Falha na autenticação: '+_coEsc(e.message)+'</div>'); return; }
   }
 
   const loadEl = _coRenderLoading('Buscando arquivos no OneDrive…');
