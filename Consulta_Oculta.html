@@ -158,10 +158,9 @@ async function _graphGet(url){
   const resp = await fetch(url,{headers:{Authorization:'Bearer '+_token}});
   if(!resp.ok){
     const txt = await resp.text();
-    // Se 404 na planilha, limpa cache para forçar nova busca
-    if(resp.status===404 && _xlsxId && url.includes(_xlsxId)){
+    if(resp.status===404 && _xlsxItem && url.includes(_xlsxItem.id)){
       console.warn('[XLSX] 404 no item cacheado — limpando cache');
-      _xlsxId=null; _xlsxRows=null;
+      _xlsxItem=null; _xlsxRows=null;
     }
     throw new Error('Graph '+resp.status+': '+txt);
   }
@@ -178,58 +177,70 @@ async function _driveSearch(termo){
 }
 
 // ── PLANILHA DE INFRATORES ────────────────────────────────
-let _xlsxId   = null;  // id do item no OneDrive
-let _xlsxRows = null;  // cache das linhas [{nome,pai,mae,...}]
-let _xlsxCols = null;  // mapeamento de colunas detectadas
+let _xlsxItem = null; // {id, driveId}
+let _xlsxRows = null; // cache linhas [{nome,pai,mae,cpf}]
 
-async function _xlsxGetId(){
-  if(_xlsxId) return _xlsxId;
-  // Busca direta pelo nome exato conhecido na raiz do OneDrive
+const _COL_PAI = 32; // AG
+const _COL_MAE = 33; // AH
+
+async function _xlsxGetItem(){
+  if(_xlsxItem) return _xlsxItem;
   const termos = ['Cpf - Rondonopolis','CPF Rondonopolis','infratores','infrator','cpf rondonopolis'];
   for(const termo of termos){
     try{
       const items = await _driveSearch(termo);
-      console.log('[XLSX] Busca "'+termo+'" → '+items.length+' arquivo(s):', items.map(i=>i.name));
+      console.log('[XLSX] Busca "'+termo+'" →', items.map(i=>i.name));
       const f = items.find(i=>/\.(xlsx|xls)$/i.test(i.name||''));
-      if(f){ console.log('[XLSX] Planilha encontrada:', f.name, f.id); _xlsxId=f.id; return _xlsxId; }
-    }catch(e){ console.warn('[XLSX] Erro buscando "'+termo+'":', e.message); }
+      if(f){
+        const driveId = f.parentReference?.driveId || null;
+        console.log('[XLSX] Encontrado:', f.name, '| driveId:', driveId, '| itemId:', f.id);
+        _xlsxItem = {id:f.id, driveId};
+        return _xlsxItem;
+      }
+    }catch(e){ console.warn('[XLSX] Erro "'+termo+'":', e.message); }
   }
-  throw new Error('Planilha de infratores não encontrada. Verifique o nome do arquivo no OneDrive (esperado: "Cpf - Rondonopolis.xlsx" ou similar).');
+  throw new Error('Planilha não encontrada no OneDrive (esperado: "Cpf - Rondonopolis.xlsx").');
 }
 
-// Colunas fixas: AG=32 (pai), AH=33 (mãe)
-// Nome e CPF detectados pelo cabeçalho como fallback
-const _COL_PAI = 32; // AG
-const _COL_MAE = 33; // AH
+function _xlsxBaseUrl(item){
+  return item.driveId
+    ? `https://graph.microsoft.com/v1.0/drives/${item.driveId}/items/${item.id}`
+    : `https://graph.microsoft.com/v1.0/me/drive/items/${item.id}`;
+}
 
 async function _xlsxCarregar(){
   if(_xlsxRows) return _xlsxRows;
-  const id = await _xlsxGetId();
-  console.log('[XLSX] ID encontrado:', id);
-  const sheets = await _graphGet(`https://graph.microsoft.com/v1.0/me/drive/items/${id}/workbook/worksheets`);
+  const item = await _xlsxGetItem();
+  const base = _xlsxBaseUrl(item);
+  console.log('[XLSX] URL base:', base);
+
+  const sheets = await _graphGet(`${base}/workbook/worksheets`);
   const sheetName = sheets.value[0].name;
   console.log('[XLSX] Aba:', sheetName);
+
   const range = await _graphGet(
-    `https://graph.microsoft.com/v1.0/me/drive/items/${id}/workbook/worksheets('${encodeURIComponent(sheetName)}')/usedRange(valuesOnly=true)`
+    `${base}/workbook/worksheets('${encodeURIComponent(sheetName)}')/usedRange(valuesOnly=true)`
   );
   const vals = range.values||[];
-  console.log('[XLSX] Total de linhas (com cabeçalho):', vals.length);
+  console.log('[XLSX] Linhas (incl. cabeçalho):', vals.length);
   if(vals.length<2) return [];
+
   const headers = vals[0].map(h=>String(h||'').trim().toLowerCase());
-  console.log('[XLSX] Cabeçalhos AG/AH:', headers[_COL_PAI], '/', headers[_COL_MAE]);
-  // Coluna nome: prioriza cabeçalho, fallback coluna 0
-  let colNome = headers.findIndex(h=>/^nome\b|nome\s+(completo|infrator|do\s+infrator)/.test(h));
+  console.log('[XLSX] AG:', headers[_COL_PAI], '| AH:', headers[_COL_MAE]);
+
+  let colNome = headers.findIndex(h=>/^nome\b|nome\s+(completo|infrator)/.test(h));
   if(colNome<0) colNome = headers.findIndex(h=>/nome/.test(h));
   const colCpf = headers.findIndex(h=>/cpf/.test(h));
-  console.log('[XLSX] Coluna nome idx:', colNome, '| CPF idx:', colCpf);
+  console.log('[XLSX] colNome:', colNome, '| colCpf:', colCpf);
+
   _xlsxRows = vals.slice(1).map(row=>({
-    nome: colNome>=0 ? String(row[colNome]||'').trim() : String(row[0]||'').trim(),
+    nome: String(row[colNome>=0?colNome:0]||'').trim(),
     pai:  String(row[_COL_PAI]||'').trim(),
     mae:  String(row[_COL_MAE]||'').trim(),
     cpf:  colCpf>=0 ? String(row[colCpf]||'').trim() : '',
   })).filter(r=>r.nome);
   console.log('[XLSX] Linhas carregadas:', _xlsxRows.length);
-  console.log('[XLSX] Amostra (3 primeiras):', _xlsxRows.slice(0,3));
+  console.log('[XLSX] Amostra:', _xlsxRows.slice(0,3));
   return _xlsxRows;
 }
 
