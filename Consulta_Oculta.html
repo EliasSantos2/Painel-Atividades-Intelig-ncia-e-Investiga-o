@@ -12,6 +12,7 @@
 <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="infratores_enc.js"></script>
 <style>
 :root{
   --navy:#003865;--navy2:#00284a;--navy-light:#e8f0f8;
@@ -90,9 +91,12 @@ main{flex:1;padding:26px 28px;display:flex;flex-direction:column;overflow:hidden
 <main>
   <div class="co-wrap">
     <div class="co-pick-bar">
-      <button class="co-login-btn" id="co-sync-btn" onclick="_coSincronizar()" style="background:#1d8a48">
-        <i data-lucide="refresh-cw" style="width:13px;height:13px"></i> Sincronizar Planilha
-      </button>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <input id="co-inf-pass" type="password" placeholder="Senha infratores" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:160px;outline:none;" onkeydown="if(event.key==='Enter')_coUnlockInf()">
+        <button class="co-login-btn" id="co-inf-btn" onclick="_coUnlockInf()" style="background:#1d8a48;padding:6px 12px">
+          <i data-lucide="lock" style="width:13px;height:13px"></i> <span id="co-inf-label">Desbloquear</span>
+        </button>
+      </div>
       <span id="co-status" class="co-status">Digite um nome e pressione ➤ para pesquisar</span>
     </div>
     <div class="co-chat">
@@ -173,39 +177,50 @@ async function _coLogin(){
   }
 }
 
-async function _coSincronizar(){
-  const btn = document.getElementById('co-sync-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<i data-lucide="loader" style="width:13px;height:13px"></i> Sincronizando…';
-  _lc();
+async function _coUnlockInf(){
+  const inp  = document.getElementById('co-inf-pass');
+  const btn  = document.getElementById('co-inf-btn');
+  const lbl  = document.getElementById('co-inf-label');
+  const pass = inp.value.trim();
+  if(!pass){ _coSetStatus('Informe a senha dos infratores.'); inp.focus(); return; }
+  if(typeof INFRATORES_ENC === 'undefined'){
+    _coSetStatus('Arquivo infratores_enc.js não carregado.'); return;
+  }
+  btn.disabled = true; lbl.textContent = 'Desbloquando…'; _lc();
   try{
-    if(!_token){
-      _coSetStatus('Autenticando…');
-      _token = await _getToken();
-    }
-    _xlsxRows = null; // limpa cache
-    _coSetStatus('Baixando planilha…');
-    const rows = await _xlsxCarregar();
-    _coSetStatus(`✓ Planilha sincronizada — ${rows.length} infrator(es) carregado(s)`);
-    _coRenderMsg('system', `✅ Planilha sincronizada com sucesso: <strong>${rows.length}</strong> registros carregados.`);
+    const raw  = Uint8Array.from(atob(INFRATORES_ENC), c=>c.charCodeAt(0));
+    const salt = raw.slice(8,16), ct = raw.slice(16);
+    const km   = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveBits']);
+    const bits = new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:200000,hash:'SHA-256'}, km, 384));
+    const key  = await crypto.subtle.importKey('raw', bits.slice(0,32), {name:'AES-CBC'}, false, ['decrypt']);
+    const pt   = await crypto.subtle.decrypt({name:'AES-CBC',iv:bits.slice(32,48)}, key, ct);
+    const obj  = JSON.parse(new TextDecoder().decode(pt));
+    _infRows   = Array.isArray(obj) ? obj : (obj.infratores||[]);
+    // Constrói mapas pai/mãe → [nomes]
+    _xlsxPorMae = {}; _xlsxPorPai = {};
+    _infRows.forEach(r=>{
+      const k=_normU(r.nome); if(!k) return;
+      const m=_normU(r.mae), p=_normU(r.pai);
+      if(m && !_invalido(m)){ (_xlsxPorMae[m]=_xlsxPorMae[m]||[]).push(k); }
+      if(p && !_invalido(p)){ (_xlsxPorPai[p]=_xlsxPorPai[p]||[]).push(k); }
+    });
+    inp.value = ''; inp.style.display='none';
+    btn.style.background='#005CA9';
+    lbl.textContent = '✓ '+_infRows.length+' infratores';
+    _coSetStatus(`✓ Infratores desbloqueados — ${_infRows.length} registros. Vínculos habilitados.`);
+    _coRenderMsg('system',`✅ <strong>${_infRows.length}</strong> infratores carregados. Agora a busca identificará vínculos familiares automaticamente.`);
   }catch(e){
-    _coSetStatus('Erro: ' + e.message);
-    _coRenderMsg('system','⚠️ Falha ao sincronizar: '+_coEsc(e.message));
+    _coSetStatus('Senha incorreta ou arquivo inválido.');
+    _coRenderMsg('system','⚠️ Senha incorreta.');
   }finally{
-    btn.disabled = false;
-    btn.innerHTML = '<i data-lucide="refresh-cw" style="width:13px;height:13px"></i> Sincronizar Planilha';
-    _lc();
+    btn.disabled = false; _lc();
   }
 }
 
 // ── GRAPH ────────────────────────────────────────────────
 async function _graphGet(url){
   const resp = await fetch(url,{headers:{Authorization:'Bearer '+_token}});
-  if(!resp.ok){
-    const txt = await resp.text();
-    if(resp.status===404){ _xlsxRows=null; }
-    throw new Error('Graph '+resp.status+': '+txt);
-  }
+  if(!resp.ok){ const txt=await resp.text(); throw new Error('Graph '+resp.status+': '+txt); }
   return resp.json();
 }
 
@@ -216,134 +231,6 @@ async function _driveSearch(termo){
     `?$top=25&$select=name,webUrl,lastModifiedDateTime,size,parentReference,file,@microsoft.graph.downloadUrl`
   );
   return (data.value||[]).filter(i=>i.file);
-}
-
-// ── PLANILHA DE INFRATORES ────────────────────────────────
-let _xlsxRows = null; // cache linhas [{nome,pai,mae,cpf}]
-
-const _COL_PAI = 32; // AG
-const _COL_MAE = 33; // AH
-
-const _XLSX_LINK = 'https://1drv.ms/x/c/b476f1a47b64e77b/IQCV_D-uaDZ5TbmNyF3qhvlcAV4eha-61JWJJRvu4izxyT0?e=tvxrBA';
-
-async function _xlsxBaixar(url, comAuth){
-  const opts = comAuth ? {headers:{Authorization:'Bearer '+_token}, redirect:'follow'} : {};
-  const resp = await fetch(url, opts);
-  if(!resp.ok) throw new Error('HTTP '+resp.status);
-  return resp.arrayBuffer();
-}
-
-async function _xlsxCarregar(){
-  if(_xlsxRows) return _xlsxRows;
-  if(!_token) throw new Error('Não autenticado.');
-
-  let buf = null, fileName = 'Cpf - Rondonopolis.xlsx';
-
-  const _erros = [];
-
-  // 1) Resolve pelo link de compartilhamento → baixa diretamente com auth
-  try{
-    const b64 = btoa(_XLSX_LINK).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-    const info = await _graphGet(
-      `https://graph.microsoft.com/v1.0/shares/u!${b64}/driveItem`+
-      `?$select=name,id,parentReference,@microsoft.graph.downloadUrl`
-    );
-    if(info.name) fileName = info.name;
-    if(info['@microsoft.graph.downloadUrl']){
-      try{ buf = await _xlsxBaixar(info['@microsoft.graph.downloadUrl'], false); }
-      catch(e){ _erros.push('preSignedUrl: '+e.message); }
-    }
-    if(!buf && info.id){
-      const driveId = info.parentReference?.driveId;
-      const contentUrl = driveId
-        ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${info.id}/content`
-        : `https://graph.microsoft.com/v1.0/me/drive/items/${info.id}/content`;
-      try{ buf = await _xlsxBaixar(contentUrl, true); }
-      catch(e){ _erros.push('contentUrl: '+e.message); }
-    }
-    if(buf) console.log('[XLSX] Baixado via link compartilhado:', fileName);
-  }catch(e){ _erros.push('shareLink: '+e.message); }
-
-  // 2) Fallback: busca por nome + baixa com auth
-  if(!buf){
-    for(const termo of ['Cpf - Rondonopolis','CPF Rondonopolis','infratores']){
-      try{
-        const enc = encodeURIComponent(termo);
-        const resp = await _graphGet(
-          `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${enc}')`+
-          `?$top=10&$select=name,file,id,parentReference,@microsoft.graph.downloadUrl`
-        );
-        const f = (resp.value||[]).find(i=>i.file && /\.(xlsx|xls)$/i.test(i.name||''));
-        if(f){
-          fileName = f.name;
-          if(f['@microsoft.graph.downloadUrl']){
-            try{ buf = await _xlsxBaixar(f['@microsoft.graph.downloadUrl'], false); }catch(e){}
-          }
-          if(!buf){
-            const driveId = f.parentReference?.driveId;
-            const contentUrl = driveId
-              ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${f.id}/content`
-              : `https://graph.microsoft.com/v1.0/me/drive/items/${f.id}/content`;
-            try{ buf = await _xlsxBaixar(contentUrl, true); }
-            catch(e){ _erros.push('busca "'+termo+'": '+e.message); }
-          }
-          if(buf){ console.log('[XLSX] Encontrado por busca:', fileName); break; }
-        } else {
-          _erros.push('busca "'+termo+'": nenhum xlsx encontrado');
-        }
-      }catch(e){ _erros.push('busca "'+termo+'": '+e.message); }
-    }
-  }
-
-  if(!buf) throw new Error('Planilha não encontrada. Detalhes: '+_erros.join(' | '));
-
-  console.log('[XLSX] Baixando', fileName, '…');
-
-  const wb = XLSX.read(buf, {type:'array'});
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const vals = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-
-  console.log('[XLSX] Linhas (incl. cabeçalho):', vals.length);
-  if(vals.length < 2) return [];
-
-  const headers = vals[0].map(h=>String(h||'').trim().toLowerCase());
-
-  // Coluna NOME — busca pelo cabeçalho, fallback coluna 0
-  let colNome = headers.findIndex(h=>/^nome/.test(h));
-  if(colNome<0) colNome = 0;
-
-  // CPF — busca pelo cabeçalho
-  const colCpf = headers.findIndex(h=>/^cpf/.test(h));
-
-  // PAI e MÃE — sempre AG(32) e AH(33) conforme a planilha de infratores
-  const colPai = _COL_PAI; // AG = 32
-  const colMae = _COL_MAE; // AH = 33
-
-  console.log('[XLSX] Cols → nome:', colNome, '("'+headers[colNome]+'") | pai (AG=32):"'+headers[colPai]+'" | mae (AH=33):"'+headers[colMae]+'"');
-
-  _xlsxRows = vals.slice(1).map(row=>({
-    nome: String(row[colNome]||'').trim(),
-    pai:  String(row[colPai]||'').trim(),
-    mae:  String(row[colMae]||'').trim(),
-    cpf:  colCpf >= 0 ? String(row[colCpf]||'').trim() : '',
-  })).filter(r => r.nome);
-
-  // Constrói mapa de vínculos (mesma lógica da teia de infratores)
-  // porMae / porPai → { nomeNorm_pai_ou_mae -> [nomeNorm_infrator, ...] }
-  _xlsxPorMae = {};
-  _xlsxPorPai = {};
-  _xlsxRows.forEach(r=>{
-    const k = _normU(r.nome);
-    if(!k) return;
-    const m = _normU(r.mae), p = _normU(r.pai);
-    if(m && !_invalido(m)){ (_xlsxPorMae[m] = _xlsxPorMae[m]||[]).push(k); }
-    if(p && !_invalido(p)){ (_xlsxPorPai[p] = _xlsxPorPai[p]||[]).push(k); }
-  });
-
-  console.log('[XLSX] Linhas carregadas:', _xlsxRows.length,
-    '| grupos mãe:', Object.keys(_xlsxPorMae).length,
-    '| grupos pai:', Object.keys(_xlsxPorPai).length);
-  return _xlsxRows;
 }
 
 // Normaliza: sem acento, maiúsculo, espaço simples (igual à teia de infratores)
@@ -358,62 +245,55 @@ function _invalido(s){ return !s || s.length < 4 || _INV_RE.test(s.toUpperCase()
 // Mapas pré-construídos ao carregar a planilha
 let _xlsxPorMae = {}, _xlsxPorPai = {};
 
-// Busca o pesquisado na planilha; retorna {linhas, paiNorms, maeNorms}
-async function _xlsxBuscarPessoa(query){
-  try{
-    const rows = await _xlsxCarregar();
-    const qn = _normU(query);
-    // Match exato primeiro; fallback: contém
-    let matches = rows.filter(r=> _normU(r.nome)===qn);
-    if(!matches.length)
-      matches = rows.filter(r=> _normU(r.nome).includes(qn) ||
-        (r.cpf && r.cpf.replace(/\D/g,'').includes(query.replace(/\D/g,''))));
-    console.log('[XLSX] "'+query+'" → '+matches.length+' linha(s)');
-    const paiNorms = new Set(), maeNorms = new Set();
-    matches.forEach(r=>{
-      const p=_normU(r.pai), m=_normU(r.mae);
-      if(!_invalido(p)) paiNorms.add(p);
-      if(!_invalido(m)) maeNorms.add(m);
-    });
-    console.log('[XLSX] pais:', [...paiNorms], '| maes:', [...maeNorms]);
-    return { linhas:matches, paiNorms:[...paiNorms], maeNorms:[...maeNorms] };
-  }catch(e){
-    return { linhas:[], paiNorms:[], maeNorms:[], erro:e.message };
-  }
+// Dados decriptografados dos infratores (preenchido por _coUnlockInf)
+let _infRows = null;
+
+// Busca o pesquisado nos infratores; retorna {linhas, paiNorms, maeNorms}
+function _xlsxBuscarPessoa(query){
+  if(!_infRows) return { linhas:[], paiNorms:[], maeNorms:[] };
+  const qn = _normU(query);
+  let matches = _infRows.filter(r=> _normU(r.nome)===qn);
+  if(!matches.length)
+    matches = _infRows.filter(r=> _normU(r.nome).includes(qn) ||
+      (r.cpf && r.cpf.replace(/\D/g,'').includes(query.replace(/\D/g,''))));
+  console.log('[INF] "'+query+'" → '+matches.length+' linha(s)');
+  const paiNorms = new Set(), maeNorms = new Set();
+  matches.forEach(r=>{
+    const p=_normU(r.pai), m=_normU(r.mae);
+    if(!_invalido(p)) paiNorms.add(p);
+    if(!_invalido(m)) maeNorms.add(m);
+  });
+  console.log('[INF] pais:', [...paiNorms], '| maes:', [...maeNorms]);
+  return { linhas:matches, paiNorms:[...paiNorms], maeNorms:[...maeNorms] };
 }
 
 // Busca vínculos usando os mapas pré-construídos (mesma lógica da teia)
-async function _xlsxBuscarVinculos(paiNorms, maeNorms, queryNormU){
-  try{
-    await _xlsxCarregar(); // garante que mapas estão prontos
-    const rows = await _xlsxCarregar();
-    const vincAmbos=[], vincPai=[], vincMae=[];
-    const vistos = new Set();
-
-    // Conjunto de nomes com mesmo pai
-    const comPai = new Set();
-    paiNorms.forEach(p=>{ (_xlsxPorPai[p]||[]).forEach(n=>comPai.add(n)); });
-    // Conjunto de nomes com mesma mãe
-    const comMae = new Set();
-    maeNorms.forEach(m=>{ (_xlsxPorMae[m]||[]).forEach(n=>comMae.add(n)); });
-
-    for(const row of rows){
-      const k = _normU(row.nome);
-      if(!k || k===queryNormU || vistos.has(k)) continue;
-      const tp = comPai.has(k), tm = comMae.has(k);
-      if(tp || tm){
-        vistos.add(k);
-        if(tp && tm) vincAmbos.push(row);
-        else if(tp)  vincPai.push(row);
-        else         vincMae.push(row);
-      }
-    }
-    console.log('[XLSX] Vínculos → ambos:', vincAmbos.length, '| pai:', vincPai.length, '| mae:', vincMae.length);
-    return { vincAmbos, vincPai, vincMae };
-  }catch(e){
-    console.error('[XLSX] _xlsxBuscarVinculos erro:', e);
+function _xlsxBuscarVinculos(paiNorms, maeNorms, queryNormU){
+  if(!_infRows || (!paiNorms.length && !maeNorms.length))
     return { vincAmbos:[], vincPai:[], vincMae:[] };
+
+  const comPai = new Set();
+  paiNorms.forEach(p=>{ (_xlsxPorPai[p]||[]).forEach(n=>comPai.add(n)); });
+  const comMae = new Set();
+  maeNorms.forEach(m=>{ (_xlsxPorMae[m]||[]).forEach(n=>comMae.add(n)); });
+
+  const vincAmbos=[], vincPai=[], vincMae=[];
+  const vistos = new Set();
+  // Usa _infRows para ter objeto completo (nome, mae, pai)
+  const porNome = {};
+  _infRows.forEach(r=>{ const k=_normU(r.nome); if(k && !porNome[k]) porNome[k]=r; });
+
+  for(const k of new Set([...comPai,...comMae])){
+    if(k===queryNormU || vistos.has(k)) continue;
+    vistos.add(k);
+    const row = porNome[k] || {nome:k, pai:'', mae:''};
+    const tp=comPai.has(k), tm=comMae.has(k);
+    if(tp && tm) vincAmbos.push(row);
+    else if(tp)  vincPai.push(row);
+    else         vincMae.push(row);
   }
+  console.log('[INF] Vínculos → ambos:', vincAmbos.length, '| pai:', vincPai.length, '| mae:', vincMae.length);
+  return { vincAmbos, vincPai, vincMae };
 }
 
 // ── RENDERIZAÇÃO DE RESULTADOS ────────────────────────────
@@ -465,11 +345,11 @@ async function _coSend(){
     loadEl.querySelector('span').textContent = `${mainItems.length} arquivo(s) encontrado(s). Consultando planilha de infratores…`;
 
     // PASSO 2 — Linha do pesquisado na planilha → AG (pai) e AH (mãe)
-    const xlsxPessoa = await _xlsxBuscarPessoa(query);
+    const xlsxPessoa = _xlsxBuscarPessoa(query);
     const { paiNorms, maeNorms } = xlsxPessoa;
 
     // PASSO 3 — Usa mapas pré-construídos para encontrar vínculos
-    const { vincAmbos, vincPai, vincMae } = await _xlsxBuscarVinculos(paiNorms, maeNorms, _normU(query));
+    const { vincAmbos, vincPai, vincMae } = _xlsxBuscarVinculos(paiNorms, maeNorms, _normU(query));
     const totalVinc = vincAmbos.length + vincPai.length + vincMae.length;
 
     loadEl.querySelector('span').textContent = `${totalVinc} vínculo(s) encontrado(s). Buscando arquivos no OneDrive…`;
@@ -619,13 +499,8 @@ document.addEventListener('DOMContentLoaded', async function(){
       btn.innerHTML='<i data-lucide="check-circle" style="width:14px;height:14px"></i> '+name;
       btn.className='co-login-btn connected';
       btn.onclick=null;
-      _coSetStatus('✓ Conectado — sincronizando planilha…');
+      _coSetStatus('✓ Conectado — informe a senha dos infratores para habilitar vínculos.');
       _lc();
-      _xlsxCarregar().then(rows=>{
-        _coSetStatus(`✓ Pronto — ${rows.length} infrator(es) carregado(s)`);
-      }).catch(e=>{
-        _coSetStatus('Conectado. Erro ao carregar planilha: '+e.message);
-      });
     }else{
       _coSetStatus('Digite um nome e pressione ➤ para pesquisar');
     }
