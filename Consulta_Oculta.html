@@ -226,46 +226,73 @@ const _COL_MAE = 33; // AH
 
 const _XLSX_LINK = 'https://1drv.ms/x/c/b476f1a47b64e77b/IQCV_D-uaDZ5TbmNyF3qhvlcAV4eha-61JWJJRvu4izxyT0?e=tvxrBA';
 
+async function _xlsxBaixar(url, comAuth){
+  const opts = comAuth ? {headers:{Authorization:'Bearer '+_token}, redirect:'follow'} : {};
+  const resp = await fetch(url, opts);
+  if(!resp.ok) throw new Error('HTTP '+resp.status);
+  return resp.arrayBuffer();
+}
+
 async function _xlsxCarregar(){
   if(_xlsxRows) return _xlsxRows;
+  if(!_token) throw new Error('Não autenticado.');
 
-  // 1) Tenta resolver pelo link de compartilhamento direto
-  let dlUrl = null, fileName = 'Cpf - Rondonopolis.xlsx';
+  let buf = null, fileName = 'Cpf - Rondonopolis.xlsx';
+
+  // 1) Resolve pelo link de compartilhamento → baixa diretamente com auth
   try{
     const b64 = btoa(_XLSX_LINK).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
     const info = await _graphGet(
       `https://graph.microsoft.com/v1.0/shares/u!${b64}/driveItem`+
-      `?$select=name,@microsoft.graph.downloadUrl,id,parentReference`
+      `?$select=name,id,parentReference,@microsoft.graph.downloadUrl`
     );
-    dlUrl = info['@microsoft.graph.downloadUrl'];
     if(info.name) fileName = info.name;
-    console.log('[XLSX] Resolvido pelo link:', fileName);
-  }catch(e){ console.warn('[XLSX] Link direto falhou:', e.message); }
+    // Tenta downloadUrl pré-assinada primeiro (sem auth)
+    if(info['@microsoft.graph.downloadUrl']){
+      try{ buf = await _xlsxBaixar(info['@microsoft.graph.downloadUrl'], false); }catch(e){}
+    }
+    // Fallback: download via Graph com auth
+    if(!buf && info.id){
+      const driveId = info.parentReference?.driveId;
+      const contentUrl = driveId
+        ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${info.id}/content`
+        : `https://graph.microsoft.com/v1.0/me/drive/items/${info.id}/content`;
+      buf = await _xlsxBaixar(contentUrl, true);
+    }
+    if(buf) console.log('[XLSX] Baixado via link compartilhado:', fileName);
+  }catch(e){ console.warn('[XLSX] Link compartilhado falhou:', e.message); }
 
-  // 2) Fallback: busca por nome no OneDrive
-  if(!dlUrl){
+  // 2) Fallback: busca por nome + baixa com auth
+  if(!buf){
     for(const termo of ['Cpf - Rondonopolis','CPF Rondonopolis','infratores']){
       try{
         const enc = encodeURIComponent(termo);
         const resp = await _graphGet(
           `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${enc}')`+
-          `?$top=10&$select=name,file,@microsoft.graph.downloadUrl`
+          `?$top=10&$select=name,file,id,parentReference,@microsoft.graph.downloadUrl`
         );
         const f = (resp.value||[]).find(i=>i.file && /\.(xlsx|xls)$/i.test(i.name||''));
-        if(f?.['@microsoft.graph.downloadUrl']){
-          dlUrl = f['@microsoft.graph.downloadUrl'];
+        if(f){
           fileName = f.name;
-          console.log('[XLSX] Encontrado por busca:', fileName);
-          break;
+          if(f['@microsoft.graph.downloadUrl']){
+            try{ buf = await _xlsxBaixar(f['@microsoft.graph.downloadUrl'], false); }catch(e){}
+          }
+          if(!buf){
+            const driveId = f.parentReference?.driveId;
+            const contentUrl = driveId
+              ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${f.id}/content`
+              : `https://graph.microsoft.com/v1.0/me/drive/items/${f.id}/content`;
+            buf = await _xlsxBaixar(contentUrl, true);
+          }
+          if(buf){ console.log('[XLSX] Encontrado por busca:', fileName); break; }
         }
       }catch(e){ console.warn('[XLSX] Busca "'+termo+'":', e.message); }
     }
   }
 
-  if(!dlUrl) throw new Error('Planilha não encontrada. Verifique se "Cpf - Rondonopolis.xlsx" está no OneDrive.');
+  if(!buf) throw new Error('Planilha não encontrada no OneDrive.');
 
   console.log('[XLSX] Baixando', fileName, '…');
-  const buf = await (await fetch(dlUrl)).arrayBuffer();
 
   const wb = XLSX.read(buf, {type:'array'});
   const ws = wb.Sheets[wb.SheetNames[0]];
