@@ -253,22 +253,44 @@ let _porBo = {}, _porOrg = {};
 // Dados decriptografados dos infratores (preenchido por _coUnlockInf)
 let _infRows = null;
 
-// Busca o pesquisado nos infratores — apenas match exato de nome ou CPF
+// Busca o pesquisado nos infratores com múltiplos níveis de precisão
 function _xlsxBuscarPessoa(query){
-  if(!_infRows) return { linhas:[], paiNorms:[], maeNorms:[] };
+  if(!_infRows) return { linhas:[], paiNorms:[], maeNorms:[], boNums:[], orgNorms:[] };
   const qn = _normU(query);
   const isCpf = /^\d{6,}$/.test(query.replace(/\D/g,''));
 
-  // Tenta match exato primeiro
+  // 1) Match exato de nome completo
   let matches = _infRows.filter(r=> _normU(r.nome)===qn);
-  // Fallback: busca por CPF (apenas se parece CPF)
+
+  // 2) CPF exato
   if(!matches.length && isCpf)
     matches = _infRows.filter(r=> r.cpf && r.cpf.replace(/\D/g,'')===query.replace(/\D/g,''));
-  // Fallback: todas as palavras do query presentes no nome (não "contém substring")
+
+  // 3) Todas as palavras do query (≥3 chars) presentes no nome cadastrado
   if(!matches.length){
     const palavras = qn.split(' ').filter(p=>p.length>=3);
-    if(palavras.length >= 2)
+    if(palavras.length>=2)
       matches = _infRows.filter(r=>{ const n=_normU(r.nome); return palavras.every(p=>n.includes(p)); });
+  }
+
+  // 4) Todas as palavras significativas do nome cadastrado presentes no query (nome abreviado/parcial)
+  if(!matches.length){
+    const qWords = new Set(qn.split(' ').filter(p=>p.length>=4));
+    if(qWords.size>=1)
+      matches = _infRows.filter(r=>{
+        const nWords = _normU(r.nome).split(' ').filter(p=>p.length>=4);
+        return nWords.length>=2 && nWords.every(w=>qWords.has(w));
+      });
+  }
+
+  // 5) Pelo menos 2 palavras significativas em comum (≥4 chars) entre query e nome
+  if(!matches.length){
+    const qWords = new Set(qn.split(' ').filter(p=>p.length>=4));
+    if(qWords.size>=2)
+      matches = _infRows.filter(r=>{
+        const nWords = _normU(r.nome).split(' ').filter(p=>p.length>=4);
+        return nWords.filter(w=>qWords.has(w)).length>=2;
+      });
   }
 
   console.log('[INF] "'+query+'" → '+matches.length+' linha(s)');
