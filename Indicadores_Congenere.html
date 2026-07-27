@@ -326,7 +326,18 @@ window.addEventListener('load', function(){
     document.getElementById('hdr-date').textContent =
       new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
 
+    // Coluna V (índice 21) = COORDENADAS; fallback para posição aproximada por trecho
     _coords = ROWS.map((r,i)=>{
+      const raw=v(r,21).trim();
+      if(raw){
+        // Aceita formatos: "-16.47,-54.63" | "-16.47, -54.63" | "-16.47 -54.63"
+        const parts=raw.replace(/\s*,\s*/g,',').split(/[,\s]+/);
+        if(parts.length>=2){
+          const lat=parseFloat(parts[0]), lng=parseFloat(parts[1]);
+          if(!isNaN(lat)&&!isNaN(lng)&&Math.abs(lat)<90&&Math.abs(lng)<180)
+            return [lat,lng];
+        }
+      }
       const g=GEO[v(r,C.trecho)]||GEO_DEF;
       return [g.lat+(_seed(i*13)*2-1)*g.r, g.lng+(_seed(i*17)*2-1)*g.r];
     });
