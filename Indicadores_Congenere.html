@@ -326,20 +326,17 @@ window.addEventListener('load', function(){
     document.getElementById('hdr-date').textContent =
       new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
 
-    // Coluna V (índice 21) = COORDENADAS; fallback para posição aproximada por trecho
-    _coords = ROWS.map((r,i)=>{
+    // Coluna V (índice 21) = COORDENADAS; null quando vazio (sem fallback)
+    _coords = ROWS.map(r=>{
       const raw=v(r,21).trim();
-      if(raw){
-        // Aceita formatos: "-16.47,-54.63" | "-16.47, -54.63" | "-16.47 -54.63"
-        const parts=raw.replace(/\s*,\s*/g,',').split(/[,\s]+/);
-        if(parts.length>=2){
-          const lat=parseFloat(parts[0]), lng=parseFloat(parts[1]);
-          if(!isNaN(lat)&&!isNaN(lng)&&Math.abs(lat)<90&&Math.abs(lng)<180)
-            return [lat,lng];
-        }
+      if(!raw) return null;
+      const parts=raw.replace(/\s*,\s*/g,',').split(/[,\s]+/);
+      if(parts.length>=2){
+        const lat=parseFloat(parts[0]), lng=parseFloat(parts[1]);
+        if(!isNaN(lat)&&!isNaN(lng)&&Math.abs(lat)<90&&Math.abs(lng)<180)
+          return [lat,lng];
       }
-      const g=GEO[v(r,C.trecho)]||GEO_DEF;
-      return [g.lat+(_seed(i*13)*2-1)*g.r, g.lng+(_seed(i*17)*2-1)*g.r];
+      return null;
     });
 
     _buildHeroStats();
@@ -651,6 +648,7 @@ function _buildMap(){
 
   ROWS.forEach((r,i)=>{
     const coords=_coords[i];
+    if(!coords) return; // sem coordenada na coluna V → não exibe no mapa
     const nat=v(r,C.nat), tr=v(r,C.trecho), tipo=v(r,C.tipo);
     const sub=v(r,C.sub), desc=v(r,C.desc), dt=v(r,C.dataOc);
     const cidade=v(r,C.cidade), uf=v(r,C.uf), thp=v(r,C.thp), km=v(r,C.km);
