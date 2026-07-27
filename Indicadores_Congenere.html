@@ -373,13 +373,17 @@ function _buildKPIs(){
   const soc=byCat['SOCIAL']||0;
   const crim=byCat['CRIMINAL']||0;
   const pct=x=>n?Math.round(x/n*100)+'%':'—';
-  const topTr=_topKey(C.trecho), topMes=_topKey(C.mes);
+  const topMesCrim=(()=>{
+    const c={};
+    ROWS.filter(r=>v(r,C.nat).toUpperCase().includes('CRIM')).forEach(r=>{const k=v(r,C.mes)||'N/D';c[k]=(c[k]||0)+1;});
+    let k='',n=0; Object.entries(c).forEach(([kk,vv])=>{if(vv>n){k=kk;n=vv;}}); return{k,n};
+  })();
   const kpis=[
     {label:'Total de Ocorrências',val:n,sub:'registros 2026',icon:'activity',color:'#003865',sz:32},
     {label:'Mecânica',val:mec,sub:pct(mec)+' do total',icon:'settings',color:'#005CA9',sz:28},
     {label:'Social',val:soc,sub:pct(soc)+' do total',icon:'users',color:'#1E8449',sz:28},
     {label:'Criminal',val:crim,sub:pct(crim)+' do total',icon:'shield-alert',color:'#C0392B',sz:28},
-    {label:'Mês Crítico',val:(topMes.k||'—').substring(0,3),sub:topMes.n+' ocorrências',icon:'calendar',color:'#003865',sz:22},
+    {label:'Mês Crítico Criminal',val:(topMesCrim.k||'—').substring(0,3),sub:topMesCrim.n+' ocorrências criminais',icon:'calendar',color:'#C0392B',sz:22},
   ];
 
   document.getElementById('kpi-grid').innerHTML = kpis.map(k=>`
