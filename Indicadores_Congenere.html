@@ -426,12 +426,42 @@ function _countBy(rows,col){
 function _mkChart(id,type,labels,data,colors,opts={}){
   if(_charts[id]) _charts[id].destroy();
   const ctx=document.getElementById(id); if(!ctx) return;
+  const isPD=type==='pie'||type==='doughnut';
+
+  // Plugin de leader lines para pizza/rosca
+  const leaderPlugin=isPD?{
+    id:'leader_'+id,
+    afterDatasetsDraw(chart){
+      const c=chart.ctx, ds=chart.data.datasets[0];
+      const meta=chart.getDatasetMeta(0);
+      const tot=ds.data.reduce((a,b)=>a+b,0);
+      meta.data.forEach((arc,i)=>{
+        const {startAngle,endAngle,outerRadius,x,y}=arc.getProps(['startAngle','endAngle','outerRadius','x','y'],true);
+        const mid=(startAngle+endAngle)/2;
+        const val=ds.data[i]; if(!val) return;
+        const pct=tot?Math.round(val/tot*100):0;
+        const r1=outerRadius+6, r2=outerRadius+30;
+        const cx=Math.cos(mid), cy=Math.sin(mid);
+        const x1=x+r1*cx, y1=y+r1*cy;
+        const x2=x+r2*cx, y2=y+r2*cy;
+        c.save();
+        c.strokeStyle=colors[i]||'#666'; c.lineWidth=1.5;
+        c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2); c.stroke();
+        c.fillStyle='#1A2E45'; c.font='bold 11px "Segoe UI",sans-serif';
+        c.textAlign=cx>=0?'left':'right'; c.textBaseline='middle';
+        c.fillText(val+' ('+pct+'%)', x2+(cx>=0?4:-4), y2);
+        c.restore();
+      });
+    }
+  }:null;
+
   _charts[id]=new Chart(ctx,{
     type,
     data:{labels,datasets:[{label:'Ocorrências',data,backgroundColor:colors,
       borderColor:type==='bar'?colors:'rgba(255,255,255,.7)',borderWidth:type==='bar'?0:2,hoverOffset:5}]},
     options:{
       responsive:true,maintainAspectRatio:true,
+      layout:isPD?{padding:48}:undefined,
       plugins:{
         legend:{display:opts.legend??(type!=='bar'),position:'bottom',
           labels:{font:{size:10},boxWidth:11,padding:10}},
@@ -446,7 +476,8 @@ function _mkChart(id,type,labels,data,colors,opts={}){
         x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{size:10}},border:{display:false}},
         y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{size:10}},border:{display:false}}
       }:undefined
-    }
+    },
+    plugins:leaderPlugin?[leaderPlugin]:[]
   });
 }
 
@@ -480,8 +511,8 @@ function _buildCharts(){
   const subE=Object.entries(cSub).sort((a,b)=>b[1]-a[1]).slice(0,12);
   _mkChart('chart-sub','bar',subE.map(e=>e[0]),subE.map(e=>e[1]),subE.map((_,i)=>PAL.tipos[i%PAL.tipos.length]),{horiz:true});
 
-  // Por Sigla — barras horizontais
-  const cSig=_countBy(ROWS,C.empresa);
+  // Por Sigla — barras horizontais (coluna O = índice 14)
+  const cSig=_countBy(ROWS,C.sigla);
   const sigE=Object.entries(cSig).sort((a,b)=>b[1]-a[1]);
   _mkChart('chart-sigla','bar',sigE.map(e=>e[0]),sigE.map(e=>e[1]),sigE.map((_,i)=>PAL.trechos[i%PAL.trechos.length]),{horiz:true});
 
