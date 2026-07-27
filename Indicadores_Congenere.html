@@ -283,7 +283,7 @@ const C = {
 const PAL = {
   azuis:  ['#003865','#004f8b','#005CA9','#0073C6','#2E86C1','#6B93C4','#85ACCC','#B8D4EE'],
   trechos:['#003865','#005CA9','#0073C6','#6B93C4','#F78344','#E0692A'],
-  nat:    ['#005CA9','#1E8449','#C0392B','#6B93C4'],
+  nat:    ['#003865','#F78344','#005CA9','#6B93C4'],
   tipos:  ['#003865','#005CA9','#0073C6','#F78344','#E0692A','#C0392B','#6B93C4','#B8D4EE'],
   sem:    ['#6B93C4','#005CA9','#003865','#005CA9','#003865','#F78344','#E0692A'],
 };
@@ -576,7 +576,7 @@ function _buildCharts(){
   // Por Período
   const cPer=_countBy(C.periodo,rows);
   const perE=Object.entries(cPer).sort((a,b)=>b[1]-a[1]);
-  _mkChart('chart-periodo','pie',perE.map(e=>e[0]),perE.map(e=>e[1]),['#003865','#F78344','#6B93C4','#1E8449'],{legend:true,filterCol:C.periodo});
+  _mkChart('chart-periodo','pie',perE.map(e=>e[0]),perE.map(e=>e[1]),['#003865','#F78344','#6B93C4','#E0692A'],{legend:true,filterCol:C.periodo});
 
   _buildHeatmap();
 }
