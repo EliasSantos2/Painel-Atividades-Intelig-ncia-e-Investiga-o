@@ -521,7 +521,7 @@ function _buildCharts(){
   // Por Tipo — rosca
   const cTipo=_countBy(ROWS,C.tipo);
   const tipoE=Object.entries(cTipo).sort((a,b)=>b[1]-a[1]);
-  _mkChart('chart-tipo','doughnut',tipoE.map(e=>e[0]),tipoE.map(e=>e[1]),tipoE.map((_,i)=>PAL.tipos[i%PAL.tipos.length]),{legend:true});
+  _mkChart('chart-tipo','bar',tipoE.map(e=>e[0]),tipoE.map(e=>e[1]),tipoE.map((_,i)=>PAL.tipos[i%PAL.tipos.length]));
 
   // Por Subtipo — barras horizontais
   const cSub=_countBy(ROWS,C.sub);
