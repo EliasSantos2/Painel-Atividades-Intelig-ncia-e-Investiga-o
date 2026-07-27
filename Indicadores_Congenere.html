@@ -299,24 +299,42 @@ let _charts={}, _coords=[];
 const v = (r,c)=>{ if(c===undefined||c<0) return ''; const x=r[c]; return (x===null||x===undefined)?'':String(x).trim(); };
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
-document.getElementById('hdr-date').textContent =
-  new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
-
-// Pre-computar coordenadas estáveis por índice
 function _seed(n){ const x=Math.sin(n+1)*73856; return x-Math.floor(x); }
-_coords = ROWS.map((r,i)=>{
-  const g=GEO[v(r,C.trecho)]||GEO_DEF;
-  return [g.lat+(_seed(i*13)*2-1)*g.r, g.lng+(_seed(i*17)*2-1)*g.r];
-});
 
-_buildHeroStats();
-_buildKPIs();
-_buildTHP();
-_buildCharts();
-_buildMap();
-_populateFilters();
-_filter();
-lucide.createIcons();
+function _showErr(msg){
+  const b=document.createElement('div');
+  b.style.cssText='position:fixed;top:56px;left:0;right:0;z-index:9999;background:#C0392B;color:#fff;font-family:monospace;font-size:13px;padding:12px 20px;word-break:break-all;white-space:pre-wrap;';
+  b.textContent='ERRO: '+msg;
+  document.body.appendChild(b);
+}
+
+window.addEventListener('load', function(){
+  try {
+    if(typeof BRADO_DATA === 'undefined') throw new Error('dados_brado.js não carregou — BRADO_DATA indefinido');
+    if(typeof Chart === 'undefined') throw new Error('Chart.js não carregou');
+    if(typeof L === 'undefined') throw new Error('Leaflet não carregou');
+
+    document.getElementById('hdr-date').textContent =
+      new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+
+    _coords = ROWS.map((r,i)=>{
+      const g=GEO[v(r,C.trecho)]||GEO_DEF;
+      return [g.lat+(_seed(i*13)*2-1)*g.r, g.lng+(_seed(i*17)*2-1)*g.r];
+    });
+
+    _buildHeroStats();
+    _buildKPIs();
+    _buildTHP();
+    _buildCharts();
+    _buildMap();
+    _populateFilters();
+    _filter();
+    if(typeof lucide !== 'undefined') lucide.createIcons();
+  } catch(e){
+    _showErr(e.message);
+    console.error(e);
+  }
+});
 
 // ── Hero Stats ────────────────────────────────────────────────────────────────
 function _buildHeroStats(){
