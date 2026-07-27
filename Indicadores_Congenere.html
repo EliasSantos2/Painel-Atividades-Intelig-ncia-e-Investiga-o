@@ -528,7 +528,8 @@ function _mkChart(id,type,labels,data,colors,opts={}){
   _charts[id]=new Chart(ctx,{
     type,
     data:{labels,datasets:[{label:'Ocorrências',data,backgroundColor:colors,
-      borderColor:type==='bar'?colors:'rgba(255,255,255,.7)',borderWidth:type==='bar'?0:2,hoverOffset:5}]},
+      borderColor:type==='bar'?colors:'rgba(255,255,255,.7)',borderWidth:type==='bar'?0:2,
+      borderRadius:type==='bar'?5:0,borderSkipped:false,hoverOffset:5}]},
     options:{
       responsive:true,maintainAspectRatio:true,
       layout:isPD?{padding:48}:undefined,
