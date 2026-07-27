@@ -480,8 +480,8 @@ function _mkChart(id,type,labels,data,colors,opts={}){
       const meta=chart.getDatasetMeta(0);
       const isH=opts.horiz;
       c.save();
-      c.font='bold 11px "Segoe UI",sans-serif';
-      c.fillStyle='#1A2E45';
+      c.font='11px "Segoe UI",sans-serif';
+      c.fillStyle='#666';
       meta.data.forEach((bar,i)=>{
         const val=ds.data[i]; if(!val) return;
         const {x,y,base,width,height}=bar.getProps(['x','y','base','width','height'],true);
