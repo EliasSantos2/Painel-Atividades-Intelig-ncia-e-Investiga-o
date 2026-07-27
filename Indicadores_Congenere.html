@@ -550,8 +550,8 @@ function _mkChart(id,type,labels,data,colors,opts={}){
       },
       indexAxis:opts.horiz?'y':'x',
       scales:type==='bar'?{
-        x:{grid:{display:false},ticks:{font:{size:10}},border:{display:false}},
-        y:{grid:{display:false},ticks:{font:{size:10}},border:{display:false}}
+        x:{grid:{display:false},ticks:{font:{size:10},display:!opts.horiz},border:{display:false}},
+        y:{grid:{display:false},ticks:{font:{size:10},display:!!opts.horiz},border:{display:false}}
       }:undefined
     },
     plugins:[leaderPlugin,barLabelPlugin].filter(Boolean)
