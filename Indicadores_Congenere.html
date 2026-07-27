@@ -516,7 +516,7 @@ function _buildCharts(){
   // Por Natureza — pizza
   const cNat=_countBy(ROWS,C.nat);
   const natE=Object.entries(cNat).sort((a,b)=>b[1]-a[1]);
-  _mkChart('chart-nat','pie',natE.map(e=>e[0]),natE.map(e=>e[1]),natE.map((_,i)=>PAL.nat[i%PAL.nat.length]),{legend:true});
+  _mkChart('chart-nat','doughnut',natE.map(e=>e[0]),natE.map(e=>e[1]),natE.map((_,i)=>PAL.nat[i%PAL.nat.length]),{legend:true});
 
   // Por Tipo — rosca
   const cTipo=_countBy(ROWS,C.tipo);
