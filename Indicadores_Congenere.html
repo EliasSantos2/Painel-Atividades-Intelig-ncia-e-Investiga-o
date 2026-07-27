@@ -339,18 +339,16 @@ function _buildKPIs(){
   const crim=byCat['CRIMINAL']||0;
   const pct=x=>n?Math.round(x/n*100)+'%':'—';
   const topTr=_topKey(C.trecho), topMes=_topKey(C.mes);
-  const qtdMang=ROWS.reduce((s,r)=>{const x=parseInt(v(r,C.qtdMang));return s+(isNaN(x)?0:x);},0);
-  const qtdVag=ROWS.reduce((s,r)=>{const x=parseInt(v(r,C.qtdVag));return s+(isNaN(x)?0:x);},0);
+  const crimRows=ROWS.filter(r=>v(r,C.nat).toUpperCase().includes('CRIM'));
+  const qtdVag=crimRows.reduce((s,r)=>{const x=parseInt(v(r,C.qtdVag));return s+(isNaN(x)?0:x);},0);
 
   const kpis=[
     {label:'Total de Ocorrências',val:n,sub:'registros 2026',icon:'activity',color:'#003865',sz:32},
     {label:'Mecânica',val:mec,sub:pct(mec)+' do total',icon:'settings',color:'#005CA9',sz:28},
     {label:'Social',val:soc,sub:pct(soc)+' do total',icon:'users',color:'#1E8449',sz:28},
     {label:'Criminal',val:crim,sub:pct(crim)+' do total',icon:'shield-alert',color:'#C0392B',sz:28},
-    {label:'Mangueiras',val:qtdMang,sub:'total qtd. danificadas',icon:'droplets',color:'#E0692A',sz:28},
-    {label:'Vagões Abertos',val:qtdVag,sub:'total qtd. abertos',icon:'package-open',color:'#6B93C4',sz:28},
+    {label:'Vagões Abertos',val:qtdVag,sub:'ocorrências criminais',icon:'package-open',color:'#C0392B',sz:28},
     {label:'Mês Crítico',val:(topMes.k||'—').substring(0,3),sub:topMes.n+' ocorrências',icon:'calendar',color:'#003865',sz:22},
-    {label:'Trecho Crítico',val:topTr.k||'—',sub:topTr.n+' ocorrências',icon:'map-pin',color:'#E0692A',sz:16},
   ];
 
   document.getElementById('kpi-grid').innerHTML = kpis.map(k=>`
