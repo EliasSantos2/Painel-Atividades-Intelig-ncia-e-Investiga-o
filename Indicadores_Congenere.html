@@ -119,6 +119,15 @@ tr:hover td{background:#f7f9fc;}
 .pg-btn:hover,.pg-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
 .pg-btn:disabled{opacity:.3;cursor:not-allowed;pointer-events:none;}
 
+/* Heatmap Hora × Dia */
+.hm-wrap{overflow-x:auto;margin-top:8px;}
+.hm-table{border-collapse:collapse;width:100%;font-size:12px;}
+.hm-table th{background:var(--navy);color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:7px 10px;text-align:center;white-space:nowrap;}
+.hm-table th.hm-row-hdr{background:var(--navy);text-align:left;padding-left:12px;}
+.hm-table td{padding:7px 10px;text-align:center;font-weight:700;font-size:12px;border:1px solid rgba(255,255,255,.15);min-width:44px;}
+.hm-table tr.hm-total th,.hm-table tr.hm-total td{background:var(--navy)!important;color:#fff;font-size:11px;}
+.hm-table td.hm-tot-col{background:var(--navy)!important;color:#fff!important;font-weight:800;}
+
 @media(max-width:768px){
   header{padding:0 14px;}
   .hero{padding:28px 14px 22px;}
@@ -203,16 +212,16 @@ tr:hover td{background:#f7f9fc;}
     </div>
   </div>
 
-  <!-- Período + Dia da semana -->
-  <div class="sec-title"><div class="st-bar"></div><div class="st-text">Período e Dia da Semana</div></div>
+  <!-- Período + Heatmap Hora × Dia -->
+  <div class="sec-title"><div class="st-bar"></div><div class="st-text">Período e Faixa de Horário por Dia da Semana</div></div>
   <div class="charts-row sec-gap">
     <div class="chart-card">
       <div class="chart-title"><i data-lucide="sun" style="width:13px;height:13px;color:var(--orange)"></i> Por Período (Diurno/Noturno)</div>
       <canvas id="chart-periodo" style="max-height:250px"></canvas>
     </div>
-    <div class="chart-card">
-      <div class="chart-title"><i data-lucide="calendar-days" style="width:13px;height:13px;color:var(--orange)"></i> Por Dia da Semana</div>
-      <canvas id="chart-diasem"></canvas>
+    <div class="chart-card" style="overflow-x:auto">
+      <div class="chart-title"><i data-lucide="calendar-days" style="width:13px;height:13px;color:var(--orange)"></i> Faixa de Horário × Dia da Semana</div>
+      <div id="heatmap-diasem"></div>
     </div>
   </div>
 
@@ -521,14 +530,96 @@ function _buildCharts(){
   const perE=Object.entries(cPer).sort((a,b)=>b[1]-a[1]);
   _mkChart('chart-periodo','pie',perE.map(e=>e[0]),perE.map(e=>e[1]),['#003865','#F78344','#6B93C4','#1E8449'],{legend:true});
 
-  // Por Dia da Semana — barras verticais (ordem seg-dom)
-  const cSem=_countBy(ROWS,C.diaSem);
-  const semL=[],semD=[],semC=[];
-  SEM_ORD.forEach((s,i)=>{
-    if(cSem[s]!=null){semL.push(s.substring(0,3));semD.push(cSem[s]);semC.push(PAL.sem[i%PAL.sem.length]);}
+  // Heatmap Hora × Dia da Semana
+  _buildHeatmap();
+}
+
+// ── Heatmap Hora × Dia ───────────────────────────────────────────────────────
+function _buildHeatmap(){
+  const DIAS=['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+  const DIA_MAP={
+    'DOMINGO':'DOM','SEGUNDA':'SEG','TERCA':'TER','TERÇA':'TER',
+    'QUARTA':'QUA','QUINTA':'QUI','SEXTA':'SEX',
+    'SABADO':'SÁB','SÁBADO':'SÁB'
+  };
+  const FAIXAS=['00:00','03:00','06:00','09:00','12:00','15:00','18:00','21:00'];
+  const FAIXA_H=[0,3,6,9,12,15,18,21];
+
+  // Montar matriz zerada
+  const mat={};
+  FAIXAS.forEach(f=>{mat[f]={};DIAS.forEach(d=>{mat[f][d]=0;});});
+  const colTot={};DIAS.forEach(d=>{colTot[d]=0;});
+  const rowTot={};FAIXAS.forEach(f=>{rowTot[f]=0;});
+  let grand=0;
+
+  ROWS.forEach(r=>{
+    const diaRaw=v(r,C.diaSem).toUpperCase().trim();
+    const dia=DIA_MAP[diaRaw];
+    if(!dia) return;
+    // Hora: coluna 41 — ex: "16H", "23H", "06H"
+    const horaStr=v(r,41).replace(/[^0-9]/g,'');
+    const h=parseInt(horaStr);
+    if(isNaN(h)) return;
+    // Banda de 3h
+    const banda=Math.floor(h/3)*3;
+    const faixa=String(banda).padStart(2,'0')+':00';
+    if(!mat[faixa]) return;
+    mat[faixa][dia]++;
+    colTot[dia]++;
+    rowTot[faixa]++;
+    grand++;
   });
-  Object.entries(cSem).forEach(([k,vv])=>{if(!SEM_ORD.includes(k)&&k!=='N/D'){semL.push(k.substring(0,3));semD.push(vv);semC.push('#B8D4EE');}});
-  _mkChart('chart-diasem','bar',semL,semD,semC);
+
+  // Valor máximo para normalizar cor
+  let maxVal=0;
+  FAIXAS.forEach(f=>DIAS.forEach(d=>{if(mat[f][d]>maxVal) maxVal=mat[f][d];}));
+
+  // Cor: interpolação branco → navy
+  function _hmColor(val){
+    if(!val||!maxVal) return'#F0F4F8';
+    const t=val/maxVal;
+    // branco(240,244,248) → navy(0,56,101)
+    const r=Math.round(240-(240-0)*t);
+    const g=Math.round(244-(244-56)*t);
+    const b=Math.round(248-(248-101)*t);
+    const lum=0.299*r+0.587*g+0.114*b;
+    return`<span style="color:${lum>140?'#1A2E45':'#fff'}">${val}</span>`;
+  }
+  function _hmBg(val){
+    if(!val||!maxVal) return'#F0F4F8';
+    const t=val/maxVal;
+    const r=Math.round(240-(240-0)*t);
+    const g=Math.round(244-(244-56)*t);
+    const b=Math.round(248-(248-101)*t);
+    return`rgb(${r},${g},${b})`;
+  }
+
+  let html=`<div class="hm-wrap"><table class="hm-table">
+    <thead><tr>
+      <th class="hm-row-hdr">HORA</th>
+      ${DIAS.map(d=>`<th>${d}</th>`).join('')}
+      <th>Total</th>
+    </tr></thead><tbody>`;
+
+  FAIXAS.forEach(f=>{
+    html+=`<tr><th class="hm-row-hdr">${f}</th>`;
+    DIAS.forEach(d=>{
+      const val=mat[f][d];
+      const bg=_hmBg(val);
+      html+=`<td style="background:${bg}">${_hmColor(val)}</td>`;
+    });
+    const rt=rowTot[f];
+    html+=`<td class="hm-tot-col">${rt}</td></tr>`;
+  });
+
+  html+=`</tbody><tfoot><tr class="hm-total">
+    <th class="hm-row-hdr">Total</th>
+    ${DIAS.map(d=>`<td>${colTot[d]}</td>`).join('')}
+    <td>${grand}</td>
+  </tr></tfoot></table></div>`;
+
+  const el=document.getElementById('heatmap-diasem');
+  if(el) el.innerHTML=html;
 }
 
 // ── Mapa ──────────────────────────────────────────────────────────────────────
