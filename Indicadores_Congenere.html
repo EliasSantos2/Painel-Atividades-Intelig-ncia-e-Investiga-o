@@ -584,9 +584,8 @@ function _buildHeatmap(){
 
   // Cor: interpolação branco → navy
   function _hmColor(val){
-    if(!val||!maxVal) return'#F0F4F8';
+    if(!maxVal||val===0) return`<span style="color:#9EB3CC">${val}</span>`;
     const t=val/maxVal;
-    // branco(240,244,248) → navy(0,56,101)
     const r=Math.round(240-(240-0)*t);
     const g=Math.round(244-(244-56)*t);
     const b=Math.round(248-(248-101)*t);
