@@ -539,16 +539,19 @@ function _buildCharts(){
   // Por Mês
   const cMes=_countBy(C.mes,rows);
   const mesL=[],mesOrig=[],mesD=[],mesC=[];
+  const RUMO='#003865';
+  const _bc=n=>Array(n).fill(RUMO);
+
   MES_ORD.forEach((m,i)=>{
-    if(cMes[m]!=null){mesL.push(m.substring(0,3));mesOrig.push(m);mesD.push(cMes[m]);mesC.push(PAL.azuis[i%PAL.azuis.length]);}
+    if(cMes[m]!=null){mesL.push(m.substring(0,3));mesOrig.push(m);mesD.push(cMes[m]);mesC.push(RUMO);}
   });
-  Object.entries(cMes).forEach(([k,vv])=>{if(!MES_ORD.includes(k)){mesL.push(k.substring(0,3));mesOrig.push(k);mesD.push(vv);mesC.push('#6B93C4');}});
+  Object.entries(cMes).forEach(([k,vv])=>{if(!MES_ORD.includes(k)){mesL.push(k.substring(0,3));mesOrig.push(k);mesD.push(vv);mesC.push(RUMO);}});
   _mkChart('chart-mes','bar',mesL,mesD,mesC,{filterCol:C.mes,origVals:mesOrig});
 
   // Por Trecho
   const cTr=_countBy(C.trecho,rows);
   const trSort=Object.entries(cTr).sort((a,b)=>b[1]-a[1]);
-  _mkChart('chart-trecho','bar',trSort.map(e=>e[0]),trSort.map(e=>e[1]),trSort.map((_,i)=>PAL.trechos[i%PAL.trechos.length]),{horiz:true,filterCol:C.trecho});
+  _mkChart('chart-trecho','bar',trSort.map(e=>e[0]),trSort.map(e=>e[1]),_bc(trSort.length),{horiz:true,filterCol:C.trecho});
 
   // Por Natureza
   const cNat=_countBy(C.nat,rows);
@@ -558,17 +561,17 @@ function _buildCharts(){
   // Por Tipo
   const cTipo=_countBy(C.tipo,rows);
   const tipoE=Object.entries(cTipo).sort((a,b)=>b[1]-a[1]);
-  _mkChart('chart-tipo','bar',tipoE.map(e=>e[0]),tipoE.map(e=>e[1]),tipoE.map((_,i)=>PAL.tipos[i%PAL.tipos.length]),{horiz:true,filterCol:C.tipo});
+  _mkChart('chart-tipo','bar',tipoE.map(e=>e[0]),tipoE.map(e=>e[1]),_bc(tipoE.length),{horiz:true,filterCol:C.tipo});
 
   // Por Subtipo
   const cSub=_countBy(C.sub,rows);
   const subE=Object.entries(cSub).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  _mkChart('chart-sub','bar',subE.map(e=>e[0]),subE.map(e=>e[1]),subE.map((_,i)=>PAL.tipos[i%PAL.tipos.length]),{horiz:true,filterCol:C.sub});
+  _mkChart('chart-sub','bar',subE.map(e=>e[0]),subE.map(e=>e[1]),_bc(subE.length),{horiz:true,filterCol:C.sub});
 
   // Por Sigla
   const cSig=_countBy(C.sigla,rows);
   const sigE=Object.entries(cSig).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  _mkChart('chart-sigla','bar',sigE.map(e=>e[0]),sigE.map(e=>e[1]),sigE.map((_,i)=>PAL.trechos[i%PAL.trechos.length]),{horiz:true,filterCol:C.sigla});
+  _mkChart('chart-sigla','bar',sigE.map(e=>e[0]),sigE.map(e=>e[1]),_bc(sigE.length),{horiz:true,filterCol:C.sigla});
 
   // Por Período
   const cPer=_countBy(C.periodo,rows);
