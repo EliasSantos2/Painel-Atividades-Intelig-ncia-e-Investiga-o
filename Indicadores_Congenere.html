@@ -407,8 +407,12 @@ function _buildKPIs(){
     rows.filter(r=>v(r,C.nat).toUpperCase().includes('CRIM')).forEach(r=>{const k=v(r,C.mes)||'N/D';c[k]=(c[k]||0)+1;});
     let k='',n=0; Object.entries(c).forEach(([kk,vv])=>{if(vv>n){k=kk;n=vv;}}); return{k,n};
   })();
+  const cidades=new Set(rows.map(r=>v(r,C.cidade)).filter(Boolean)).size;
+  const ufs=new Set(rows.map(r=>v(r,C.uf)).filter(Boolean)).size;
   const kpis=[
     {label:'Total de Ocorrências',val:n,sub:'registros 2026',icon:'activity',color:'#003865',sz:32},
+    {label:'Cidades',val:cidades,sub:'municípios afetados',icon:'building-2',color:'#005CA9',sz:28},
+    {label:'Estados (UF)',val:ufs,sub:'unidades federativas',icon:'map',color:'#0073C6',sz:28},
     {label:'Mecânica',val:mec,sub:pct(mec)+' do total',icon:'settings',color:'#005CA9',sz:28},
     {label:'Social',val:soc,sub:pct(soc)+' do total',icon:'users',color:'#1E8449',sz:28},
     {label:'Criminal',val:crim,sub:pct(crim)+' do total',icon:'shield-alert',color:'#C0392B',sz:28},
