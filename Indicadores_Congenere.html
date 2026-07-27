@@ -300,12 +300,39 @@ const GEO = {
 const GEO_DEF = {lat:-17.00,lng:-54.50,r:0.42};
 
 // ── Estado ────────────────────────────────────────────────────────────────────
-const ROWS = BRADO_DATA; // array de linhas da planilha
+const ROWS = BRADO_DATA;
 let _filtered=[], _page=1; const PG=15;
 let _map=null,_scatter=null,_heat=null,_mapMode='scatter';
 let _charts={}, _coords=[];
+let _sel={col:null,val:null,lbl:null}; // filtro ativo por clique em gráfico
 
 const v = (r,c)=>{ if(c===undefined||c<0) return ''; const x=r[c]; return (x===null||x===undefined)?'':String(x).trim(); };
+
+// Retorna linhas filtradas pelo _sel ativo
+function _getRows(){ return _sel.col!==null ? ROWS.filter(r=>v(r,_sel.col)===_sel.val) : ROWS; }
+
+// Aplica ou remove filtro e atualiza tudo
+function _setFilter(col,val,lbl){
+  if(_sel.col===col && _sel.val===val){ _sel={col:null,val:null,lbl:null}; }
+  else { _sel={col,val,lbl:lbl||val}; }
+  _refresh();
+}
+function _clearFilter(){ _sel={col:null,val:null,lbl:null}; _refresh(); }
+
+function _refresh(){
+  _buildHeroStats(); _buildKPIs(); _buildTHP(); _buildCharts();
+  _filter();
+  _updateFilterBadge();
+  if(typeof lucide!=='undefined') lucide.createIcons();
+}
+
+function _updateFilterBadge(){
+  let b=document.getElementById('filter-badge');
+  if(!b){ b=document.createElement('div'); b.id='filter-badge'; b.style.cssText='display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:1000;background:var(--navy);color:#fff;border-radius:24px;padding:9px 20px;font-size:13px;font-weight:600;font-family:inherit;box-shadow:0 4px 16px rgba(0,0,0,.25);display:flex;align-items:center;gap:12px;'; document.body.appendChild(b); }
+  if(_sel.col===null){ b.style.display='none'; return; }
+  b.style.display='flex';
+  b.innerHTML=`<span style="opacity:.7;font-size:11px">FILTRO ATIVO</span> <span>${_sel.lbl}</span> <button onclick="_clearFilter()" style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:22px;height:22px;color:#fff;cursor:pointer;font-size:15px;line-height:1;font-family:inherit;display:flex;align-items:center;justify-content:center">×</button>`;
+}
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 function _seed(n){ const x=Math.sin(n+1)*73856; return x-Math.floor(x); }
@@ -355,27 +382,29 @@ window.addEventListener('load', function(){
 
 // ── Hero Stats ────────────────────────────────────────────────────────────────
 function _buildHeroStats(){
-  document.getElementById('hs-total').textContent = ROWS.length;
-  const rfsm = ROWS.filter(r=>v(r,C.rfsm)).length;
+  const rows=_getRows();
+  document.getElementById('hs-total').textContent = rows.length;
+  const rfsm = rows.filter(r=>v(r,C.rfsm)).length;
   document.getElementById('hs-rfsm').textContent = rfsm;
-  const {h,m} = _thpTotal(ROWS);
+  const {h,m} = _thpTotal(rows);
   document.getElementById('hs-thp').textContent = h+'h'+(m?m+'m':'');
 }
 
 // ── KPIs ──────────────────────────────────────────────────────────────────────
-function _cnt(col){ const c={}; ROWS.forEach(r=>{const k=v(r,col)||'N/D';c[k]=(c[k]||0)+1;}); return c; }
-function _topKey(col){ const c=_cnt(col); let k='',n=0; Object.entries(c).forEach(([kk,vv])=>{if(vv>n){k=kk;n=vv;}}); return{k,n}; }
+function _cnt(col,rows){ rows=rows||_getRows(); const c={}; rows.forEach(r=>{const k=v(r,col)||'N/D';c[k]=(c[k]||0)+1;}); return c; }
+function _topKey(col,rows){ const c=_cnt(col,rows); let k='',n=0; Object.entries(c).forEach(([kk,vv])=>{if(vv>n){k=kk;n=vv;}}); return{k,n}; }
 
 function _buildKPIs(){
-  const n=ROWS.length;
-  const byCat=_cnt(C.nat);
+  const rows=_getRows();
+  const n=rows.length;
+  const byCat=_cnt(C.nat,rows);
   const mec=(byCat['MECÂNICA']||0)+(byCat['MECANICA']||0);
   const soc=byCat['SOCIAL']||0;
   const crim=byCat['CRIMINAL']||0;
   const pct=x=>n?Math.round(x/n*100)+'%':'—';
   const topMesCrim=(()=>{
     const c={};
-    ROWS.filter(r=>v(r,C.nat).toUpperCase().includes('CRIM')).forEach(r=>{const k=v(r,C.mes)||'N/D';c[k]=(c[k]||0)+1;});
+    rows.filter(r=>v(r,C.nat).toUpperCase().includes('CRIM')).forEach(r=>{const k=v(r,C.mes)||'N/D';c[k]=(c[k]||0)+1;});
     let k='',n=0; Object.entries(c).forEach(([kk,vv])=>{if(vv>n){k=kk;n=vv;}}); return{k,n};
   })();
   const kpis=[
@@ -407,16 +436,17 @@ function _thpTotal(rows){ const m=_thpMin(rows); return{h:Math.floor(m/60),m:m%6
 function _thpFmt(rows){ const{h,m}=_thpTotal(rows); return h+'h'+(m?String(m).padStart(2,'0')+'m':''); }
 
 function _buildTHP(){
+  const rows=_getRows();
   const nats=['MECÂNICA','SOCIAL','CRIMINAL'];
   const colors=['#005CA9','#1E8449','#C0392B'];
   const bgs=['#E3F0FF','#E8F8EE','#FDECEA'];
-  const {h,m}=_thpTotal(ROWS);
+  const {h,m}=_thpTotal(rows);
 
   const breakdownHtml = nats.map((nat,i)=>{
-    const sub=ROWS.filter(r=>v(r,C.nat)===nat||v(r,C.nat)===nat.replace('Â','A'));
+    const sub=rows.filter(r=>v(r,C.nat)===nat||v(r,C.nat)===nat.replace('Â','A'));
     const min=_thpMin(sub);
     const hh=Math.floor(min/60), mm=min%60;
-    const pct=(_thpMin(ROWS)?Math.round(min/_thpMin(ROWS)*100):0);
+    const pct=(_thpMin(rows)?Math.round(min/_thpMin(rows)*100):0);
     return `<div class="thp-item" style="background:${bgs[i]}">
       <div class="ti-val" style="color:${colors[i]}">${hh}h${mm?String(mm).padStart(2,'0')+'m':''}</div>
       <div class="ti-lbl" style="color:${colors[i]}">${nat}</div>
@@ -436,9 +466,7 @@ function _buildTHP(){
 const MES_ORD=['JANEIRO','FEVEREIRO','MARÇO','MARCO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
 const SEM_ORD=['SEGUNDA','TERÇA','TERCA','QUARTA','QUINTA','SEXTA','SÁBADO','SABADO','DOMINGO'];
 
-function _countBy(rows,col){
-  const c={}; rows.forEach(r=>{const k=v(r,col)||'N/D';c[k]=(c[k]||0)+1;}); return c;
-}
+function _countBy(col,rows){ rows=rows||_getRows(); const c={}; rows.forEach(r=>{const k=v(r,col)||'N/D';c[k]=(c[k]||0)+1;}); return c; }
 
 function _mkChart(id,type,labels,data,colors,opts={}){
   if(_charts[id]) _charts[id].destroy();
@@ -472,6 +500,8 @@ function _mkChart(id,type,labels,data,colors,opts={}){
     }
   }:null;
 
+  const origVals=opts.origVals||labels;
+
   _charts[id]=new Chart(ctx,{
     type,
     data:{labels,datasets:[{label:'Ocorrências',data,backgroundColor:colors,
@@ -479,6 +509,7 @@ function _mkChart(id,type,labels,data,colors,opts={}){
     options:{
       responsive:true,maintainAspectRatio:true,
       layout:isPD?{padding:48}:undefined,
+      cursor:'pointer',
       plugins:{
         legend:{display:opts.legend??(type!=='bar'),position:'bottom',
           labels:{font:{size:10},boxWidth:11,padding:10}},
@@ -487,6 +518,12 @@ function _mkChart(id,type,labels,data,colors,opts={}){
           const tot=ctx.dataset.data.reduce((a,b)=>a+b,0);
           return ` ${val} (${tot?Math.round(val/tot*100):0}%)`;
         }}}
+      },
+      onClick:(evt,elements)=>{
+        if(opts.filterCol===undefined) return;
+        if(!elements.length){ _clearFilter(); return; }
+        const idx=elements[0].index;
+        _setFilter(opts.filterCol, origVals[idx], labels[idx]);
       },
       indexAxis:opts.horiz?'y':'x',
       scales:type==='bar'?{
@@ -499,46 +536,47 @@ function _mkChart(id,type,labels,data,colors,opts={}){
 }
 
 function _buildCharts(){
-  // Por Mês — barras verticais (ordem calendário)
-  const cMes=_countBy(ROWS,C.mes);
-  const mesL=[],mesD=[],mesC=[];
+  const rows=_getRows();
+
+  // Por Mês
+  const cMes=_countBy(C.mes,rows);
+  const mesL=[],mesOrig=[],mesD=[],mesC=[];
   MES_ORD.forEach((m,i)=>{
-    if(cMes[m]!=null){mesL.push(m.substring(0,3));mesD.push(cMes[m]);mesC.push(PAL.azuis[i%PAL.azuis.length]);}
+    if(cMes[m]!=null){mesL.push(m.substring(0,3));mesOrig.push(m);mesD.push(cMes[m]);mesC.push(PAL.azuis[i%PAL.azuis.length]);}
   });
-  Object.entries(cMes).forEach(([k,vv])=>{if(!MES_ORD.includes(k)){mesL.push(k.substring(0,3));mesD.push(vv);mesC.push('#6B93C4');}});
-  _mkChart('chart-mes','bar',mesL,mesD,mesC);
+  Object.entries(cMes).forEach(([k,vv])=>{if(!MES_ORD.includes(k)){mesL.push(k.substring(0,3));mesOrig.push(k);mesD.push(vv);mesC.push('#6B93C4');}});
+  _mkChart('chart-mes','bar',mesL,mesD,mesC,{filterCol:C.mes,origVals:mesOrig});
 
-  // Por Trecho — barras horizontais
-  const cTr=_countBy(ROWS,C.trecho);
+  // Por Trecho
+  const cTr=_countBy(C.trecho,rows);
   const trSort=Object.entries(cTr).sort((a,b)=>b[1]-a[1]);
-  _mkChart('chart-trecho','bar',trSort.map(e=>e[0]),trSort.map(e=>e[1]),trSort.map((_,i)=>PAL.trechos[i%PAL.trechos.length]),{horiz:true});
+  _mkChart('chart-trecho','bar',trSort.map(e=>e[0]),trSort.map(e=>e[1]),trSort.map((_,i)=>PAL.trechos[i%PAL.trechos.length]),{horiz:true,filterCol:C.trecho});
 
-  // Por Natureza — pizza
-  const cNat=_countBy(ROWS,C.nat);
+  // Por Natureza
+  const cNat=_countBy(C.nat,rows);
   const natE=Object.entries(cNat).sort((a,b)=>b[1]-a[1]);
-  _mkChart('chart-nat','doughnut',natE.map(e=>e[0]),natE.map(e=>e[1]),natE.map((_,i)=>PAL.nat[i%PAL.nat.length]),{legend:true});
+  _mkChart('chart-nat','doughnut',natE.map(e=>e[0]),natE.map(e=>e[1]),natE.map((_,i)=>PAL.nat[i%PAL.nat.length]),{legend:true,filterCol:C.nat});
 
-  // Por Tipo — rosca
-  const cTipo=_countBy(ROWS,C.tipo);
+  // Por Tipo
+  const cTipo=_countBy(C.tipo,rows);
   const tipoE=Object.entries(cTipo).sort((a,b)=>b[1]-a[1]);
-  _mkChart('chart-tipo','bar',tipoE.map(e=>e[0]),tipoE.map(e=>e[1]),tipoE.map((_,i)=>PAL.tipos[i%PAL.tipos.length]),{horiz:true});
+  _mkChart('chart-tipo','bar',tipoE.map(e=>e[0]),tipoE.map(e=>e[1]),tipoE.map((_,i)=>PAL.tipos[i%PAL.tipos.length]),{horiz:true,filterCol:C.tipo});
 
-  // Por Subtipo — barras horizontais
-  const cSub=_countBy(ROWS,C.sub);
+  // Por Subtipo
+  const cSub=_countBy(C.sub,rows);
   const subE=Object.entries(cSub).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  _mkChart('chart-sub','bar',subE.map(e=>e[0]),subE.map(e=>e[1]),subE.map((_,i)=>PAL.tipos[i%PAL.tipos.length]),{horiz:true});
+  _mkChart('chart-sub','bar',subE.map(e=>e[0]),subE.map(e=>e[1]),subE.map((_,i)=>PAL.tipos[i%PAL.tipos.length]),{horiz:true,filterCol:C.sub});
 
-  // Por Sigla — barras horizontais (coluna O = índice 14)
-  const cSig=_countBy(ROWS,C.sigla);
+  // Por Sigla
+  const cSig=_countBy(C.sigla,rows);
   const sigE=Object.entries(cSig).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  _mkChart('chart-sigla','bar',sigE.map(e=>e[0]),sigE.map(e=>e[1]),sigE.map((_,i)=>PAL.trechos[i%PAL.trechos.length]),{horiz:true});
+  _mkChart('chart-sigla','bar',sigE.map(e=>e[0]),sigE.map(e=>e[1]),sigE.map((_,i)=>PAL.trechos[i%PAL.trechos.length]),{horiz:true,filterCol:C.sigla});
 
-  // Por Período — pizza
-  const cPer=_countBy(ROWS,C.periodo);
+  // Por Período
+  const cPer=_countBy(C.periodo,rows);
   const perE=Object.entries(cPer).sort((a,b)=>b[1]-a[1]);
-  _mkChart('chart-periodo','pie',perE.map(e=>e[0]),perE.map(e=>e[1]),['#003865','#F78344','#6B93C4','#1E8449'],{legend:true});
+  _mkChart('chart-periodo','pie',perE.map(e=>e[0]),perE.map(e=>e[1]),['#003865','#F78344','#6B93C4','#1E8449'],{legend:true,filterCol:C.periodo});
 
-  // Heatmap Hora × Dia da Semana
   _buildHeatmap();
 }
 
@@ -560,7 +598,7 @@ function _buildHeatmap(){
   const rowTot={};FAIXAS.forEach(f=>{rowTot[f]=0;});
   let grand=0;
 
-  ROWS.forEach(r=>{
+  _getRows().forEach(r=>{
     const diaRaw=v(r,C.diaSem).toUpperCase().trim();
     const dia=DIA_MAP[diaRaw];
     if(!dia) return;
@@ -608,12 +646,15 @@ function _buildHeatmap(){
       <th>Total</th>
     </tr></thead><tbody>`;
 
+  const DIA_FULL={'DOM':'DOMINGO','SEG':'SEGUNDA','TER':'TERÇA','QUA':'QUARTA','QUI':'QUINTA','SEX':'SEXTA','SÁB':'SÁBADO'};
   FAIXAS.forEach(f=>{
-    html+=`<tr><th class="hm-row-hdr">${f}</th>`;
+    const fAtivo=_sel.col===44&&_sel.lbl&&_sel.lbl.startsWith(f);
+    html+=`<tr><th class="hm-row-hdr" style="cursor:pointer" onclick="_setFilter(41,'${f.split(':')[0]}H','${f}')">${f}</th>`;
     DIAS.forEach(d=>{
       const val=mat[f][d];
       const bg=_hmBg(val);
-      html+=`<td style="background:${bg}">${_hmColor(val)}</td>`;
+      const isActive=_sel.col===C.diaSem&&_sel.val===DIA_FULL[d];
+      html+=`<td style="background:${bg};cursor:pointer;${isActive?'outline:2px solid #F78344;outline-offset:-2px':''}" onclick="_setFilter(${C.diaSem},'${DIA_FULL[d]}','${d}')">${_hmColor(val)}</td>`;
     });
     const rt=rowTot[f];
     html+=`<td class="hm-tot-col">${rt}</td></tr>`;
@@ -731,7 +772,7 @@ function _filter(){
   const tr=document.getElementById('tbl-tr').value.toUpperCase();
   const mes=document.getElementById('tbl-mes').value.toUpperCase();
   const per=document.getElementById('tbl-per').value.toUpperCase();
-  _filtered=ROWS.filter(r=>{
+  _filtered=_getRows().filter(r=>{
     if(nat&&v(r,C.nat).toUpperCase()!==nat) return false;
     if(tr&&v(r,C.trecho).toUpperCase()!==tr) return false;
     if(mes&&v(r,C.mes).toUpperCase()!==mes) return false;
