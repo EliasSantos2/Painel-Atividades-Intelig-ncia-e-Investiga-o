@@ -530,7 +530,7 @@ function _buildCharts(){
 
   // Por Sigla — barras horizontais (coluna O = índice 14)
   const cSig=_countBy(ROWS,C.sigla);
-  const sigE=Object.entries(cSig).sort((a,b)=>b[1]-a[1]);
+  const sigE=Object.entries(cSig).sort((a,b)=>b[1]-a[1]).slice(0,10);
   _mkChart('chart-sigla','bar',sigE.map(e=>e[0]),sigE.map(e=>e[1]),sigE.map((_,i)=>PAL.trechos[i%PAL.trechos.length]),{horiz:true});
 
   // Por Período — pizza
